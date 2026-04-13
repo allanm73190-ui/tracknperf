@@ -12,6 +12,29 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+async function bootstrapFirstAdminOnce(userId: string) {
+  if (!supabase) return;
+
+  let alreadyAttempted = false;
+  try {
+    const key = `tnp:bootstrap_first_admin:${userId}`;
+    alreadyAttempted = window.localStorage.getItem(key) === "1";
+    if (!alreadyAttempted) window.localStorage.setItem(key, "1");
+  } catch {
+    // Ignore storage errors; we'll just attempt again next time.
+  }
+
+  if (alreadyAttempted) return;
+
+  try {
+    const { error } = await supabase.rpc("bootstrap_first_admin");
+    // It's expected to error if an admin already exists; either way, don't block auth.
+    void error;
+  } catch {
+    // Best-effort; do not block auth or crash UI.
+  }
+}
+
 export function AuthProvider(props: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
@@ -59,6 +82,11 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       subscription.subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    void bootstrapFirstAdminOnce(user.id);
+  }, [user?.id]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
