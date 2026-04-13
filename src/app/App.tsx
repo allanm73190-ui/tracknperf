@@ -1,133 +1,42 @@
+import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
+import { useAuth } from "../auth/AuthProvider";
+import { useIsAdmin } from "../auth/useIsAdmin";
+import { useHasProfile } from "../auth/useHasProfile";
+import AdminPage from "../ui/pages/Admin";
 import AuthPage from "../ui/pages/Auth";
 import AuthCallbackPage from "../ui/pages/AuthCallback";
+import HistoryPage from "../ui/pages/History";
 import OnboardingPage from "../ui/pages/Onboarding";
-import AdminPage from "../ui/pages/Admin";
-import { useAuth } from "../auth/AuthProvider";
-import { supabase } from "../infra/supabase/client";
-import { useEffect, useState } from "react";
+import SessionDetailPage from "../ui/pages/SessionDetail";
+import StatsPage from "../ui/pages/Stats";
+import TodayPage from "../ui/pages/Today";
 
-function ProtectedPage() {
-  const { user, signOut, isConfigured } = useAuth();
-
+function AppLoading(props: { title?: string }) {
   return (
     <main className="container">
       <h1>TrackNPerf</h1>
-      <h2>Protected</h2>
-      <p style={{ marginTop: 12 }}>
-        Signed in as <code>{user?.email ?? user?.id ?? "unknown"}</code>
-      </p>
-      <button type="button" onClick={() => void signOut()} disabled={!isConfigured}>
-        Sign out
-      </button>
+      <p>{props.title ?? "Loading…"} </p>
     </main>
   );
 }
 
-function useHasProfile(userId: string | null) {
-  const [loading, setLoading] = useState(true);
-  const [hasProfile, setHasProfile] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+function RequireAuth() {
+  const { loading, user } = useAuth();
+  const location = useLocation();
 
-  useEffect(() => {
-    let ignore = false;
-
-    async function run() {
-      if (!userId || !supabase) {
-        if (!ignore) {
-          setHasProfile(false);
-          setError(null);
-          setLoading(false);
-        }
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", userId)
-        .maybeSingle();
-
-      if (ignore) return;
-
-      if (error) {
-        setHasProfile(false);
-        setError(typeof error === "object" && error && "message" in error ? String(error.message) : null);
-        setLoading(false);
-        return;
-      }
-
-      setHasProfile(Boolean(data?.id));
-      setLoading(false);
-    }
-
-    void run();
-    return () => {
-      ignore = true;
-    };
-  }, [userId]);
-
-  return { loading, hasProfile, error };
+  if (loading) return <AppLoading />;
+  if (!user) return <Navigate to="/auth" replace state={{ returnTo: location.pathname + location.search }} />;
+  return <Outlet />;
 }
 
-export default function App() {
-  const { loading, user } = useAuth();
-  const { loading: profileLoading, hasProfile, error: profileError } = useHasProfile(
-    user?.id ?? null,
-  );
+function RequireProfile() {
+  const { user } = useAuth();
+  const location = useLocation();
+  const { loading, hasProfile, error } = useHasProfile(user?.id ?? null);
 
-  useEffect(() => {
-    if (!user) return;
-
-    if (!profileLoading && !profileError && !hasProfile && window.location.pathname !== "/onboarding") {
-      window.history.replaceState(null, "", "/onboarding");
-      return;
-    }
-
-    if (!profileLoading && !profileError && hasProfile && window.location.pathname === "/onboarding") {
-      window.history.replaceState(null, "", "/");
-    }
-  }, [hasProfile, profileError, profileLoading, user]);
-
-  if (window.location.pathname === "/auth/callback") {
-    return <AuthCallbackPage />;
-  }
-
-  if (window.location.pathname === "/admin") {
-    if (loading) {
-      return (
-        <main className="container">
-          <h1>TrackNPerf</h1>
-          <p>Loading…</p>
-        </main>
-      );
-    }
-    if (!user) return <AuthPage />;
-    return <AdminPage />;
-  }
-
-  if (loading) {
-    return (
-      <main className="container">
-        <h1>TrackNPerf</h1>
-        <p>Loading…</p>
-      </main>
-    );
-  }
-
-  if (!user) return <AuthPage />;
-
-  if (profileLoading) {
-    return (
-      <main className="container">
-        <h1>TrackNPerf</h1>
-        <p>Loading…</p>
-      </main>
-    );
-  }
-
-  if (profileError) {
+  if (!user) return <Navigate to="/auth" replace state={{ returnTo: location.pathname + location.search }} />;
+  if (loading) return <AppLoading />;
+  if (error) {
     return (
       <main className="container">
         <h1>TrackNPerf</h1>
@@ -135,15 +44,73 @@ export default function App() {
         <p role="alert" style={{ maxWidth: 720 }}>
           We couldn’t load your profile right now. Please check your connection or try again.
         </p>
-        <pre style={{ whiteSpace: "pre-wrap", opacity: 0.8 }}>{profileError}</pre>
+        <pre style={{ whiteSpace: "pre-wrap", opacity: 0.8 }}>{error}</pre>
       </main>
     );
   }
+  if (!hasProfile) return <Navigate to="/onboarding" replace state={{ returnTo: location.pathname + location.search }} />;
+  return <Outlet />;
+}
 
-  if (!hasProfile) {
-    return <OnboardingPage />;
+function RequireAdmin() {
+  const { user } = useAuth();
+  const { loading, isAdmin, error } = useIsAdmin(user?.id ?? null);
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (loading) return <AppLoading />;
+  if (!isAdmin) {
+    return (
+      <main className="container">
+        <h1>TrackNPerf</h1>
+        <h2>Admin</h2>
+        <p role="alert" style={{ maxWidth: 720 }}>
+          You don’t have access to this page.
+        </p>
+        {error ? <pre style={{ whiteSpace: "pre-wrap", opacity: 0.8 }}>{error}</pre> : null}
+      </main>
+    );
   }
+  return <Outlet />;
+}
 
-  return <ProtectedPage />;
+function IndexRedirect() {
+  // We want `/` to go to the primary screen, but only after auth/profile is resolved.
+  return <Navigate to="/today" replace />;
+}
+
+function NotFound() {
+  return (
+    <main className="container">
+      <h1>TrackNPerf</h1>
+      <h2>Not found</h2>
+      <p style={{ opacity: 0.85 }}>This page doesn’t exist.</p>
+    </main>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/auth/callback" element={<AuthCallbackPage />} />
+
+      <Route element={<RequireAuth />}>
+        <Route path="/onboarding" element={<OnboardingPage />} />
+
+        <Route element={<RequireProfile />}>
+          <Route path="/" element={<IndexRedirect />} />
+          <Route path="/today" element={<TodayPage />} />
+          <Route element={<RequireAdmin />}>
+            <Route path="/admin" element={<AdminPage />} />
+          </Route>
+          <Route path="/history" element={<HistoryPage />} />
+          <Route path="/stats" element={<StatsPage />} />
+          <Route path="/session/:sessionId" element={<SessionDetailPage />} />
+        </Route>
+      </Route>
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
 }
 

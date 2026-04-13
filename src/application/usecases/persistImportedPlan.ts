@@ -11,6 +11,13 @@ function isPostgrestErrorMessage(err: unknown): string | null {
 }
 
 export async function persistImportedPlan(input: PlanImport): Promise<PersistedPlanImportResult> {
+  return persistImportedPlanWithEngineContext(input, { configProfileId: null, algorithmVersionId: null });
+}
+
+export async function persistImportedPlanWithEngineContext(
+  input: PlanImport,
+  engineContext: { configProfileId: string | null; algorithmVersionId: string | null },
+): Promise<PersistedPlanImportResult> {
   const parsed = planImportSchema.parse(input);
 
   if (!supabase) {
@@ -38,8 +45,8 @@ export async function persistImportedPlan(input: PlanImport): Promise<PersistedP
       plan_id: planRow.id,
       version: parsed.planVersion.version,
       payload: parsed.planVersion.payload,
-      config_profile_id: null,
-      algorithm_version_id: null,
+      config_profile_id: engineContext.configProfileId,
+      algorithm_version_id: engineContext.algorithmVersionId,
     })
     .select("id")
     .single();

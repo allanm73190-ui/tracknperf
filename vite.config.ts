@@ -3,6 +3,12 @@ import { VitePWA } from "vite-plugin-pwa";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  // Ensure dev/preview serve index.html for deep links like /admin
+  appType: "spa",
+  resolve: {
+    // Prevent “Invalid hook call” caused by multiple React copies in parent folders.
+    dedupe: ["react", "react-dom", "react-router", "react-router-dom"],
+  },
   plugins: [
     react(),
     VitePWA({

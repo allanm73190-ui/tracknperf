@@ -51,16 +51,21 @@ export function AuthProvider(props: { children: React.ReactNode }) {
         return;
       }
 
-      const { data, error } = await supabase.auth.getSession();
-      if (error) {
-        // If session retrieval fails, still allow rendering unauth UI.
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          if (!ignore) setLoading(false);
+          return;
+        }
+        if (!ignore) {
+          setSession(data.session);
+          setUser(data.session?.user ?? null);
+          setLoading(false);
+        }
+      } catch {
+        // In some browser/privacy contexts, getSession() can throw (storage blocked).
+        // Fail open: render unauth UI instead of staying stuck.
         if (!ignore) setLoading(false);
-        return;
-      }
-      if (!ignore) {
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
-        setLoading(false);
       }
     }
 

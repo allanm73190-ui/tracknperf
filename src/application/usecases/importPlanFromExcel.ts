@@ -4,6 +4,17 @@ import { planImportSchema } from "../../domain/plan/planImport.schema";
 
 type Row = Record<string, unknown>;
 
+type ProgrammeRow = {
+  exercise: string;
+  series: string | null;
+  reps: string | null;
+  load: string | null;
+  tempo: string | null;
+  rest: string | null;
+  rir: string | null;
+  coachNotes: string | null;
+};
+
 function normalizeHeaderKey(key: string): string {
   return key
     .trim()
@@ -83,9 +94,141 @@ function guessPlanName(workbook: XLSX.WorkBook): string {
   return "Imported plan";
 }
 
-export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer): PlanImport {
-  const workbook = XLSX.read(buf, { type: "array", cellDates: true });
+function stripEmojiAndTrim(name: string): string {
+  return name.replace(/[^\p{L}\p{N}\p{P}\p{Z}]/gu, "").trim();
+}
+
+function normalizeMaybeString(v: unknown): string | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v === "string") {
+    const s = v.trim();
+    return s.length ? s : null;
+  }
+  return String(v);
+}
+
+function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | null {
+  // Legacy template (`tracknperf_deploy/programme_template.xlsx`) has sheets like:
+  // '🏋️ Force', '🎯 Hypertrophie', '🔧 Spécifique', '🏔️ Trail', '😌 Repos'
+  // Each sheet is a simple table with header row:
+  // Exercice | Séries | Reps | Charge | Tempo | Repos | RIR | Notes coach
+  const templateSheets = workbook.SheetNames.filter((n) => !n.toLowerCase().includes("instruction"));
+  const sessionTemplates: PlanImport["sessionTemplates"] = [];
+
+  for (const sheetName of templateSheets) {
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) continue;
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: null, raw: false });
+    if (rows.length < 2) continue;
+
+    // Legacy sheets have a title row, then the header row.
+    // Find the header row by scanning for a cell that normalizes to "exercice".
+    let headerRowIndex = -1;
+    for (let i = 0; i < Math.min(rows.length, 20); i++) {
+      const r = rows[i];
+      if (!Array.isArray(r)) continue;
+      const normalized = r.map((c) => (typeof c === "string" ? normalizeHeaderKey(c) : ""));
+      if (normalized.some((h) => h === "exercice" || h === "exercise")) {
+        headerRowIndex = i;
+        break;
+      }
+    }
+    if (headerRowIndex < 0) continue;
+
+    const header =
+      (rows[headerRowIndex] ?? []).map((c) => (typeof c === "string" ? normalizeHeaderKey(c) : "")) ?? [];
+    const exIdx = header.findIndex((h) => h === "exercice" || h === "exercise");
+    if (exIdx < 0) continue;
+
+    const items: ProgrammeRow[] = [];
+    for (let i = headerRowIndex + 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (!Array.isArray(r)) continue;
+      const exercise = normalizeMaybeString(r[exIdx]);
+      if (!exercise) continue;
+      items.push({
+        exercise,
+        // Legacy template uses fixed column order A-H.
+        series: normalizeMaybeString(r[1]),
+        reps: normalizeMaybeString(r[2]),
+        load: normalizeMaybeString(r[3]),
+        tempo: normalizeMaybeString(r[4]),
+        rest: normalizeMaybeString(r[5]),
+        rir: normalizeMaybeString(r[6]),
+        coachNotes: normalizeMaybeString(r[7]),
+      });
+    }
+
+    if (!items.length) continue;
+
+    sessionTemplates.push({
+      name: stripEmojiAndTrim(sheetName) || sheetName,
+      template: {
+        source: "legacy_programme_template",
+        sheetName,
+        columns: header,
+        items,
+      },
+    });
+  }
+
+  if (!sessionTemplates.length) return null;
+
+  const planName = workbook.Props?.Title?.trim() || "Imported programme";
+
+  return planImportSchema.parse({
+    plan: { name: planName, description: "Imported from legacy programme_template.xlsx" },
+    planVersion: { version: 1, payload: { source: "legacy_programme_template" } },
+    sessionTemplates,
+    plannedSessions: [],
+  });
+}
+
+function toArrayBuffer(buf: ArrayBuffer | Uint8Array): ArrayBuffer {
+  if (buf instanceof ArrayBuffer) return buf;
+  return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
+}
+
+export function importProgrammeTemplateFromExcelArrayBuffer(
+  buf: ArrayBuffer | Uint8Array,
+): PlanImport | null {
+  const workbook = XLSX.read(toArrayBuffer(buf), { type: "array", cellDates: true });
+  if (!workbook.SheetNames.length) return null;
+  return parseProgrammeTemplateWorkbook(workbook);
+}
+
+function detectLegacyProgrammeTemplate(workbook: XLSX.WorkBook): boolean {
+  let matchingSheets = 0;
+  for (const sheetName of workbook.SheetNames) {
+    if (sheetName.toLowerCase().includes("instruction")) continue;
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) continue;
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: null, raw: false });
+    for (let i = 0; i < Math.min(rows.length, 15); i++) {
+      const r = rows[i];
+      if (!Array.isArray(r)) continue;
+      const normalized = r.map((c) => (typeof c === "string" ? normalizeHeaderKey(c) : ""));
+      const hasExercise = normalized.includes("exercice") || normalized.includes("exercise");
+      const hasNotesCoach = normalized.includes("notes_coach");
+      if (hasExercise && hasNotesCoach) {
+        matchingSheets++;
+        break;
+      }
+    }
+  }
+  return matchingSheets >= 2;
+}
+
+export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): PlanImport {
+  const workbook = XLSX.read(toArrayBuffer(buf), { type: "array", cellDates: true });
   if (!workbook.SheetNames.length) throw new Error("Excel file has no sheets.");
+
+  // First: detect the legacy programme_template.xlsx format (no dates, sheet-per-template).
+  const legacyDetected = detectLegacyProgrammeTemplate(workbook);
+  if (legacyDetected) {
+    const legacy = parseProgrammeTemplateWorkbook(workbook);
+    if (legacy) return legacy;
+  }
 
   // Template-compat strategy: read first non-empty sheet as a table
   // and try to find columns for date + template/session.
@@ -171,8 +314,18 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer): PlanImport {
   }
 
   if (plannedSessions.length === 0) {
+    const legacy = parseProgrammeTemplateWorkbook(workbook);
+    if (legacy) return legacy;
+
+    if (legacyDetected) {
+      throw new Error(
+        `Legacy programme template detected (sheets: ${workbook.SheetNames.join(
+          ", ",
+        )}), but no templates could be parsed.`,
+      );
+    }
     throw new Error(
-      "Excel template not recognized: expected rows with a date column (e.g. 'date' or 'scheduled_for').",
+      "Excel template not recognized: expected rows with a date column (e.g. 'date' or 'scheduled_for'), or the legacy programme template format.",
     );
   }
 

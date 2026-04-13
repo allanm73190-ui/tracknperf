@@ -1,9 +1,12 @@
 import { useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../infra/supabase/client";
 
 type Mode = "signIn" | "signUp" | "magicLink";
 
 export default function AuthPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>("signIn");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,6 +43,15 @@ export default function AuthPage() {
 
     setBusy(true);
     try {
+      const state = location.state as { returnTo?: unknown } | null;
+      const returnTo =
+        typeof state?.returnTo === "string" && state.returnTo.startsWith("/") ? state.returnTo : "/today";
+      try {
+        window.sessionStorage.setItem("tnp:returnTo", returnTo);
+      } catch {
+        // Ignore if storage is blocked.
+      }
+
       if (mode === "signUp") {
         const { error } = await supabase.auth.signUp({
           email,
@@ -54,6 +66,7 @@ export default function AuthPage() {
       if (mode === "signIn") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        navigate(returnTo, { replace: true });
         return;
       }
 

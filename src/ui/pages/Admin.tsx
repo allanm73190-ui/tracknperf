@@ -5,23 +5,12 @@ import type { PlanImport } from "../../domain/plan/planImport";
 import { importPlanFromJsonText } from "../../application/usecases/importPlanFromJson";
 import { importPlanFromCsvText } from "../../application/usecases/importPlanFromCsv";
 import { importPlanFromExcelArrayBuffer } from "../../application/usecases/importPlanFromExcel";
-import { persistImportedPlan } from "../../application/usecases/persistImportedPlan";
+import { persistImportedPlanWithEngineContext } from "../../application/usecases/persistImportedPlan";
 
 type Format = "excel" | "json" | "csv";
 
-async function isAdmin(): Promise<boolean> {
-  if (!supabase) return false;
-  const { data, error } = await supabase.rpc("is_admin");
-  if (!error && typeof data === "boolean") return data;
-
-  // Fallback to selecting own role row (RLS allows it), in case RPC is unavailable.
-  const { data: roleRow, error: roleErr } = await supabase
-    .from("user_roles")
-    .select("role")
-    .maybeSingle();
-  if (roleErr) return false;
-  return roleRow?.role === "admin";
-}
+type ConfigProfileRow = { id: string; key: string; name: string };
+type AlgorithmVersionRow = { id: string; version: string };
 
 function guessFormat(file: File | null): Format {
   const name = file?.name?.toLowerCase() ?? "";
@@ -32,46 +21,52 @@ function guessFormat(file: File | null): Format {
 
 export default function AdminPage() {
   const { user, signOut, isConfigured } = useAuth();
-  const [adminLoading, setAdminLoading] = useState(true);
-  const [admin, setAdmin] = useState(false);
-  const [adminError, setAdminError] = useState<string | null>(null);
-
   const [file, setFile] = useState<File | null>(null);
   const [format, setFormat] = useState<Format>("excel");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [parsed, setParsed] = useState<PlanImport | null>(null);
 
+  const [configProfiles, setConfigProfiles] = useState<ConfigProfileRow[]>([]);
+  const [algoVersions, setAlgoVersions] = useState<AlgorithmVersionRow[]>([]);
+  const [selectedConfigProfileId, setSelectedConfigProfileId] = useState<string>("");
+  const [selectedAlgorithmVersionId, setSelectedAlgorithmVersionId] = useState<string>("");
+
+  const [newConfigKey, setNewConfigKey] = useState("default");
+  const [newConfigName, setNewConfigName] = useState("Default config");
+  const [newConfigJson, setNewConfigJson] = useState('{"version":"v1.1-default"}');
+
+  const [newAlgoVersion, setNewAlgoVersion] = useState("v1.1.0");
+
   useEffect(() => {
     let ignore = false;
-    async function run() {
-      if (!supabase || !user?.id) {
-        if (!ignore) {
-          setAdmin(false);
-          setAdminLoading(false);
-        }
-        return;
+    async function loadAdminData() {
+      if (!supabase || !user?.id) return;
+      const { data: cfg, error: cfgErr } = await supabase
+        .from("config_profiles")
+        .select("id, key, name")
+        .order("created_at", { ascending: false });
+      if (!ignore && !cfgErr && cfg) {
+        const rows = cfg.map((r) => ({ id: String(r.id), key: String(r.key), name: String(r.name) }));
+        setConfigProfiles(rows);
+        if (!selectedConfigProfileId && rows[0]) setSelectedConfigProfileId(rows[0].id);
       }
-      setAdminLoading(true);
-      setAdminError(null);
-      try {
-        const ok = await isAdmin();
-        if (!ignore) {
-          setAdmin(ok);
-          setAdminLoading(false);
-        }
-      } catch (err) {
-        if (!ignore) {
-          setAdmin(false);
-          setAdminError(err instanceof Error ? err.message : "Could not check admin role.");
-          setAdminLoading(false);
-        }
+
+      const { data: av, error: avErr } = await supabase
+        .from("algorithm_versions")
+        .select("id, version")
+        .order("created_at", { ascending: false });
+      if (!ignore && !avErr && av) {
+        const rows = av.map((r) => ({ id: String(r.id), version: String(r.version) }));
+        setAlgoVersions(rows);
+        if (!selectedAlgorithmVersionId && rows[0]) setSelectedAlgorithmVersionId(rows[0].id);
       }
     }
-    void run();
+    void loadAdminData();
     return () => {
       ignore = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   const preview = useMemo(() => {
@@ -134,7 +129,10 @@ export default function AdminPage() {
     }
     setBusy(true);
     try {
-      const res = await persistImportedPlan(parsed);
+      const res = await persistImportedPlanWithEngineContext(parsed, {
+        configProfileId: selectedConfigProfileId || null,
+        algorithmVersionId: selectedAlgorithmVersionId || null,
+      });
       setMessage(`Imported: plan=${res.planId}, version=${res.planVersionId}.`);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : "Import failed.");
@@ -143,35 +141,54 @@ export default function AdminPage() {
     }
   }
 
-  if (adminLoading) {
-    return (
-      <main className="container">
-        <h1>TrackNPerf</h1>
-        <h2>Admin</h2>
-        <p>Loading…</p>
-      </main>
-    );
+  async function onCreateConfigProfile() {
+    if (!supabase) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      let cfg: unknown;
+      try {
+        cfg = JSON.parse(newConfigJson);
+      } catch {
+        throw new Error("Config JSON is invalid.");
+      }
+      const { data, error } = await supabase
+        .from("config_profiles")
+        .insert({ key: newConfigKey.trim(), name: newConfigName.trim(), config: cfg })
+        .select("id, key, name")
+        .single();
+      if (error) throw new Error(error.message);
+      const row = { id: String(data.id), key: String(data.key), name: String(data.name) };
+      setConfigProfiles((prev) => [row, ...prev]);
+      setSelectedConfigProfileId(row.id);
+      setMessage("Config profile created.");
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Could not create config profile.");
+    } finally {
+      setBusy(false);
+    }
   }
 
-  if (!admin) {
-    return (
-      <main className="container">
-        <h1>TrackNPerf</h1>
-        <h2>Admin</h2>
-        <p role="alert" style={{ maxWidth: 720 }}>
-          You don’t have access to this page.
-        </p>
-        {adminError ? <pre style={{ whiteSpace: "pre-wrap", opacity: 0.8 }}>{adminError}</pre> : null}
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <button type="button" onClick={() => window.history.back()}>
-            Go back
-          </button>
-          <button type="button" onClick={() => void signOut()} disabled={!isConfigured}>
-            Sign out
-          </button>
-        </div>
-      </main>
-    );
+  async function onCreateAlgorithmVersion() {
+    if (!supabase) return;
+    setBusy(true);
+    setMessage(null);
+    try {
+      const { data, error } = await supabase
+        .from("algorithm_versions")
+        .insert({ version: newAlgoVersion.trim(), metadata: {} })
+        .select("id, version")
+        .single();
+      if (error) throw new Error(error.message);
+      const row = { id: String(data.id), version: String(data.version) };
+      setAlgoVersions((prev) => [row, ...prev]);
+      setSelectedAlgorithmVersionId(row.id);
+      setMessage("Algorithm version created.");
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Could not create algorithm version.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -181,6 +198,85 @@ export default function AdminPage() {
       <p style={{ marginTop: 12 }}>
         Signed in as <code>{user?.email ?? user?.id ?? "unknown"}</code>
       </p>
+
+      <section style={{ marginTop: 18, display: "grid", gap: 10, maxWidth: 720 }}>
+        <h3 style={{ margin: 0 }}>Engine config (V1.1)</h3>
+
+        <label style={{ display: "grid", gap: 6 }}>
+          <span>Config profile used for next plan import</span>
+          <select
+            value={selectedConfigProfileId}
+            onChange={(e) => setSelectedConfigProfileId(e.currentTarget.value)}
+            disabled={busy}
+          >
+            <option value="">(none)</option>
+            {configProfiles.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.key} — {c.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <details>
+          <summary>Create config profile</summary>
+          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>Key</span>
+              <input value={newConfigKey} onChange={(e) => setNewConfigKey(e.currentTarget.value)} disabled={busy} />
+            </label>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>Name</span>
+              <input value={newConfigName} onChange={(e) => setNewConfigName(e.currentTarget.value)} disabled={busy} />
+            </label>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>Config JSON</span>
+              <textarea
+                value={newConfigJson}
+                onChange={(e) => setNewConfigJson(e.currentTarget.value)}
+                rows={6}
+                disabled={busy}
+              />
+            </label>
+            <button type="button" onClick={() => void onCreateConfigProfile()} disabled={busy}>
+              Create config profile
+            </button>
+          </div>
+        </details>
+
+        <label style={{ display: "grid", gap: 6 }}>
+          <span>Algorithm version used for next plan import</span>
+          <select
+            value={selectedAlgorithmVersionId}
+            onChange={(e) => setSelectedAlgorithmVersionId(e.currentTarget.value)}
+            disabled={busy}
+          >
+            <option value="">(none)</option>
+            {algoVersions.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.version}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <details>
+          <summary>Create algorithm version</summary>
+          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+            <label style={{ display: "grid", gap: 6 }}>
+              <span>Version</span>
+              <input
+                value={newAlgoVersion}
+                onChange={(e) => setNewAlgoVersion(e.currentTarget.value)}
+                disabled={busy}
+              />
+            </label>
+            <button type="button" onClick={() => void onCreateAlgorithmVersion()} disabled={busy}>
+              Create algorithm version
+            </button>
+          </div>
+        </details>
+      </section>
 
       <section style={{ marginTop: 18, display: "grid", gap: 10, maxWidth: 720 }}>
         <h3 style={{ margin: 0 }}>Import plan</h3>

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "../../infra/supabase/client";
 
 export default function AuthCallbackPage() {
   const [message, setMessage] = useState("Completing sign-in…");
+  const navigate = useNavigate();
 
   useEffect(() => {
     let ignore = false;
@@ -22,7 +24,15 @@ export default function AuthCallbackPage() {
         return;
       }
       if (data.session) {
-        window.location.replace("/");
+        let returnTo = "/today";
+        try {
+          const raw = window.sessionStorage.getItem("tnp:returnTo");
+          if (raw && raw.startsWith("/")) returnTo = raw;
+          window.sessionStorage.removeItem("tnp:returnTo");
+        } catch {
+          // Ignore if storage is blocked.
+        }
+        navigate(returnTo, { replace: true });
         return;
       }
       setMessage("No session found. Please try signing in again.");
