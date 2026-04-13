@@ -1,6 +1,7 @@
 import AuthPage from "../ui/pages/Auth";
 import AuthCallbackPage from "../ui/pages/AuthCallback";
 import OnboardingPage from "../ui/pages/Onboarding";
+import AdminPage from "../ui/pages/Admin";
 import { useAuth } from "../auth/AuthProvider";
 import { supabase } from "../infra/supabase/client";
 import { useEffect, useState } from "react";
@@ -91,6 +92,19 @@ export default function App() {
 
   if (window.location.pathname === "/auth/callback") {
     return <AuthCallbackPage />;
+  }
+
+  if (window.location.pathname === "/admin") {
+    if (loading) {
+      return (
+        <main className="container">
+          <h1>TrackNPerf</h1>
+          <p>Loading…</p>
+        </main>
+      );
+    }
+    if (!user) return <AuthPage />;
+    return <AdminPage />;
   }
 
   if (loading) {
