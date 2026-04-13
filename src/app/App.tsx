@@ -25,6 +25,7 @@ function ProtectedPage() {
 function useHasProfile(userId: string | null) {
   const [loading, setLoading] = useState(true);
   const [hasProfile, setHasProfile] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -33,12 +34,14 @@ function useHasProfile(userId: string | null) {
       if (!userId || !supabase) {
         if (!ignore) {
           setHasProfile(false);
+          setError(null);
           setLoading(false);
         }
         return;
       }
 
       setLoading(true);
+      setError(null);
       const { data, error } = await supabase
         .from("profiles")
         .select("id")
@@ -48,8 +51,8 @@ function useHasProfile(userId: string | null) {
       if (ignore) return;
 
       if (error) {
-        // If we can't load profile for any reason, don't dead-end the user.
-        setHasProfile(true);
+        setHasProfile(false);
+        setError(typeof error === "object" && error && "message" in error ? String(error.message) : null);
         setLoading(false);
         return;
       }
@@ -64,12 +67,27 @@ function useHasProfile(userId: string | null) {
     };
   }, [userId]);
 
-  return { loading, hasProfile };
+  return { loading, hasProfile, error };
 }
 
 export default function App() {
   const { loading, user } = useAuth();
-  const { loading: profileLoading, hasProfile } = useHasProfile(user?.id ?? null);
+  const { loading: profileLoading, hasProfile, error: profileError } = useHasProfile(
+    user?.id ?? null,
+  );
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (!profileLoading && !profileError && !hasProfile && window.location.pathname !== "/onboarding") {
+      window.history.replaceState(null, "", "/onboarding");
+      return;
+    }
+
+    if (!profileLoading && !profileError && hasProfile && window.location.pathname === "/onboarding") {
+      window.history.replaceState(null, "", "/");
+    }
+  }, [hasProfile, profileError, profileLoading, user]);
 
   if (window.location.pathname === "/auth/callback") {
     return <AuthCallbackPage />;
@@ -95,16 +113,23 @@ export default function App() {
     );
   }
 
+  if (profileError) {
+    return (
+      <main className="container">
+        <h1>TrackNPerf</h1>
+        <h2>Profile</h2>
+        <p role="alert" style={{ maxWidth: 720 }}>
+          We couldn’t load your profile right now. Please check your connection or try again.
+        </p>
+        <pre style={{ whiteSpace: "pre-wrap", opacity: 0.8 }}>{profileError}</pre>
+      </main>
+    );
+  }
+
   if (!hasProfile) {
-    if (window.location.pathname !== "/onboarding") {
-      window.history.replaceState(null, "", "/onboarding");
-    }
     return <OnboardingPage />;
   }
 
-  if (window.location.pathname === "/onboarding") {
-    window.history.replaceState(null, "", "/");
-  }
   return <ProtectedPage />;
 }
 

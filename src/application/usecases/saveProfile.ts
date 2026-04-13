@@ -28,7 +28,19 @@ export async function saveProfile(input: SaveProfileInput): Promise<ProfileRow> 
     .select("*")
     .single();
 
-  if (error) throw error;
+  if (error) {
+    const msg = "Could not save profile. Please try again.";
+    const details =
+      typeof error === "object" && error && "message" in error
+        ? String((error as { message: unknown }).message)
+        : null;
+    throw new Error(details ? `${msg} (${details})` : msg);
+  }
+
+  if (!data || typeof data !== "object" || typeof (data as { id?: unknown }).id !== "string") {
+    throw new Error("Unexpected profile response from server.");
+  }
+
   return data as ProfileRow;
 }
 

@@ -12,8 +12,8 @@ export default function OnboardingPage() {
   const email = user?.email ?? null;
 
   const canSubmit = useMemo(() => {
-    return Boolean(user?.id) && displayName.trim().length > 0 && !busy;
-  }, [busy, displayName, user?.id]);
+    return Boolean(user?.id) && isConfigured && displayName.trim().length > 0 && !busy;
+  }, [busy, displayName, isConfigured, user?.id]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,7 +40,7 @@ export default function OnboardingPage() {
 
       window.location.replace("/");
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Unknown error";
+      const msg = err instanceof Error ? err.message : "Something went wrong.";
       setMessage(msg);
     } finally {
       setBusy(false);
