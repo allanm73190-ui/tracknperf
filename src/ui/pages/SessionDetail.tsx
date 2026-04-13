@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "../../infra/supabase/client";
+import { AppShell } from "../kit/AppShell";
+import { Card } from "../kit/Card";
+import { Pill } from "../kit/Pill";
 
 type ExecutedSession = {
   id: string;
@@ -67,29 +70,83 @@ export default function SessionDetailPage() {
   }, [sessionId]);
 
   return (
-    <main className="container">
-      <h1>TrackNPerf</h1>
-      <h2>Session detail</h2>
-
-      {loading ? <p>Loading…</p> : null}
+    <AppShell
+      title="Session"
+      nav={[
+        { to: "/today", label: "Today" },
+        { to: "/history", label: "History" },
+        { to: "/stats", label: "Stats" },
+        { to: "/admin", label: "Admin" },
+      ]}
+      rightSlot={sessionId ? <Pill tone="neutral">ID</Pill> : <Pill tone="error">Missing ID</Pill>}
+    >
+      {loading ? <Card tone="low">Loading…</Card> : null}
       {message ? (
-        <p role="alert" style={{ whiteSpace: "pre-wrap" }}>
-          {message}
-        </p>
+        <Card tone="highest">
+          <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
+        </Card>
       ) : null}
 
       {!loading && row ? (
-        <pre style={{ whiteSpace: "pre-wrap", background: "rgba(0,0,0,0.04)", padding: 12, borderRadius: 8 }}>
-          {JSON.stringify(row, null, 2)}
-        </pre>
-      ) : null}
+        <div style={{ display: "grid", gap: 14 }}>
+          <Card tone="low">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+              <h2 className="h2">What happened</h2>
+              <Pill tone="primary">
+                {row.startedAt.slice(11, 16)} → {row.endedAt ? row.endedAt.slice(11, 16) : "—"}
+              </Pill>
+            </div>
+            <div className="muted" style={{ fontSize: 13 }}>
+              {row.id}
+            </div>
+          </Card>
 
-      <div style={{ marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <Link to="/today">Today</Link>
-        <Link to="/history">History</Link>
-        <Link to="/stats">Stats</Link>
-      </div>
-    </main>
+          <Card tone="low">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+              <h2 className="h2">Context</h2>
+              <Pill tone="secondary">Why</Pill>
+            </div>
+            <div className="muted" style={{ fontSize: 13, display: "grid", gap: 6 }}>
+              <div>
+                planId: <code>{row.planId ?? "—"}</code>
+              </div>
+              <div>
+                plannedSessionId: <code>{row.plannedSessionId ?? "—"}</code>
+              </div>
+            </div>
+          </Card>
+
+          <Card tone="low">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+              <h2 className="h2">Payload</h2>
+              <Pill tone="neutral">JSON</Pill>
+            </div>
+            <pre
+              style={{
+                margin: 0,
+                whiteSpace: "pre-wrap",
+                background: "rgba(38, 38, 38, 0.5)",
+                padding: 12,
+                borderRadius: "var(--radius-lg)",
+                color: "var(--text)",
+                overflowX: "auto",
+              }}
+            >
+              {JSON.stringify(row.payload, null, 2)}
+            </pre>
+          </Card>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link to="/history">
+              <Pill tone="neutral">Back to history</Pill>
+            </Link>
+            <Link to="/today">
+              <Pill tone="neutral">Today</Pill>
+            </Link>
+          </div>
+        </div>
+      ) : null}
+    </AppShell>
   );
 }
 

@@ -6,6 +6,11 @@ import { importPlanFromJsonText } from "../../application/usecases/importPlanFro
 import { importPlanFromCsvText } from "../../application/usecases/importPlanFromCsv";
 import { importPlanFromExcelArrayBuffer } from "../../application/usecases/importPlanFromExcel";
 import { persistImportedPlanWithEngineContext } from "../../application/usecases/persistImportedPlan";
+import { AppShell } from "../kit/AppShell";
+import { Button } from "../kit/Button";
+import { Card } from "../kit/Card";
+import { Input } from "../kit/Input";
+import { Pill } from "../kit/Pill";
 
 type Format = "excel" | "json" | "csv";
 
@@ -192,145 +197,221 @@ export default function AdminPage() {
   }
 
   return (
-    <main className="container">
-      <h1>TrackNPerf</h1>
-      <h2>Admin</h2>
-      <p style={{ marginTop: 12 }}>
-        Signed in as <code>{user?.email ?? user?.id ?? "unknown"}</code>
-      </p>
-
-      <section style={{ marginTop: 18, display: "grid", gap: 10, maxWidth: 720 }}>
-        <h3 style={{ margin: 0 }}>Engine config (V1.1)</h3>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Config profile used for next plan import</span>
-          <select
-            value={selectedConfigProfileId}
-            onChange={(e) => setSelectedConfigProfileId(e.currentTarget.value)}
-            disabled={busy}
-          >
-            <option value="">(none)</option>
-            {configProfiles.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.key} — {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <details>
-          <summary>Create config profile</summary>
-          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>Key</span>
-              <input value={newConfigKey} onChange={(e) => setNewConfigKey(e.currentTarget.value)} disabled={busy} />
-            </label>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>Name</span>
-              <input value={newConfigName} onChange={(e) => setNewConfigName(e.currentTarget.value)} disabled={busy} />
-            </label>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>Config JSON</span>
-              <textarea
-                value={newConfigJson}
-                onChange={(e) => setNewConfigJson(e.currentTarget.value)}
-                rows={6}
-                disabled={busy}
-              />
-            </label>
-            <button type="button" onClick={() => void onCreateConfigProfile()} disabled={busy}>
-              Create config profile
-            </button>
-          </div>
-        </details>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Algorithm version used for next plan import</span>
-          <select
-            value={selectedAlgorithmVersionId}
-            onChange={(e) => setSelectedAlgorithmVersionId(e.currentTarget.value)}
-            disabled={busy}
-          >
-            <option value="">(none)</option>
-            {algoVersions.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.version}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <details>
-          <summary>Create algorithm version</summary>
-          <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-            <label style={{ display: "grid", gap: 6 }}>
-              <span>Version</span>
-              <input
-                value={newAlgoVersion}
-                onChange={(e) => setNewAlgoVersion(e.currentTarget.value)}
-                disabled={busy}
-              />
-            </label>
-            <button type="button" onClick={() => void onCreateAlgorithmVersion()} disabled={busy}>
-              Create algorithm version
-            </button>
-          </div>
-        </details>
-      </section>
-
-      <section style={{ marginTop: 18, display: "grid", gap: 10, maxWidth: 720 }}>
-        <h3 style={{ margin: 0 }}>Import plan</h3>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>File (Excel .xlsx, JSON, or CSV)</span>
-          <input
-            type="file"
-            accept=".xlsx,.xls,.json,.csv"
-            onChange={(e) => {
-              const f = e.currentTarget.files?.item(0) ?? null;
-              setFile(f);
-              setFormat(guessFormat(f));
-              setParsed(null);
-              setMessage(null);
-            }}
-            disabled={busy}
-          />
-        </label>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Format</span>
-          <select value={format} onChange={(e) => setFormat(e.currentTarget.value as Format)} disabled={busy}>
-            <option value="excel">Excel</option>
-            <option value="json">JSON</option>
-            <option value="csv">CSV</option>
-          </select>
-        </label>
-
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <button type="button" onClick={() => void onParse()} disabled={!file || busy}>
-            {busy ? "Working…" : "Parse & preview"}
-          </button>
-          <button type="button" onClick={() => void onImport()} disabled={!parsed || busy}>
-            {busy ? "Importing…" : "Import"}
-          </button>
-          <button type="button" onClick={() => void signOut()} disabled={!isConfigured || busy}>
+    <AppShell
+      title="Admin"
+      nav={[
+        { to: "/today", label: "Today" },
+        { to: "/history", label: "History" },
+        { to: "/stats", label: "Stats" },
+        { to: "/admin", label: "Admin" },
+      ]}
+      rightSlot={
+        <>
+          <Pill tone="secondary">Engine</Pill>
+          <Button variant="ghost" onClick={() => void signOut()} disabled={!isConfigured || busy}>
             Sign out
-          </button>
-        </div>
+          </Button>
+        </>
+      }
+    >
+      <div className="muted" style={{ marginBottom: 18 }}>
+        Signed in as <code>{user?.email ?? user?.id ?? "unknown"}</code>
+      </div>
 
-        {message ? (
-          <p role="status" style={{ margin: 0 }}>
-            {message}
-          </p>
-        ) : null}
+      {message ? (
+        <Card tone="highest">
+          <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
+        </Card>
+      ) : null}
 
-        {preview ? (
-          <pre style={{ whiteSpace: "pre-wrap", background: "rgba(0,0,0,0.04)", padding: 12, borderRadius: 8 }}>
-            {JSON.stringify(preview, null, 2)}
-          </pre>
-        ) : null}
-      </section>
-    </main>
+      <div style={{ display: "grid", gap: 14 }}>
+        <Card tone="low">
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+            <h2 className="h2">Engine context</h2>
+            <Pill tone="neutral">V1.1</Pill>
+          </div>
+
+          <div style={{ display: "grid", gap: 10 }}>
+            <label style={{ display: "grid", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                Config profile for next import
+              </span>
+              <select
+                value={selectedConfigProfileId}
+                onChange={(e) => setSelectedConfigProfileId(e.currentTarget.value)}
+                disabled={busy}
+                style={{
+                  border: 0,
+                  borderRadius: "var(--radius-md)",
+                  background: "rgba(38, 38, 38, 0.7)",
+                  color: "var(--text)",
+                  padding: "12px 12px",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                <option value="">(none)</option>
+                {configProfiles.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.key} — {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <details>
+              <summary style={{ cursor: "pointer" }}>Create config profile</summary>
+              <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+                <Input label="Key" value={newConfigKey} onChange={setNewConfigKey} disabled={busy} />
+                <Input label="Name" value={newConfigName} onChange={setNewConfigName} disabled={busy} />
+                <label style={{ display: "grid", gap: 8 }}>
+                  <span style={{ fontSize: 12, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                    Config JSON
+                  </span>
+                  <textarea
+                    value={newConfigJson}
+                    onChange={(e) => setNewConfigJson(e.currentTarget.value)}
+                    rows={6}
+                    disabled={busy}
+                    style={{
+                      border: 0,
+                      borderRadius: "var(--radius-md)",
+                      background: "rgba(38, 38, 38, 0.7)",
+                      color: "var(--text)",
+                      padding: 12,
+                      fontFamily: "var(--font-body)",
+                      resize: "vertical",
+                    }}
+                  />
+                </label>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <Button variant="primary" onClick={() => void onCreateConfigProfile()} disabled={busy}>
+                    Create config profile
+                  </Button>
+                  <Pill tone="neutral">Stored in config_profiles</Pill>
+                </div>
+              </div>
+            </details>
+
+            <label style={{ display: "grid", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                Algorithm version for next import
+              </span>
+              <select
+                value={selectedAlgorithmVersionId}
+                onChange={(e) => setSelectedAlgorithmVersionId(e.currentTarget.value)}
+                disabled={busy}
+                style={{
+                  border: 0,
+                  borderRadius: "var(--radius-md)",
+                  background: "rgba(38, 38, 38, 0.7)",
+                  color: "var(--text)",
+                  padding: "12px 12px",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                <option value="">(none)</option>
+                {algoVersions.map((a) => (
+                  <option key={a.id} value={a.id}>
+                    {a.version}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <details>
+              <summary style={{ cursor: "pointer" }}>Create algorithm version</summary>
+              <div style={{ display: "grid", gap: 12, marginTop: 12 }}>
+                <Input label="Version" value={newAlgoVersion} onChange={setNewAlgoVersion} disabled={busy} />
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <Button variant="primary" onClick={() => void onCreateAlgorithmVersion()} disabled={busy}>
+                    Create algorithm version
+                  </Button>
+                  <Pill tone="neutral">Stored in algorithm_versions</Pill>
+                </div>
+              </div>
+            </details>
+          </div>
+        </Card>
+
+        <Card tone="low">
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+            <h2 className="h2">Import a plan</h2>
+            <Pill tone="primary">What</Pill>
+          </div>
+
+          <div style={{ display: "grid", gap: 12 }}>
+            <label style={{ display: "grid", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                Plan file (Excel / JSON / CSV)
+              </span>
+              <input
+                type="file"
+                accept=".xlsx,.xls,.json,.csv"
+                onChange={(e) => {
+                  const f = e.currentTarget.files?.item(0) ?? null;
+                  setFile(f);
+                  setFormat(guessFormat(f));
+                  setParsed(null);
+                  setMessage(null);
+                }}
+                disabled={busy}
+              />
+            </label>
+
+            <label style={{ display: "grid", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                Format
+              </span>
+              <select
+                value={format}
+                onChange={(e) => setFormat(e.currentTarget.value as Format)}
+                disabled={busy}
+                style={{
+                  border: 0,
+                  borderRadius: "var(--radius-md)",
+                  background: "rgba(38, 38, 38, 0.7)",
+                  color: "var(--text)",
+                  padding: "12px 12px",
+                  fontFamily: "var(--font-body)",
+                }}
+              >
+                <option value="excel">Excel</option>
+                <option value="json">JSON</option>
+                <option value="csv">CSV</option>
+              </select>
+            </label>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <Button variant="primary" onClick={() => void onParse()} disabled={!file || busy}>
+                {busy ? "Working…" : "Parse & preview"}
+              </Button>
+              <Button variant="ghost" onClick={() => void onImport()} disabled={!parsed || busy}>
+                {busy ? "Importing…" : "Import"}
+              </Button>
+              {parsed ? <Pill tone="secondary">Preview ready</Pill> : <Pill tone="neutral">No preview</Pill>}
+            </div>
+
+            {preview ? (
+              <Card tone="highest">
+                <div style={{ display: "grid", gap: 10 }}>
+                  <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
+                    {preview.planName}
+                  </div>
+                  <div className="muted" style={{ fontSize: 13 }}>
+                    Version {preview.version} · {preview.templates} templates · {preview.plannedSessions} planned sessions
+                  </div>
+                  {preview.dateRange ? (
+                    <div className="muted" style={{ fontSize: 13 }}>
+                      Range: {preview.dateRange.from} → {preview.dateRange.to}
+                    </div>
+                  ) : null}
+                </div>
+              </Card>
+            ) : null}
+          </div>
+        </Card>
+      </div>
+    </AppShell>
   );
 }
 

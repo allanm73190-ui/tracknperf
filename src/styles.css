@@ -1,18 +1,100 @@
 :root {
-  color-scheme: light dark;
-  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica,
-    Arial, "Apple Color Emoji", "Segoe UI Emoji";
+  color-scheme: dark;
+
+  /* Typography */
+  --font-headline: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  --font-body: "Manrope", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+
+  /* Hyperflux Dark tokens */
+  --bg: #0e0e0e;
+  --surface: #0e0e0e;
+  --surface-low: #131313;
+  --surface-highest: #262626;
+
+  --text: #ffffff;
+  --text-muted: #adaaaa;
+
+  --primary: #f3ffca;
+  --primary-container: #cafd00;
+  --secondary: #c57eff;
+  --secondary-container: #6a0baa;
+  --error: #ff7351;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  --shadow-ambient-purple: 0 24px 80px rgba(197, 126, 255, 0.12);
+  --shadow-ambient-lime: 0 24px 80px rgba(202, 253, 0, 0.09);
+
+  --ring: 0 0 0 3px rgba(202, 253, 0, 0.25);
+
+  --space-1: 6px;
+  --space-2: 10px;
+  --space-3: 14px;
+  --space-4: 18px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 44px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  background: #0b1220;
-  color: #e8eefc;
+  background: radial-gradient(900px 500px at 85% 20%, rgba(197, 126, 255, 0.12), transparent 60%),
+    radial-gradient(700px 400px at 20% 75%, rgba(202, 253, 0, 0.10), transparent 65%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  opacity: 0.9;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 10px;
 }
 
 .container {
-  max-width: 960px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 48px 24px;
+  padding: 42px 20px;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.h1 {
+  font-family: var(--font-headline);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.h2 {
+  font-family: var(--font-headline);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0;
 }
 

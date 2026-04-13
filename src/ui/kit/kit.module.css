@@ -1,0 +1,251 @@
+.app {
+  min-height: 100dvh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 18px 18px;
+  background: rgba(19, 19, 19, 0.72);
+  backdrop-filter: blur(18px);
+  border-bottom-left-radius: 18px;
+  border-bottom-right-radius: 18px;
+  box-shadow: var(--shadow-ambient-purple);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.brand {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.brandMark {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--primary-container);
+  box-shadow: 0 0 14px rgba(202, 253, 0, 0.55);
+}
+
+.brandText {
+  display: grid;
+  gap: 2px;
+}
+
+.brandName {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.brandSub {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbarSlot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav {
+  padding: 16px 18px 0 18px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.navItem,
+.navItemActive {
+  display: inline-flex;
+}
+
+.main {
+  padding: 22px 18px 42px 18px;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.cardLow,
+.cardHighest {
+  border-radius: var(--radius-xl);
+  padding: 18px 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.cardLow {
+  background: var(--surface-low);
+}
+
+.cardHighest {
+  background: var(--surface-highest);
+}
+
+.btnPrimary,
+.btnGhost {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-family: var(--font-body);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+.btnPrimary {
+  background: linear-gradient(45deg, rgba(190, 238, 0, 1) 0%, rgba(243, 255, 202, 1) 100%);
+  color: #1a1a1a;
+  box-shadow: var(--shadow-ambient-lime);
+}
+
+.btnGhost {
+  background: rgba(38, 38, 38, 0.5);
+  color: var(--text);
+}
+
+.btnPrimary:disabled,
+.btnGhost:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btnPrimary:active,
+.btnGhost:active {
+  transform: scale(0.98);
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.input {
+  border: 0;
+  border-radius: var(--radius-md);
+  background: rgba(38, 38, 38, 0.7);
+  color: var(--text);
+  padding: 12px 12px;
+  font-family: var(--font-body);
+  outline: none;
+}
+
+.pillNeutral,
+.pillPrimary,
+.pillSecondary,
+.pillError {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pillNeutral {
+  background: rgba(38, 38, 38, 0.55);
+  color: var(--text-muted);
+}
+
+.pillPrimary {
+  background: rgba(202, 253, 0, 0.12);
+  color: var(--primary);
+  box-shadow: 0 0 18px rgba(202, 253, 0, 0.14);
+}
+
+.pillSecondary {
+  background: rgba(197, 126, 255, 0.14);
+  color: var(--secondary);
+  box-shadow: 0 0 18px rgba(197, 126, 255, 0.12);
+}
+
+.pillError {
+  background: rgba(255, 115, 81, 0.16);
+  color: var(--error);
+}
+
+.drawerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(6px);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.drawer {
+  width: min(520px, 92vw);
+  height: 100%;
+  background: rgba(20, 20, 20, 0.7);
+  backdrop-filter: blur(20px);
+  box-shadow: -40px 0 80px rgba(197, 126, 255, 0.14);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.drawerTitle {
+  font-family: var(--font-headline);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+}
+
+.drawerClose {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: rgba(38, 38, 38, 0.55);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.drawerBody {
+  overflow: auto;
+  display: grid;
+  gap: 12px;
+  padding-bottom: 10px;
+}
+

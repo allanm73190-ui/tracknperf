@@ -110,3 +110,14 @@ export async function getQueueStats(): Promise<{ pending: number; applied: numbe
   return { pending, applied };
 }
 
+export async function listRecentOps(limit = 50): Promise<SyncOp[]> {
+  const db = await getDb();
+  const tx = db.transaction("sync_ops", "readonly");
+  const all = await tx.store.getAll();
+  await tx.done;
+  return all
+    .slice()
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .slice(0, Math.max(1, Math.min(200, limit)));
+}
+

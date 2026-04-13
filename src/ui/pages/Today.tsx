@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { Link } from "react-router-dom";
+import { AppShell } from "../kit/AppShell";
+import { Button } from "../kit/Button";
+import { Card } from "../kit/Card";
+import { Drawer } from "../kit/Drawer";
+import { Input } from "../kit/Input";
+import { Pill } from "../kit/Pill";
 import { getTodayOverview, type TodayOverview } from "../../application/usecases/getTodayOverview";
 import { logExecutedSession } from "../../application/usecases/logExecutedSession";
 import {
@@ -8,7 +14,7 @@ import {
   type PersistedRecommendation,
 } from "../../application/usecases/computeAndPersistTodayRecommendation";
 import { flushSyncQueue } from "../../application/sync/syncClient";
-import { getQueueStats } from "../../infra/offline/db";
+import { getQueueStats, listRecentOps, type SyncOp } from "../../infra/offline/db";
 
 function nowIsoTime(d: Date): string {
   const hh = String(d.getHours()).padStart(2, "0");
@@ -35,6 +41,8 @@ export default function TodayPage() {
   const [recommendation, setRecommendation] = useState<PersistedRecommendation | null>(null);
   const [syncStatus, setSyncStatus] = useState<{ pending: number; applied: number } | null>(null);
   const [syncBusy, setSyncBusy] = useState(false);
+  const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
+  const [recentOps, setRecentOps] = useState<SyncOp[]>([]);
 
   // Log form state
   const today = useMemo(() => new Date(), []);
@@ -63,6 +71,8 @@ export default function TodayPage() {
         if (!ignore) setRecommendation(reco);
         const stats = await getQueueStats();
         if (!ignore) setSyncStatus(stats);
+        const recent = await listRecentOps(50);
+        if (!ignore) setRecentOps(recent);
       } catch (err) {
         const msg = err instanceof Error ? err.message : "Could not load today.";
         if (!ignore) setMessage(msg);
@@ -84,6 +94,8 @@ export default function TodayPage() {
       const res = await flushSyncQueue();
       const stats = await getQueueStats();
       setSyncStatus(stats);
+      const recent = await listRecentOps(50);
+      setRecentOps(recent);
       setMessage(`Sync done. Applied: ${res.applied}, failed: ${res.failed}.`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Sync failed.";
@@ -120,6 +132,8 @@ export default function TodayPage() {
       setRecommendation(reco);
       const stats = await getQueueStats();
       setSyncStatus(stats);
+      const recent = await listRecentOps(50);
+      setRecentOps(recent);
       setNotes("");
       setMessage(`Session logged. (${res.id})`);
     } catch (err) {
@@ -131,190 +145,323 @@ export default function TodayPage() {
   }
 
   return (
-    <main className="container">
-      <header style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
-        <div>
-          <h1>TrackNPerf</h1>
-          <p style={{ marginTop: 8, opacity: 0.8 }}>
-            Signed in as <code>{user?.email ?? user?.id ?? "unknown"}</code>
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <button type="button" onClick={() => void onSyncNow()} disabled={syncBusy}>
+    <AppShell
+      title="Today"
+      nav={[
+        { to: "/today", label: "Today" },
+        { to: "/history", label: "History" },
+        { to: "/stats", label: "Stats" },
+        { to: "/admin", label: "Admin" },
+      ]}
+      rightSlot={
+        <>
+          {syncStatus ? (
+            <Pill tone={syncStatus.pending > 0 ? "secondary" : "primary"}>
+              {syncStatus.pending > 0 ? `Queued ${syncStatus.pending}` : "Synced"}
+            </Pill>
+          ) : (
+            <Pill tone="neutral">Sync</Pill>
+          )}
+          <Button variant="ghost" onClick={() => setSyncDrawerOpen(true)}>
+            Details
+          </Button>
+          <Button variant="ghost" onClick={() => void onSyncNow()} disabled={syncBusy}>
             {syncBusy ? "Syncing…" : "Sync now"}
-          </button>
-          <button type="button" onClick={() => void signOut()} disabled={!isConfigured}>
+          </Button>
+          <Button variant="ghost" onClick={() => void signOut()} disabled={!isConfigured}>
             Sign out
-          </button>
-        </div>
-      </header>
+          </Button>
+        </>
+      }
+    >
+      <div className="muted" style={{ marginBottom: 18 }}>
+        Signed in as <code>{user?.email ?? user?.id ?? "unknown"}</code>
+      </div>
 
-      <h2 style={{ marginTop: 24 }}>Today</h2>
-      {loading ? <p>Loading…</p> : null}
+      {loading ? <Card tone="low">Loading…</Card> : null}
       {message ? (
-        <p role="alert" style={{ whiteSpace: "pre-wrap" }}>
-          {message}
-        </p>
-      ) : null}
-      {syncStatus ? (
-        <p style={{ marginTop: 8, opacity: 0.85 }}>
-          Sync queue: <strong>{syncStatus.pending}</strong> pending, <strong>{syncStatus.applied}</strong> applied.
-        </p>
+        <Card tone="highest">
+          <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
+        </Card>
       ) : null}
 
       {!loading && overview ? (
-        <>
-          <nav style={{ marginTop: 12, display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link to="/history">History</Link>
-            <Link to="/stats">Stats</Link>
-            <Link to="/admin">Admin</Link>
-          </nav>
-
-          <section style={{ marginTop: 16 }}>
-            <h3>Planned</h3>
+        <div style={{ display: "grid", gap: 14 }}>
+          <Card tone="low">
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+              <h2 className="h2">What’s planned</h2>
+              <span className="muted" style={{ fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                Today
+              </span>
+            </div>
             {overview.planned.length === 0 ? (
-              <p style={{ opacity: 0.8 }}>No planned session for today.</p>
+              <div className="muted">No planned session for today.</div>
             ) : (
-              <ul>
+              <div style={{ display: "grid", gap: 10 }}>
                 {overview.planned.map((p) => (
-                  <li key={p.id}>
-                    <strong>{p.templateName ?? "Session"}</strong> <span style={{ opacity: 0.8 }}>({p.scheduledFor})</span>
-                  </li>
+                  <Card key={p.id} tone="highest">
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                      <div style={{ display: "grid", gap: 6 }}>
+                        <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
+                          {p.templateName ?? "Session"}
+                        </div>
+                        <div className="muted" style={{ fontSize: 13 }}>
+                          Scheduled: {p.scheduledFor}
+                        </div>
+                      </div>
+                      <Pill tone="primary">Plan</Pill>
+                    </div>
+                  </Card>
                 ))}
-              </ul>
+              </div>
             )}
-          </section>
+          </Card>
 
-          <section style={{ marginTop: 16 }}>
-            <h3>Recommended</h3>
+          <Card tone="low">
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+              <h2 className="h2">What to do</h2>
+              <Pill tone="secondary">Why</Pill>
+            </div>
+
             {!recommendation ? (
-              <p style={{ opacity: 0.8 }}>No recommendation yet.</p>
+              <div className="muted">No recommendation yet.</div>
             ) : (
-              <>
-                <p>
-                  <strong>
-                    {typeof (recommendation.output as { recommendedTemplateName?: unknown })
-                      ?.recommendedTemplateName === "string"
-                      ? String(
-                          (recommendation.output as { recommendedTemplateName: unknown })
-                            .recommendedTemplateName,
-                        )
+              <Card tone="highest">
+                <div style={{ display: "grid", gap: 10 }}>
+                  <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
+                    {typeof (recommendation.output as { recommendedTemplateName?: unknown })?.recommendedTemplateName ===
+                    "string"
+                      ? String((recommendation.output as { recommendedTemplateName: unknown }).recommendedTemplateName)
                       : "Recommended session"}
-                  </strong>
-                </p>
-                <details>
-                  <summary>Why?</summary>
-                  <div style={{ marginTop: 8 }}>
-                    <p style={{ marginTop: 0, fontWeight: 600 }}>
-                      {typeof (recommendation.explanation as { summary?: unknown }) === "object" &&
-                      recommendation.explanation &&
-                      "summary" in (recommendation.explanation as Record<string, unknown>) &&
-                      (recommendation.explanation as { summary: unknown }).summary &&
-                      typeof (recommendation.explanation as { summary: unknown }).summary === "object" &&
-                      "headline" in
-                        ((recommendation.explanation as { summary: Record<string, unknown> }).summary ??
-                          {})
-                        ? String(
-                            (recommendation.explanation as {
+                  </div>
+
+                  <div className="muted" style={{ fontSize: 13 }}>
+                    {typeof (recommendation.explanation as { summary?: unknown }) === "object" &&
+                    recommendation.explanation &&
+                    "summary" in (recommendation.explanation as Record<string, unknown>) &&
+                    (recommendation.explanation as { summary: unknown }).summary &&
+                    typeof (recommendation.explanation as { summary: unknown }).summary === "object" &&
+                    "headline" in ((recommendation.explanation as { summary: Record<string, unknown> }).summary ?? {})
+                      ? String(
+                          (
+                            recommendation.explanation as {
                               summary: { headline?: unknown };
-                            }).summary.headline ?? "",
-                          )
-                        : "Explanation"}
-                    </p>
-                    <ol>
-                      {Array.isArray(
-                        (recommendation.explanation as { summary?: { reasonsTop3?: unknown } })?.summary
-                          ?.reasonsTop3,
+                            }
+                          ).summary.headline ?? "",
+                        )
+                      : "Explanation"}
+                  </div>
+
+                  {Array.isArray((recommendation.explanation as { summary?: { reasonsTop3?: unknown } })?.summary?.reasonsTop3) ? (
+                    <ol style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8 }}>
+                      {(
+                        (recommendation.explanation as { summary: { reasonsTop3: Array<{ text?: unknown }> } }).summary
+                          .reasonsTop3 ?? []
                       )
-                        ? (
-                            (recommendation.explanation as {
-                              summary: { reasonsTop3: Array<{ text?: unknown }> };
-                            }).summary.reasonsTop3 ?? []
-                          )
-                            .slice(0, 3)
-                            .map((r, idx) => (
-                              <li key={idx}>{typeof r.text === "string" ? r.text : JSON.stringify(r)}</li>
-                            ))
-                        : null}
+                        .slice(0, 3)
+                        .map((r, idx) => (
+                          <li key={idx} style={{ color: "var(--text-muted)", lineHeight: 1.35 }}>
+                            {typeof r.text === "string" ? r.text : JSON.stringify(r)}
+                          </li>
+                        ))}
                     </ol>
-                    <div style={{ marginTop: 8, opacity: 0.8 }}>
+                  ) : null}
+
+                  <details>
+                    <summary style={{ cursor: "pointer" }}>Details</summary>
+                    <div className="muted" style={{ marginTop: 10 }}>
                       Recommendation id: <code>{recommendation.recommendationId}</code>
                     </div>
-                  </div>
-                </details>
-              </>
+                  </details>
+                </div>
+              </Card>
             )}
-          </section>
+          </Card>
 
-          <section style={{ marginTop: 16 }}>
-            <h3>Executed</h3>
-            {overview.executed.length === 0 ? (
-              <p style={{ opacity: 0.8 }}>Nothing logged yet.</p>
-            ) : (
-              <ul>
-                {overview.executed.map((e) => (
-                  <li key={e.id}>
-                    <code>{e.startedAt.slice(11, 16)}</code> →{" "}
-                    <code>{e.endedAt ? e.endedAt.slice(11, 16) : "—"}</code> <span style={{ opacity: 0.8 }}>({e.id})</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section style={{ marginTop: 24 }}>
-            <h3>Log session</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, maxWidth: 520 }}>
-              <label>
-                Start
-                <input value={startTime} onChange={(e) => setStartTime(e.target.value)} placeholder="HH:MM" />
-              </label>
-              <label>
-                End
-                <input value={endTime} onChange={(e) => setEndTime(e.target.value)} placeholder="HH:MM" />
-              </label>
-              <label>
-                Duration (min)
-                <input
-                  inputMode="numeric"
-                  value={durationMinutes}
-                  onChange={(e) => {
-                    const v = e.target.value.trim();
-                    if (!v) return setDurationMinutes("");
-                    const n = Number(v);
-                    if (!Number.isFinite(n)) return;
-                    setDurationMinutes(Math.max(1, Math.min(24 * 60, Math.floor(n))));
-                  }}
-                />
-              </label>
-              <label>
-                RPE (1-10)
-                <input
-                  inputMode="numeric"
-                  value={rpe}
-                  onChange={(e) => {
-                    const v = e.target.value.trim();
-                    if (!v) return setRpe("");
-                    const n = Number(v);
-                    if (!Number.isFinite(n)) return;
-                    setRpe(Math.max(1, Math.min(10, Math.floor(n))));
-                  }}
-                />
-              </label>
+          <Card tone="low">
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+              <h2 className="h2">Log a session</h2>
+              <Pill tone="neutral">Journal</Pill>
             </div>
-            <label style={{ display: "block", marginTop: 12, maxWidth: 720 }}>
-              Notes
-              <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={4} />
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+              <Input label="Start (HH:MM)" value={startTime} onChange={setStartTime} placeholder="08:30" />
+              <Input label="End (HH:MM)" value={endTime} onChange={setEndTime} placeholder="09:30" />
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+              <Input
+                label="Duration (min)"
+                value={durationMinutes === "" ? "" : String(durationMinutes)}
+                onChange={(v) => {
+                  const raw = v.trim();
+                  if (!raw) return setDurationMinutes("");
+                  const n = Number(raw);
+                  if (!Number.isFinite(n)) return;
+                  setDurationMinutes(Math.max(1, Math.min(24 * 60, Math.floor(n))));
+                }}
+                placeholder="60"
+              />
+              <Input
+                label="RPE (1-10)"
+                value={rpe === "" ? "" : String(rpe)}
+                onChange={(v) => {
+                  const raw = v.trim();
+                  if (!raw) return setRpe("");
+                  const n = Number(raw);
+                  if (!Number.isFinite(n)) return;
+                  setRpe(Math.max(1, Math.min(10, Math.floor(n))));
+                }}
+                placeholder="7"
+              />
+            </div>
+
+            <label style={{ display: "grid", gap: 8 }}>
+              <span style={{ fontSize: 12, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                Notes
+              </span>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.currentTarget.value)}
+                rows={4}
+                style={{
+                  border: 0,
+                  borderRadius: "var(--radius-md)",
+                  background: "rgba(38, 38, 38, 0.7)",
+                  color: "var(--text)",
+                  padding: 12,
+                  fontFamily: "var(--font-body)",
+                  resize: "vertical",
+                }}
+              />
             </label>
-            <div style={{ marginTop: 12 }}>
-              <button type="button" onClick={() => void onLog()} disabled={busy}>
+
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+              <Button variant="primary" onClick={() => void onLog()} disabled={busy}>
                 {busy ? "Logging…" : "Log"}
-              </button>
+              </Button>
+              <span className="muted" style={{ fontSize: 13 }}>
+                {plannedCandidate?.templateName ? `Linked to: ${plannedCandidate.templateName}` : "No planned session linked."}
+              </span>
             </div>
-          </section>
-        </>
+          </Card>
+
+          <Card tone="low">
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+              <h2 className="h2">Recent execution</h2>
+              <Pill tone="neutral">{overview.executed.length} sessions</Pill>
+            </div>
+            {overview.executed.length === 0 ? (
+              <div className="muted">Nothing logged yet.</div>
+            ) : (
+              <div style={{ display: "grid", gap: 10 }}>
+                {overview.executed.slice(0, 6).map((e) => (
+                  <Link key={e.id} to={`/session/${e.id}`}>
+                    <Card tone="highest">
+                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                        <div style={{ display: "grid", gap: 6 }}>
+                          <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
+                            {e.startedAt.slice(11, 16)} → {e.endedAt ? e.endedAt.slice(11, 16) : "—"}
+                          </div>
+                          <div className="muted" style={{ fontSize: 13 }}>
+                            {e.id}
+                          </div>
+                        </div>
+                        <Pill tone="neutral">Log</Pill>
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
       ) : null}
-    </main>
+
+      <Drawer open={syncDrawerOpen} title="Sync details" onClose={() => setSyncDrawerOpen(false)}>
+        <Card tone="low">
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+            <h2 className="h2">Status</h2>
+            {syncStatus ? (
+              <Pill tone={syncStatus.pending > 0 ? "secondary" : "primary"}>
+                {syncStatus.pending > 0 ? `Queued ${syncStatus.pending}` : "Synced"}
+              </Pill>
+            ) : (
+              <Pill tone="neutral">Unknown</Pill>
+            )}
+          </div>
+          {syncStatus ? (
+            <div className="muted" style={{ display: "grid", gap: 6 }}>
+              <div>
+                Pending: <strong>{syncStatus.pending}</strong>
+              </div>
+              <div>
+                Applied: <strong>{syncStatus.applied}</strong>
+              </div>
+            </div>
+          ) : null}
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Button variant="primary" onClick={() => void onSyncNow()} disabled={syncBusy}>
+              {syncBusy ? "Syncing…" : "Sync now"}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                void (async () => {
+                  const stats = await getQueueStats();
+                  const recent = await listRecentOps(50);
+                  setSyncStatus(stats);
+                  setRecentOps(recent);
+                })();
+              }}
+            >
+              Refresh
+            </Button>
+          </div>
+        </Card>
+
+        <Card tone="low">
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+            <h2 className="h2">Queue</h2>
+            <Pill tone="neutral">{recentOps.length} ops</Pill>
+          </div>
+          {recentOps.length === 0 ? (
+            <div className="muted">No ops yet.</div>
+          ) : (
+            <div style={{ display: "grid", gap: 10 }}>
+              {recentOps.slice(0, 25).map((op) => (
+                <Card key={op.opId} tone="highest">
+                  <div style={{ display: "grid", gap: 8 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+                      <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
+                        {op.entity} · {op.opType}
+                      </div>
+                      <Pill tone={op.status === "applied" ? "primary" : op.lastError ? "error" : "secondary"}>
+                        {op.status === "applied" ? "Applied" : op.lastError ? "Error" : "Queued"}
+                      </Pill>
+                    </div>
+                    <div className="muted" style={{ fontSize: 13, display: "grid", gap: 4 }}>
+                      <div>
+                        attempts: <strong>{op.attempts}</strong>
+                      </div>
+                      <div>
+                        next try:{" "}
+                        <code>{op.nextAttemptAt ? new Date(op.nextAttemptAt).toISOString().slice(11, 19) : "—"}</code>
+                      </div>
+                      {op.lastError ? (
+                        <div style={{ whiteSpace: "pre-wrap" }}>
+                          lastError: <code>{op.lastError}</code>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </Card>
+      </Drawer>
+    </AppShell>
   );
 }
 

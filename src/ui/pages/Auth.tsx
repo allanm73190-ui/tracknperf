@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "../../infra/supabase/client";
+import { Button } from "../kit/Button";
+import { Card } from "../kit/Card";
+import { Input } from "../kit/Input";
+import { Pill } from "../kit/Pill";
 
 type Mode = "signIn" | "signUp" | "magicLink";
 
@@ -85,77 +89,74 @@ export default function AuthPage() {
   }
 
   return (
-    <main className="container">
-      <h1>TrackNPerf</h1>
-      <h2>{heading}</h2>
+    <main className="container" style={{ maxWidth: 920, paddingTop: 64 }}>
+      <div style={{ maxWidth: 520, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 22 }}>
+          <h1 className="h1" style={{ fontSize: 46 }}>
+            TrackNPerf
+          </h1>
+          <div className="muted" style={{ marginTop: 8 }}>
+            Performance Hub · Hybrid training OS
+          </div>
+        </div>
 
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "12px 0" }}>
-        <button
-          type="button"
-          onClick={() => setMode("signIn")}
-          aria-pressed={mode === "signIn"}
-        >
-          Email + password
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("signUp")}
-          aria-pressed={mode === "signUp"}
-        >
-          Sign up
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("magicLink")}
-          aria-pressed={mode === "magicLink"}
-        >
-          Magic link
-        </button>
+        <Card tone="low">
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+            <h2 className="h2">{heading}</h2>
+            <Pill tone="secondary">Secure</Pill>
+          </div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Button variant={mode === "signIn" ? "primary" : "ghost"} onClick={() => setMode("signIn")} disabled={busy}>
+              Sign in
+            </Button>
+            <Button variant={mode === "signUp" ? "primary" : "ghost"} onClick={() => setMode("signUp")} disabled={busy}>
+              Sign up
+            </Button>
+            <Button
+              variant={mode === "magicLink" ? "primary" : "ghost"}
+              onClick={() => setMode("magicLink")}
+              disabled={busy}
+            >
+              Magic link
+            </Button>
+          </div>
+
+          <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
+            <Input label="Email" value={email} onChange={setEmail} type="email" placeholder="you@domain.com" disabled={busy} />
+
+            {mode !== "magicLink" ? (
+              <Input
+                label="Password"
+                value={password}
+                onChange={setPassword}
+                type="password"
+                placeholder="••••••••"
+                disabled={busy}
+              />
+            ) : null}
+
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <Button variant="primary" type="submit" disabled={busy || !isConfigured}>
+                {busy ? "Working…" : mode === "magicLink" ? "Send link" : "Continue"}
+              </Button>
+              {!isConfigured ? <Pill tone="error">Supabase not configured</Pill> : null}
+            </div>
+
+            {!isConfigured ? (
+              <div className="muted" style={{ fontSize: 13 }}>
+                Set <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code>.
+              </div>
+            ) : null}
+
+            {message ? (
+              <Card tone="highest">
+                <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
+              </Card>
+            ) : null}
+          </form>
+        </Card>
       </div>
-
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10, maxWidth: 420 }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Email</span>
-          <input
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.currentTarget.value)}
-          />
-        </label>
-
-        {mode !== "magicLink" ? (
-          <label style={{ display: "grid", gap: 6 }}>
-            <span>Password</span>
-            <input
-              type="password"
-              autoComplete={mode === "signUp" ? "new-password" : "current-password"}
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.currentTarget.value)}
-            />
-          </label>
-        ) : null}
-
-        <button type="submit" disabled={busy || !isConfigured}>
-          {busy ? "Working…" : "Continue"}
-        </button>
-
-        {!isConfigured ? (
-          <p role="alert" style={{ margin: 0 }}>
-            Supabase is not configured. Set <code>VITE_SUPABASE_URL</code> and{" "}
-            <code>VITE_SUPABASE_ANON_KEY</code>.
-          </p>
-        ) : null}
-
-        {message ? (
-          <p role="status" style={{ margin: 0 }}>
-            {message}
-          </p>
-        ) : null}
-      </form>
     </main>
   );
 }

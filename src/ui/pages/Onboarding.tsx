@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { saveProfile } from "../../application/usecases/saveProfile";
+import { Button } from "../kit/Button";
+import { Card } from "../kit/Card";
+import { Input } from "../kit/Input";
+import { Pill } from "../kit/Pill";
 
 export default function OnboardingPage() {
   const { user, signOut, isConfigured } = useAuth();
@@ -48,57 +52,91 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="container">
-      <h1>TrackNPerf</h1>
-      <h2>Welcome</h2>
-      <p style={{ marginTop: 12, maxWidth: 640 }}>
-        Let’s set up your profile. You can change this later.
-      </p>
-
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 10, maxWidth: 520 }}>
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Email</span>
-          <input type="email" value={email ?? ""} readOnly />
-        </label>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Display name</span>
-          <input
-            type="text"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.currentTarget.value)}
-            placeholder="e.g. Alex"
-            autoComplete="name"
-            required
-          />
-        </label>
-
-        <label style={{ display: "grid", gap: 6 }}>
-          <span>Avatar URL (optional)</span>
-          <input
-            type="url"
-            value={avatarUrl}
-            onChange={(e) => setAvatarUrl(e.currentTarget.value)}
-            placeholder="https://…"
-            autoComplete="url"
-          />
-        </label>
-
-        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
-          <button type="submit" disabled={!canSubmit}>
-            {busy ? "Saving…" : "Continue"}
-          </button>
-          <button type="button" onClick={() => void signOut()} disabled={!isConfigured || busy}>
-            Sign out
-          </button>
+    <main className="container" style={{ maxWidth: 920, paddingTop: 64 }}>
+      <div style={{ maxWidth: 560, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 22 }}>
+          <h1 className="h1" style={{ fontSize: 46 }}>
+            TrackNPerf
+          </h1>
+          <div className="muted" style={{ marginTop: 8 }}>
+            Profile setup · takes 30 seconds
+          </div>
         </div>
 
-        {message ? (
-          <p role="status" style={{ margin: 0 }}>
-            {message}
-          </p>
-        ) : null}
-      </form>
+        <Card tone="low">
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10 }}>
+            <h2 className="h2">Welcome</h2>
+            <Pill tone="primary">Start</Pill>
+          </div>
+
+          <div className="muted" style={{ maxWidth: 520 }}>
+            Tell us who you are. This unlocks your dashboard and recommendations.
+          </div>
+
+          <form onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
+            <label style={{ display: "grid", gap: 8 }}>
+              <span
+                style={{
+                  fontSize: 12,
+                  color: "var(--text-muted)",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                }}
+              >
+                Email
+              </span>
+              <input
+                type="email"
+                value={email ?? ""}
+                readOnly
+                style={{
+                  border: 0,
+                  borderRadius: "var(--radius-md)",
+                  background: "rgba(38, 38, 38, 0.7)",
+                  color: "var(--text)",
+                  padding: "12px 12px",
+                  fontFamily: "var(--font-body)",
+                  opacity: 0.9,
+                }}
+              />
+            </label>
+
+            <Input
+              label="Display name"
+              value={displayName}
+              onChange={setDisplayName}
+              placeholder="e.g. Alex"
+              disabled={busy}
+            />
+
+            <Input
+              label="Avatar URL (optional)"
+              value={avatarUrl}
+              onChange={setAvatarUrl}
+              placeholder="https://…"
+              disabled={busy}
+              type="url"
+            />
+
+            <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+              <Button variant="primary" type="submit" disabled={!canSubmit}>
+                {busy ? "Saving…" : "Continue"}
+              </Button>
+              <Button variant="ghost" onClick={() => void signOut()} disabled={!isConfigured || busy}>
+                Sign out
+              </Button>
+              {!isConfigured ? <Pill tone="error">Supabase not configured</Pill> : null}
+            </div>
+
+            {message ? (
+              <Card tone="highest">
+                <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
+              </Card>
+            ) : null}
+          </form>
+        </Card>
+      </div>
     </main>
   );
 }

@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../infra/supabase/client";
+import { AppShell } from "../kit/AppShell";
+import { Card } from "../kit/Card";
+import { Pill } from "../kit/Pill";
 
 type Stats = {
   executedCount: number;
@@ -59,44 +62,80 @@ export default function StatsPage() {
   }, [sinceIso]);
 
   return (
-    <main className="container">
-      <h1>TrackNPerf</h1>
-      <h2>Stats</h2>
+    <AppShell
+      title="Stats"
+      nav={[
+        { to: "/today", label: "Today" },
+        { to: "/history", label: "History" },
+        { to: "/stats", label: "Stats" },
+        { to: "/admin", label: "Admin" },
+      ]}
+      rightSlot={<Pill tone="neutral">{days}d</Pill>}
+    >
+      <Card tone="low">
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+          <h2 className="h2">Performance snapshot</h2>
+          <Pill tone="secondary">Range</Pill>
+        </div>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <select
+            value={days}
+            onChange={(e) => setDays(Number(e.currentTarget.value))}
+            style={{
+              border: 0,
+              borderRadius: "var(--radius-md)",
+              background: "rgba(38, 38, 38, 0.7)",
+              color: "var(--text)",
+              padding: "10px 12px",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            <option value={7}>7</option>
+            <option value={14}>14</option>
+            <option value={30}>30</option>
+            <option value={90}>90</option>
+          </select>
+          <Pill tone="neutral">Since {new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)}</Pill>
+        </div>
+      </Card>
 
-      <label style={{ display: "inline-grid", gap: 6 }}>
-        <span>Range (days)</span>
-        <select value={days} onChange={(e) => setDays(Number(e.currentTarget.value))}>
-          <option value={7}>7</option>
-          <option value={14}>14</option>
-          <option value={30}>30</option>
-          <option value={90}>90</option>
-        </select>
-      </label>
-
-      {loading ? <p>Loading…</p> : null}
+      {loading ? <Card tone="low">Loading…</Card> : null}
       {message ? (
-        <p role="alert" style={{ whiteSpace: "pre-wrap" }}>
-          {message}
-        </p>
+        <Card tone="highest">
+          <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
+        </Card>
       ) : null}
 
       {!loading ? (
-        <div style={{ marginTop: 12 }}>
-          <p>
-            <strong>{stats.executedCount}</strong> executed sessions
-          </p>
-          <p>
-            <strong>{stats.totalDurationMinutes}</strong> total duration (min)
-          </p>
+        <div style={{ display: "grid", gap: 14 }}>
+          <Card tone="low">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+              <h2 className="h2">What</h2>
+              <Pill tone="primary">Sessions</Pill>
+            </div>
+            <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.04em", fontSize: 44 }}>
+              {stats.executedCount}
+            </div>
+            <div className="muted" style={{ marginTop: 4 }}>
+              executed sessions in the last {days} days
+            </div>
+          </Card>
+
+          <Card tone="low">
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+              <h2 className="h2">What</h2>
+              <Pill tone="secondary">Time</Pill>
+            </div>
+            <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.04em", fontSize: 44 }}>
+              {stats.totalDurationMinutes}
+            </div>
+            <div className="muted" style={{ marginTop: 4 }}>
+              total minutes (from logged payloads)
+            </div>
+          </Card>
         </div>
       ) : null}
-
-      <div style={{ marginTop: 16 }}>
-        <button type="button" onClick={() => window.history.back()}>
-          Back
-        </button>
-      </div>
-    </main>
+    </AppShell>
   );
 }
 

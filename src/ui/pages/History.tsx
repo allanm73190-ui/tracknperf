@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../../infra/supabase/client";
+import { AppShell } from "../kit/AppShell";
+import { Button } from "../kit/Button";
+import { Card } from "../kit/Card";
+import { Pill } from "../kit/Pill";
 
 type ExecutedRow = {
   id: string;
@@ -69,50 +73,86 @@ export default function HistoryPage() {
   }, [sinceIso]);
 
   return (
-    <main className="container">
-      <h1>TrackNPerf</h1>
-      <h2>History</h2>
+    <AppShell
+      title="History"
+      nav={[
+        { to: "/today", label: "Today" },
+        { to: "/history", label: "History" },
+        { to: "/stats", label: "Stats" },
+        { to: "/admin", label: "Admin" },
+      ]}
+      rightSlot={<Pill tone="neutral">{days}d</Pill>}
+    >
+      <Card tone="low">
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
+          <h2 className="h2">Recent sessions</h2>
+          <span className="muted" style={{ fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            Since {isoDate(new Date(Date.now() - days * 24 * 60 * 60 * 1000))}
+          </span>
+        </div>
 
-      <label style={{ display: "inline-grid", gap: 6 }}>
-        <span>Range (days)</span>
-        <select value={days} onChange={(e) => setDays(Number(e.currentTarget.value))}>
-          <option value={7}>7</option>
-          <option value={14}>14</option>
-          <option value={30}>30</option>
-          <option value={90}>90</option>
-        </select>
-      </label>
+        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
+          <Pill tone="secondary">Range</Pill>
+          <select
+            value={days}
+            onChange={(e) => setDays(Number(e.currentTarget.value))}
+            style={{
+              border: 0,
+              borderRadius: "var(--radius-md)",
+              background: "rgba(38, 38, 38, 0.7)",
+              color: "var(--text)",
+              padding: "10px 12px",
+              fontFamily: "var(--font-body)",
+            }}
+          >
+            <option value={7}>7</option>
+            <option value={14}>14</option>
+            <option value={30}>30</option>
+            <option value={90}>90</option>
+          </select>
+          <Pill tone="neutral">{rows.length} sessions</Pill>
+        </div>
+      </Card>
 
-      <p style={{ marginTop: 12, opacity: 0.8 }}>
-        Since <code>{isoDate(new Date(Date.now() - days * 24 * 60 * 60 * 1000))}</code>
-      </p>
-
-      {loading ? <p>Loading…</p> : null}
+      {loading ? <Card tone="low">Loading…</Card> : null}
       {message ? (
-        <p role="alert" style={{ whiteSpace: "pre-wrap" }}>
-          {message}
-        </p>
+        <Card tone="highest">
+          <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
+        </Card>
       ) : null}
 
-      {!loading && rows.length === 0 ? <p style={{ opacity: 0.8 }}>No executed sessions.</p> : null}
+      {!loading && rows.length === 0 ? <Card tone="low">No executed sessions in this range.</Card> : null}
 
       {!loading && rows.length > 0 ? (
-        <ul style={{ marginTop: 12 }}>
-          {rows.map((r) => (
-            <li key={r.id}>
-              <Link to={`/session/${r.id}`}>{r.startedAt.slice(0, 16).replace("T", " ")}</Link>{" "}
-              <span style={{ opacity: 0.8 }}>({r.id})</span>
-            </li>
-          ))}
-        </ul>
+        <Card tone="low">
+          <div style={{ display: "grid", gap: 10 }}>
+            {rows.map((r) => (
+              <Link key={r.id} to={`/session/${r.id}`}>
+                <Card tone="highest">
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
+                    <div style={{ display: "grid", gap: 6 }}>
+                      <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
+                        {r.startedAt.slice(0, 16).replace("T", " ")}
+                      </div>
+                      <div className="muted" style={{ fontSize: 13 }}>
+                        {r.id}
+                      </div>
+                    </div>
+                    <Pill tone="neutral">Open</Pill>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </Card>
       ) : null}
 
-      <div style={{ marginTop: 16 }}>
-        <button type="button" onClick={() => window.history.back()}>
+      <div style={{ marginTop: 14 }}>
+        <Button variant="ghost" onClick={() => window.history.back()}>
           Back
-        </button>
+        </Button>
       </div>
-    </main>
+    </AppShell>
   );
 }
 
