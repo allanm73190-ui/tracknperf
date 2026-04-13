@@ -23,6 +23,10 @@ export default function AuthPage() {
     }
   }, [mode]);
 
+  const redirectTo = useMemo(() => {
+    return new URL("/auth/callback", window.location.origin).toString();
+  }, []);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
@@ -37,7 +41,11 @@ export default function AuthPage() {
     setBusy(true);
     try {
       if (mode === "signUp") {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: redirectTo },
+        });
         if (error) throw error;
         setMessage("Check your email to confirm your account (if required).");
         return;
@@ -51,7 +59,7 @@ export default function AuthPage() {
 
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: window.location.origin },
+        options: { emailRedirectTo: redirectTo },
       });
       if (error) throw error;
       setMessage("Magic link sent. Check your inbox.");

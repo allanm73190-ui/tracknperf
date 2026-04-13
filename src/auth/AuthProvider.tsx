@@ -50,6 +50,7 @@ export function AuthProvider(props: { children: React.ReactNode }) {
         if (ignore) return;
         setSession(nextSession);
         setUser(nextSession?.user ?? null);
+        setLoading(false);
       },
     );
 
@@ -67,7 +68,8 @@ export function AuthProvider(props: { children: React.ReactNode }) {
       isConfigured,
       signOut: async () => {
         if (!supabase) return;
-        await supabase.auth.signOut();
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
       },
     }),
     [isConfigured, loading, session, user],

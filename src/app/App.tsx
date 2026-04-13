@@ -1,4 +1,5 @@
 import AuthPage from "../ui/pages/Auth";
+import AuthCallbackPage from "../ui/pages/AuthCallback";
 import { useAuth } from "../auth/AuthProvider";
 
 function ProtectedPage() {
@@ -20,6 +21,10 @@ function ProtectedPage() {
 
 export default function App() {
   const { loading, user } = useAuth();
+
+  if (window.location.pathname === "/auth/callback") {
+    return <AuthCallbackPage />;
+  }
 
   if (loading) {
     return (
