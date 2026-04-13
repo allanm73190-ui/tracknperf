@@ -138,6 +138,11 @@ begin
     raise exception 'owner cannot be null' using errcode = 'P0001';
   end if;
 
+  -- Ensure owner exists as an auth user (prevents invalid ownership backfill).
+  if not exists (select 1 from auth.users u where u.id = owner) then
+    raise exception 'owner must exist in auth.users' using errcode = 'P0001';
+  end if;
+
   -- Set singleton owner_user_id (create row if missing).
   insert into public.app_settings (id, owner_user_id)
   values (true, owner)
