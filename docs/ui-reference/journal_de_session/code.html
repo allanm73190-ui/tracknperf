@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary-dim": "#beee00",
+                    "primary-fixed-dim": "#beee00",
+                    "tertiary-container": "#fce047",
+                    "on-primary": "#516700",
+                    "tertiary": "#ffeea5",
+                    "inverse-primary": "#516700",
+                    "secondary-container": "#6a0baa",
+                    "on-background": "#ffffff",
+                    "tertiary-fixed": "#fce047",
+                    "secondary-fixed": "#e7c5ff",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "surface-container-lowest": "#000000",
+                    "error": "#ff7351",
+                    "tertiary-dim": "#edd13a",
+                    "inverse-surface": "#fcf9f8",
+                    "outline": "#767575",
+                    "on-secondary-container": "#e6c3ff",
+                    "surface-bright": "#2c2c2c",
+                    "surface-variant": "#262626",
+                    "surface-tint": "#f3ffca",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "error-container": "#b92902",
+                    "surface-container": "#1a1919",
+                    "outline-variant": "#484847",
+                    "inverse-on-surface": "#565555",
+                    "on-tertiary-container": "#5d5000",
+                    "surface": "#0e0e0e",
+                    "on-surface": "#ffffff",
+                    "on-secondary": "#340058",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "surface-container-low": "#131313",
+                    "on-tertiary-fixed": "#483d00",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "error-dim": "#d53d18",
+                    "background": "#0e0e0e",
+                    "surface-dim": "#0e0e0e",
+                    "surface-container-high": "#201f1f",
+                    "on-error": "#450900",
+                    "on-tertiary": "#665800",
+                    "primary-fixed": "#cafd00",
+                    "on-surface-variant": "#adaaaa",
+                    "surface-container-highest": "#262626",
+                    "on-primary-fixed-variant": "#526900",
+                    "on-error-container": "#ffd2c8",
+                    "secondary-dim": "#c57eff",
+                    "on-primary-container": "#4a5e00",
+                    "primary": "#f3ffca",
+                    "on-secondary-fixed": "#510085",
+                    "primary-container": "#cafd00",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary": "#c57eff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; background-color: #0e0e0e; color: #ffffff; }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        
+        /* Intensity Slider Styling */
+        input[type=range]::-webkit-slider-runnable-track {
+            background: #262626;
+            height: 8px;
+            border-radius: 9999px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            background: #cafd00;
+            border-radius: 50%;
+            margin-top: -8px;
+            box-shadow: 0 0 15px rgba(202, 253, 0, 0.6);
+            cursor: pointer;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0e0e0e]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<button class="text-[#f3ffca] hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-['Space_Grotesk'] font-bold tracking-tighter text-2xl italic text-[#f3ffca] tracking-widest">TRACKNPERF</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
+<img class="w-full h-full object-cover" data-alt="close-up portrait of a determined elite athlete with sweat glinting under dramatic gym lighting, high contrast aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDf6RhGyW_Dxzj1AlgqfKn9q7XCO-1M33qkSjxANx2BNS32uP961YLkI8Frgjwj43YESLR0yhcEVy_1WXdGfrUwcfmoJbYIeO7XJrnFeppL0maxqeybqpIrR47HyWFGhxxMn_OAtzc0Mb8-bdwAz_TUFlT_pYxs0LWMkpUh3tyS0lfByxpEEUkt6OBMADPLH5Dyy0r8DWMiGlVapUjjBw7m35d0104beqGZyAKM5t_a6GKvx6bJ08IPjIKT0F9_bIAHA4oMEdtL9JfC"/>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow pt-24 pb-32 px-6 max-w-2xl mx-auto w-full">
+<!-- Header Section -->
+<div class="mb-12">
+<span class="text-secondary font-headline font-bold tracking-widest text-xs uppercase mb-2 block">ENTRY MODE: MANUAL</span>
+<h2 class="text-5xl font-headline font-black text-on-surface leading-tight tracking-tighter">JOURNAL RAPIDE</h2>
+</div>
+<form class="space-y-10">
+<!-- TYPE Selection (Editorial Grid) -->
+<div class="space-y-4">
+<label class="font-headline font-bold text-lg text-primary tracking-tight">TYPE</label>
+<div class="grid grid-cols-2 gap-4">
+<button class="group flex flex-col items-center justify-center p-6 bg-surface-container-highest rounded-xl border-2 border-transparent hover:border-primary-container transition-all" type="button">
+<span class="material-symbols-outlined text-4xl mb-2 text-on-surface-variant group-hover:text-primary-container">directions_run</span>
+<span class="font-headline font-bold text-sm tracking-widest">RUN</span>
+</button>
+<button class="group flex flex-col items-center justify-center p-6 bg-surface-container-highest rounded-xl border-2 border-primary-container transition-all" type="button">
+<span class="material-symbols-outlined text-4xl mb-2 text-primary-container" style="font-variation-settings: 'FILL' 1;">fitness_center</span>
+<span class="font-headline font-bold text-sm tracking-widest text-primary-container">GYM</span>
+</button>
+<button class="group flex flex-col items-center justify-center p-6 bg-surface-container-highest rounded-xl border-2 border-transparent hover:border-primary-container transition-all" type="button">
+<span class="material-symbols-outlined text-4xl mb-2 text-on-surface-variant group-hover:text-primary-container">pool</span>
+<span class="font-headline font-bold text-sm tracking-widest">SWIM</span>
+</button>
+<button class="group flex flex-col items-center justify-center p-6 bg-surface-container-highest rounded-xl border-2 border-transparent hover:border-primary-container transition-all" type="button">
+<span class="material-symbols-outlined text-4xl mb-2 text-on-surface-variant group-hover:text-primary-container">pedal_bike</span>
+<span class="font-headline font-bold text-sm tracking-widest">CYCLE</span>
+</button>
+</div>
+</div>
+<!-- DURÉE (Time Picker) -->
+<div class="space-y-4">
+<label class="font-headline font-bold text-lg text-primary tracking-tight uppercase">DURÉE</label>
+<div class="flex items-end gap-4 bg-surface-container-low p-8 rounded-xl">
+<div class="flex-1 text-center">
+<input class="bg-transparent border-none text-6xl font-headline font-black text-on-surface w-full p-0 focus:ring-0 text-center" type="number" value="00"/>
+<span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">HH</span>
+</div>
+<span class="text-6xl font-headline font-black text-on-surface-variant pb-6">:</span>
+<div class="flex-1 text-center">
+<input class="bg-transparent border-none text-6xl font-headline font-black text-on-surface w-full p-0 focus:ring-0 text-center" type="number" value="45"/>
+<span class="text-on-surface-variant font-bold text-xs tracking-widest uppercase">MM</span>
+</div>
+</div>
+</div>
+<!-- INTENSITÉ (Scale 1-10 Slider) -->
+<div class="space-y-6">
+<div class="flex justify-between items-baseline">
+<label class="font-headline font-bold text-lg text-primary tracking-tight uppercase">INTENSITÉ</label>
+<span class="font-headline font-black text-4xl text-primary-container" id="intensity-val">7</span>
+</div>
+<div class="relative px-2">
+<input class="w-full h-2 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary-container" max="10" min="1" type="range" value="7"/>
+<div class="flex justify-between mt-4 px-1">
+<span class="text-[10px] font-bold text-on-surface-variant tracking-widest">RECOVERY</span>
+<span class="text-[10px] font-bold text-on-surface-variant tracking-widest">ELITE</span>
+</div>
+</div>
+</div>
+<!-- Big ENREGISTRER Button -->
+<div class="pt-6">
+<button class="w-full bg-primary-container text-on-primary-fixed h-20 rounded-xl font-headline font-black text-2xl tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-95 transition-all shadow-[0_20px_50px_rgba(202,253,0,0.2)]" type="submit">
+                    ENREGISTRER
+                    <span class="material-symbols-outlined text-3xl">bolt</span>
+</button>
+</div>
+</form>
+</main>
+<!-- BottomNavBar (Suppressed as per task focus, but template provided for shell integrity if needed) -->
+<!-- Applying Suppression Logic: Page intent is Task-Focused/Linear form. BottomNavBar hidden to prioritize form focus. -->
+<!-- Ambient Glow Visuals (Decorative) -->
+<div class="fixed top-1/4 -right-20 w-96 h-96 bg-primary-container/5 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="fixed -bottom-20 -left-20 w-96 h-96 bg-secondary-container/5 blur-[120px] rounded-full pointer-events-none"></div>
+</body></html>

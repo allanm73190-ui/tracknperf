@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#e6c3ff",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "tertiary-container": "#fce047",
+                    "error": "#ff7351",
+                    "on-tertiary-fixed": "#483d00",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "surface-dim": "#0e0e0e",
+                    "on-surface": "#ffffff",
+                    "on-tertiary-container": "#5d5000",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "surface-container-high": "#201f1f",
+                    "outline-variant": "#484847",
+                    "surface-container-highest": "#262626",
+                    "outline": "#767575",
+                    "on-secondary-fixed": "#510085",
+                    "on-error": "#450900",
+                    "surface-bright": "#2c2c2c",
+                    "surface-variant": "#262626",
+                    "primary-dim": "#beee00",
+                    "inverse-surface": "#fcf9f8",
+                    "error-dim": "#d53d18",
+                    "background": "#0e0e0e",
+                    "surface": "#0e0e0e",
+                    "primary-fixed": "#cafd00",
+                    "secondary": "#c57eff",
+                    "surface-container": "#1a1919",
+                    "on-background": "#ffffff",
+                    "error-container": "#b92902",
+                    "primary-container": "#cafd00",
+                    "surface-container-lowest": "#000000",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-dim": "#c57eff",
+                    "secondary-container": "#6a0baa",
+                    "primary": "#f3ffca",
+                    "surface-tint": "#f3ffca",
+                    "on-error-container": "#ffd2c8",
+                    "primary-fixed-dim": "#beee00",
+                    "inverse-primary": "#516700",
+                    "secondary-fixed": "#e7c5ff",
+                    "tertiary-dim": "#edd13a",
+                    "on-surface-variant": "#adaaaa",
+                    "on-primary-fixed-variant": "#526900",
+                    "on-primary": "#516700",
+                    "inverse-on-surface": "#565555",
+                    "tertiary": "#ffeea5",
+                    "on-tertiary": "#665800",
+                    "on-secondary": "#340058",
+                    "surface-container-low": "#131313",
+                    "tertiary-fixed": "#fce047"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .kinetic-gradient {
+            background: linear-gradient(45deg, #beee00, #f3ffca);
+        }
+        .glass-panel {
+            background: rgba(44, 44, 44, 0.4);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Suppression: Not rendered for Onboarding per protocol -->
+<main class="min-h-screen flex flex-col items-center justify-center px-6 py-12 relative overflow-hidden">
+<!-- Background Kinetic Element -->
+<div class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full pointer-events-none"></div>
+<div class="absolute bottom-[-5%] left-[-5%] w-[400px] h-[400px] bg-secondary/5 blur-[100px] rounded-full pointer-events-none"></div>
+<div class="w-full max-w-2xl z-10">
+<!-- Progress Indicator -->
+<div class="flex gap-2 mb-12">
+<div class="h-1 flex-1 bg-primary-container rounded-full"></div>
+<div class="h-1 flex-1 bg-primary-container rounded-full"></div>
+<div class="h-1 flex-1 bg-surface-container-highest rounded-full"></div>
+</div>
+<!-- Header Section -->
+<div class="mb-16">
+<h1 class="font-headline text-6xl md:text-8xl font-bold tracking-tighter leading-none mb-4 uppercase">
+                    PROFIL <span class="text-primary-fixed">KINETIC</span>
+</h1>
+<p class="text-on-surface-variant text-xl md:text-2xl max-w-md font-light leading-relaxed">
+                    Configurez votre interface de performance. La précision commence ici.
+                </p>
+</div>
+<!-- Onboarding Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+<!-- Unit Selection: KG -->
+<div class="bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 group hover:border-primary/30 transition-all duration-300">
+<label class="block font-label text-sm uppercase tracking-widest text-on-surface-variant mb-6">UNITÉ DE MASSE</label>
+<div class="flex items-end justify-between">
+<span class="font-headline text-7xl font-bold">KG</span>
+<div class="bg-primary-container text-on-primary-container p-2 rounded-full cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined block">check</span>
+</div>
+</div>
+<p class="mt-6 text-on-surface-variant text-sm font-medium">Standard métrique activé.</p>
+</div>
+<!-- Unit Selection: KM -->
+<div class="bg-surface-container-low p-8 rounded-xl border border-outline-variant/10 group hover:border-primary/30 transition-all duration-300">
+<label class="block font-label text-sm uppercase tracking-widest text-on-surface-variant mb-6">UNITÉ DE DISTANCE</label>
+<div class="flex items-end justify-between">
+<span class="font-headline text-7xl font-bold">KM</span>
+<div class="bg-surface-container-highest text-on-surface-variant p-2 rounded-full cursor-pointer hover:bg-surface-bright transition-colors">
+<span class="material-symbols-outlined block">swap_horiz</span>
+</div>
+</div>
+<p class="mt-6 text-on-surface-variant text-sm font-medium">Kilomètres pour la précision.</p>
+</div>
+<!-- Preference: Dark UI -->
+<div class="md:col-span-2 bg-surface-container-highest p-10 rounded-xl relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-8">
+<div class="relative z-10 max-w-md">
+<h3 class="font-headline text-3xl font-bold mb-3 uppercase tracking-tight">PRÉFÉRENCES VISUELLES</h3>
+<p class="text-on-surface-variant text-lg">Interface haute-visibilité optimisée pour les environnements à faible luminosité et l'économie d'énergie OLED.</p>
+</div>
+<div class="relative z-10 flex gap-4">
+<button class="px-8 py-4 rounded-full bg-primary-container text-on-primary-container font-bold text-sm tracking-widest uppercase hover:scale-105 transition-transform">FONCÉ</button>
+<button class="px-8 py-4 rounded-full bg-surface-container-low text-on-surface-variant font-bold text-sm tracking-widest uppercase border border-outline-variant/20">CLAIR</button>
+</div>
+<!-- Decorative background gradient hint -->
+<div class="absolute right-0 top-0 w-1/2 h-full bg-gradient-to-l from-primary/5 to-transparent pointer-events-none"></div>
+</div>
+</div>
+<!-- Submit Section -->
+<div class="flex flex-col md:flex-row items-center justify-between gap-8 pt-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<p class="font-bold text-on-surface uppercase tracking-tight">SYNCHRONISATION ACTIVE</p>
+<p class="text-xs text-on-surface-variant font-medium uppercase tracking-widest">CLOUD READY</p>
+</div>
+</div>
+<button class="w-full md:w-auto kinetic-gradient px-12 py-6 rounded-full text-on-primary-fixed font-extrabold text-lg tracking-tighter uppercase flex items-center justify-center gap-3 hover:shadow-[0_0_40px_rgba(202,253,0,0.3)] transition-all active:scale-95 group">
+                    FINALISER LE SETUP
+                    <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Success Overlay (Hidden State Example via Opacity 0 for Demo, but rendered for structure) -->
+<div class="fixed inset-0 glass-panel z-[100] flex items-center justify-center opacity-0 pointer-events-none transition-opacity duration-700">
+<div class="text-center max-w-xl px-6">
+<div class="w-24 h-24 bg-primary-container rounded-full mx-auto mb-10 flex items-center justify-center shadow-[0_0_50px_rgba(202,253,0,0.4)]">
+<span class="material-symbols-outlined text-on-primary-container text-5xl font-bold">check</span>
+</div>
+<h2 class="font-headline text-7xl font-bold tracking-tighter uppercase mb-6">PRÊT À BOUGER</h2>
+<p class="text-on-surface-variant text-2xl font-light mb-12 leading-relaxed">Votre profil est synchronisé avec les serveurs Kinetic. La performance n'attend pas.</p>
+<button class="bg-on-surface text-background px-12 py-5 rounded-full font-black text-sm tracking-widest uppercase hover:scale-105 transition-transform">ACCÉDER AU DASHBOARD</button>
+</div>
+</div>
+</main>
+<!-- Side Image Decorative Element -->
+<div class="fixed right-0 top-0 h-full w-[25%] hidden xl:block opacity-40">
+<img alt="Athletic focus" class="h-full w-full object-cover grayscale brightness-50" data-alt="Close-up of a high-performance athlete's face in high contrast lighting, focused and intense, dark cinematic aesthetic with neon lime highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQdktB9rRTfl5FGwUVyPM022DiP44w0wENecJyvbPoE1fV2oMJgKw_JMcUBV3LUj-C-BS7Ba0yntXzhlDIzOhbVAguhjeYarFGRRVu724L9md8t20v9s-FzE5lMpGh7mRCT5s0rWWuqF8apOHN5OoLHZUcI_Wfhs5iO8xn9Mdex5SxlCfj0KJPMffkAzKS9DkH6JOFgNuMq_vpTiFF3hntEftSc4SQVLX-GtW_bZ1YDWRoJ50OVyzQor3FZpxTiseqYNLQM5YuIaUb"/>
+</div>
+<!-- Background texture Overlay -->
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay">
+<img alt="grain texture" class="w-full h-full object-cover" data-alt="fine digital noise texture and subtle film grain for a tactical technical feel" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEJQcBqUrBbhEu8btNVYGJCsXfl-hH3H333YctHoQZ32xpSBRCib0qxkEbe5ii4OeOUBgV9D6hHdyUHaEyMhfUbasl7-hyNyu0f7W92P9xNo0YSFxBrDggI_wu7GF1v6qIdSe6FFX5Dyla06PAnk0qALjbq8q5BMrrhEiIEsxzxYSoI7yiMC_V9bpsBuT4L5lvBbh-RhA_g7pGoNSvKkMtYOe0873fVsd8X2XNoTso4EUuAzkylUkWRpjIF9A4cLbdJSCjeYS4B25K"/>
+</div>
+</body></html>

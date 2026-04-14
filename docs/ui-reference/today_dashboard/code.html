@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#e6c3ff",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "tertiary-container": "#fce047",
+                    "error": "#ff7351",
+                    "on-tertiary-fixed": "#483d00",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "surface-dim": "#0e0e0e",
+                    "on-surface": "#ffffff",
+                    "on-tertiary-container": "#5d5000",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "surface-container-high": "#201f1f",
+                    "outline-variant": "#484847",
+                    "surface-container-highest": "#262626",
+                    "outline": "#767575",
+                    "on-secondary-fixed": "#510085",
+                    "on-error": "#450900",
+                    "surface-bright": "#2c2c2c",
+                    "surface-variant": "#262626",
+                    "primary-dim": "#beee00",
+                    "inverse-surface": "#fcf9f8",
+                    "error-dim": "#d53d18",
+                    "background": "#0e0e0e",
+                    "surface": "#0e0e0e",
+                    "primary-fixed": "#cafd00",
+                    "secondary": "#c57eff",
+                    "surface-container": "#1a1919",
+                    "on-background": "#ffffff",
+                    "error-container": "#b92902",
+                    "primary-container": "#cafd00",
+                    "surface-container-lowest": "#000000",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-dim": "#c57eff",
+                    "secondary-container": "#6a0baa",
+                    "primary": "#f3ffca",
+                    "surface-tint": "#f3ffca",
+                    "on-error-container": "#ffd2c8",
+                    "primary-fixed-dim": "#beee00",
+                    "inverse-primary": "#516700",
+                    "secondary-fixed": "#e7c5ff",
+                    "tertiary-dim": "#edd13a",
+                    "on-surface-variant": "#adaaaa",
+                    "on-primary-fixed-variant": "#526900",
+                    "on-primary": "#516700",
+                    "inverse-on-surface": "#565555",
+                    "tertiary": "#ffeea5",
+                    "on-tertiary": "#665800",
+                    "on-secondary": "#340058",
+                    "surface-container-low": "#131313",
+                    "tertiary-fixed": "#fce047"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .kinetic-gradient {
+            background: linear-gradient(45deg, #beee00 0%, #f3ffca 100%);
+        }
+        .tonal-layering {
+            background: #131313;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0e0e0e] tonal-shift bg-[#131313] flat no shadows flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#f3ffca]">menu</span>
+<h1 class="font-['Space_Grotesk'] tracking-tighter uppercase text-lg font-bold text-[#f3ffca]">24 MAY 2024</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-2 bg-primary-container/10 px-3 py-1 rounded-full border border-primary-container/20">
+<span class="w-2 h-2 rounded-full bg-primary-container shadow-[0_0_8px_#cafd00]"></span>
+<span class="font-label text-[10px] font-bold text-[#f3ffca] tracking-widest uppercase">SYNCED</span>
+</div>
+<button class="material-symbols-outlined text-[#f3ffca] hover:opacity-80 transition-opacity active:scale-95 duration-150">sync</button>
+</div>
+</header>
+<!-- NavigationDrawer (Visible State for 'Sync Details') -->
+<aside class="fixed inset-y-0 left-0 w-80 z-[60] flex flex-col p-8 bg-[#131313] rounded-r-[1.5rem] h-full shadow-[40px_0_60px_rgba(197,126,255,0.1)] transition-transform duration-300">
+<div class="flex justify-between items-center mb-10">
+<h2 class="font-['Space_Grotesk'] text-xl text-[#c57eff] font-black uppercase tracking-tight">Sync Details</h2>
+<span class="material-symbols-outlined text-white/40 cursor-pointer">close</span>
+</div>
+<nav class="flex flex-col gap-6 flex-1">
+<div class="text-[#f3ffca] font-bold border-l-4 border-[#f3ffca] pl-4 flex items-center gap-3 py-2 cursor-pointer transition-colors">
+<span class="material-symbols-outlined">sync</span>
+<span class="font-['Space_Grotesk']">Sync Logs</span>
+</div>
+<div class="text-white/60 pl-4 flex items-center gap-3 py-2 cursor-pointer hover:bg-[#262626] transition-colors rounded-lg">
+<span class="material-symbols-outlined">devices</span>
+<span>Device Status</span>
+</div>
+<div class="text-white/60 pl-4 flex items-center gap-3 py-2 cursor-pointer hover:bg-[#262626] transition-colors rounded-lg">
+<span class="material-symbols-outlined">cloud_done</span>
+<span>Cloud Backup</span>
+</div>
+</nav>
+<!-- Error Logs Section in Drawer -->
+<div class="mt-auto pt-8 border-t border-white/5">
+<div class="flex items-center justify-between mb-4">
+<span class="text-[10px] font-bold uppercase tracking-widest text-white/30">Dernières Erreurs</span>
+<span class="text-[10px] font-bold text-error uppercase">2 pending</span>
+</div>
+<div class="space-y-3">
+<div class="p-3 bg-surface-container-highest rounded-xl border-l-2 border-error">
+<p class="text-xs font-medium mb-1">VRC Metadata Sync</p>
+<p class="text-[10px] text-on-surface-variant mb-2">Timeout error: server-04</p>
+<button class="text-[10px] font-bold text-primary flex items-center gap-1 uppercase">
+<span class="material-symbols-outlined text-xs">refresh</span> Réessayer
+                    </button>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="pt-24 pb-32 px-6 max-w-5xl mx-auto min-h-screen">
+<!-- Dashboard Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Hero: Recommendation Card (Bento Large) -->
+<section class="md:col-span-8 group relative overflow-hidden rounded-[1.5rem] bg-surface-container-low p-8 shadow-[0_0_50px_rgba(202,253,0,0.05)] border border-white/5">
+<div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div class="relative z-10">
+<div class="inline-flex items-center gap-2 bg-primary-container text-on-primary-fixed px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest mb-6">
+                        Recommandé
+                    </div>
+<h2 class="font-headline text-5xl md:text-6xl font-bold text-on-surface leading-none tracking-tighter mb-4">
+                        Augmenter l'intensité
+                    </h2>
+<div class="flex flex-wrap gap-4 mt-8">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">État</span>
+<span class="text-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Récupération optimale
+                            </span>
+</div>
+<div class="w-px h-10 bg-white/10 hidden sm:block"></div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Tendance</span>
+<span class="text-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-sm">trending_up</span>
+                                VRC en hausse
+                            </span>
+</div>
+<div class="w-px h-10 bg-white/10 hidden sm:block"></div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Contexte</span>
+<span class="text-sm font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-sm">wb_sunny</span>
+                                Météo favorable
+                            </span>
+</div>
+</div>
+<button class="mt-10 inline-flex items-center gap-3 kinetic-gradient text-on-primary-fixed px-8 py-4 rounded-full font-bold text-sm uppercase tracking-widest active:scale-95 transition-all">
+                        Voir détails
+                        <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<!-- Glow effect -->
+<div class="absolute -bottom-20 -right-20 w-64 h-64 bg-primary/20 blur-[100px] rounded-full"></div>
+</section>
+<!-- Planifié aujourd'hui Card -->
+<section class="md:col-span-4 flex flex-col bg-surface-container-highest rounded-[1.5rem] p-6 border border-white/5">
+<div class="flex justify-between items-center mb-8">
+<h3 class="font-headline text-xl font-bold uppercase tracking-tight">Planifié</h3>
+<span class="text-xs font-bold text-on-surface-variant">2 SESSIONS</span>
+</div>
+<div class="space-y-6">
+<div class="flex items-center gap-4 group cursor-pointer">
+<div class="w-12 h-12 rounded-2xl bg-secondary-container/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">directions_run</span>
+</div>
+<div>
+<p class="font-bold text-sm">Interval Training</p>
+<p class="text-xs text-on-surface-variant">08:00 • 45 min • Zone 4</p>
+</div>
+</div>
+<div class="flex items-center gap-4 group cursor-pointer">
+<div class="w-12 h-12 rounded-2xl bg-surface-container flex items-center justify-center text-white/40">
+<span class="material-symbols-outlined">fitness_center</span>
+</div>
+<div>
+<p class="font-bold text-sm">Mobilité &amp; Core</p>
+<p class="text-xs text-on-surface-variant">18:30 • 30 min • Récup</p>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-8">
+<div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+<div class="w-1/2 h-full bg-secondary rounded-full"></div>
+</div>
+<p class="mt-2 text-[10px] font-bold text-secondary uppercase tracking-widest">50% du volume hebdo</p>
+</div>
+</section>
+<!-- Journal Quick Action Card -->
+<section class="md:col-span-4 bg-[#c57eff] text-[#340058] rounded-[1.5rem] p-8 flex flex-col justify-between group cursor-pointer hover:shadow-[0_20px_40px_rgba(197,126,255,0.2)] transition-all">
+<div>
+<span class="material-symbols-outlined text-4xl mb-4" style="font-variation-settings: 'FILL' 1;">edit_note</span>
+<h3 class="font-headline text-3xl font-black leading-none uppercase italic">Journal</h3>
+</div>
+<p class="mt-4 font-bold text-sm">Enregistrer une session manuelle ou une note d'état.</p>
+<div class="mt-8 flex justify-end">
+<div class="w-12 h-12 rounded-full bg-[#340058] flex items-center justify-center text-[#c57eff] group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined">add</span>
+</div>
+</div>
+</section>
+<!-- Quick Metrics Grid -->
+<div class="md:col-span-8 grid grid-cols-2 sm:grid-cols-3 gap-6">
+<div class="bg-surface-container-high p-6 rounded-[1.5rem] border border-white/5">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block mb-2">VRC</span>
+<span class="font-headline text-4xl font-bold">68</span>
+<span class="text-[10px] font-bold text-primary ml-1">ms</span>
+</div>
+<div class="bg-surface-container-high p-6 rounded-[1.5rem] border border-white/5">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block mb-2">Repos</span>
+<span class="font-headline text-4xl font-bold">52</span>
+<span class="text-[10px] font-bold text-on-surface-variant ml-1">bpm</span>
+</div>
+<div class="bg-surface-container-high p-6 rounded-[1.5rem] border border-white/5 col-span-2 sm:col-span-1">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest block mb-2">Sommeil</span>
+<span class="font-headline text-4xl font-bold">8.2</span>
+<span class="text-[10px] font-bold text-secondary ml-1">h</span>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-8 pb-6 pt-2 bg-[#0e0e0e]/80 backdrop-blur-xl rounded-t-[1.5rem] shadow-[0_-10px_40px_rgba(202,253,0,0.1)] z-50 no-line breathing-layout">
+<div class="flex flex-col items-center justify-center bg-[#cafd00] text-[#0e0e0e] rounded-full p-3 tap-highlight-none active:scale-90 transition-all">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 transition-all">
+<span class="material-symbols-outlined">monitoring</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 transition-all">
+<span class="material-symbols-outlined">history</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 transition-all">
+<span class="material-symbols-outlined">settings</span>
+</div>
+</nav>
+<!-- Background Decoration -->
+<div class="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden">
+<div class="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] bg-primary/5 blur-[120px] rounded-full"></div>
+<div class="absolute bottom-[10%] right-[10%] w-[30vw] h-[30vw] bg-secondary/5 blur-[100px] rounded-full"></div>
+</div>
+</body></html>

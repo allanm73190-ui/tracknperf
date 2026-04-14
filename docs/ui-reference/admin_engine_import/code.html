@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#e6c3ff",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "tertiary-container": "#fce047",
+                    "error": "#ff7351",
+                    "on-tertiary-fixed": "#483d00",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "surface-dim": "#0e0e0e",
+                    "on-surface": "#ffffff",
+                    "on-tertiary-container": "#5d5000",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "surface-container-high": "#201f1f",
+                    "outline-variant": "#484847",
+                    "surface-container-highest": "#262626",
+                    "outline": "#767575",
+                    "on-secondary-fixed": "#510085",
+                    "on-error": "#450900",
+                    "surface-bright": "#2c2c2c",
+                    "surface-variant": "#262626",
+                    "primary-dim": "#beee00",
+                    "inverse-surface": "#fcf9f8",
+                    "error-dim": "#d53d18",
+                    "background": "#0e0e0e",
+                    "surface": "#0e0e0e",
+                    "primary-fixed": "#cafd00",
+                    "secondary": "#c57eff",
+                    "surface-container": "#1a1919",
+                    "on-background": "#ffffff",
+                    "error-container": "#b92902",
+                    "primary-container": "#cafd00",
+                    "surface-container-lowest": "#000000",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-dim": "#c57eff",
+                    "secondary-container": "#6a0baa",
+                    "primary": "#f3ffca",
+                    "surface-tint": "#f3ffca",
+                    "on-error-container": "#ffd2c8",
+                    "primary-fixed-dim": "#beee00",
+                    "inverse-primary": "#516700",
+                    "secondary-fixed": "#e7c5ff",
+                    "tertiary-dim": "#edd13a",
+                    "on-surface-variant": "#adaaaa",
+                    "on-primary-fixed-variant": "#526900",
+                    "on-primary": "#516700",
+                    "inverse-on-surface": "#565555",
+                    "tertiary": "#ffeea5",
+                    "on-tertiary": "#665800",
+                    "on-secondary": "#340058",
+                    "surface-container-low": "#131313",
+                    "tertiary-fixed": "#fce047"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .code-editor {
+            counter-reset: line;
+        }
+        .code-line::before {
+            counter-increment: line;
+            content: counter(line);
+            display: inline-block;
+            width: 2rem;
+            margin-right: 1.5rem;
+            color: #484847;
+            text-align: right;
+        }
+        .glass-panel {
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0e0e0e] tonal-shift bg-[#131313] flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#f3ffca] hover:opacity-80 transition-opacity">menu</span>
+<h1 class="text-lg font-bold text-[#f3ffca] font-['Space_Grotesk'] tracking-tighter uppercase">24 MAY 2024</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 bg-primary-container/10 px-3 py-1 rounded-full">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="text-primary text-[10px] font-bold tracking-widest uppercase">SYNCED</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container font-bold text-xs">
+                AD
+            </div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-7xl mx-auto space-y-12">
+<!-- Hero Header -->
+<section class="space-y-2">
+<div class="flex items-center gap-3 mb-4">
+<span class="px-2 py-1 bg-secondary text-on-secondary text-[10px] font-black uppercase rounded-sm tracking-widest">ADMIN ONLY</span>
+<span class="text-on-surface-variant text-sm font-medium tracking-tight">KINETIC_OS // ENGINE_ROOM</span>
+</div>
+<h2 class="font-headline text-5xl md:text-7xl font-bold tracking-tighter leading-none">PANNEAU<br/><span class="text-primary italic">DE CONTRÔLE.</span></h2>
+</section>
+<!-- Main Bento Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- Left Navigation (Engine / Import) -->
+<div class="lg:col-span-3 space-y-4">
+<button class="w-full text-left p-6 rounded-xl bg-surface-container-highest border-l-4 border-primary group transition-all">
+<div class="flex items-center justify-between mb-2">
+<span class="material-symbols-outlined text-primary">terminal</span>
+<span class="text-[10px] font-bold text-primary/50 tracking-widest uppercase">MODE_01</span>
+</div>
+<p class="font-headline text-xl font-bold text-on-surface">Engine</p>
+<p class="text-xs text-on-surface-variant mt-1">Config Profiles &amp; JSON Editor</p>
+</button>
+<button class="w-full text-left p-6 rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-all group">
+<div class="flex items-center justify-between mb-2">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary">upload_file</span>
+<span class="text-[10px] font-bold text-on-surface-variant/30 tracking-widest uppercase">MODE_02</span>
+</div>
+<p class="font-headline text-xl font-bold text-on-surface">Import</p>
+<p class="text-xs text-on-surface-variant mt-1">CSV/XLSX Bulk Ingestion</p>
+</button>
+<div class="mt-8 p-6 rounded-xl bg-error-container/10 space-y-4 border border-error/20">
+<div class="flex items-center gap-2 text-error">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="text-[10px] font-black uppercase tracking-widest">CRITICAL_ACTION</span>
+</div>
+<p class="text-sm text-on-surface font-medium leading-tight">Accès restreint. Toute modification impacte les métriques de performance globales.</p>
+</div>
+</div>
+<!-- Main Content Area: Mode 1 - Engine -->
+<div class="lg:col-span-9 space-y-6">
+<div class="bg-surface-container-low rounded-xl overflow-hidden">
+<!-- Editor Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between p-6 gap-4 bg-surface-container-high">
+<div class="flex items-center gap-4">
+<div class="p-3 bg-surface-container-highest rounded-lg">
+<span class="material-symbols-outlined text-primary">settings_input_component</span>
+</div>
+<div>
+<h3 class="font-headline text-lg font-bold">CONFIG_PROFILE_09</h3>
+<p class="text-xs text-on-surface-variant font-mono uppercase tracking-tighter">ID: kinetic-882-pulse</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-4 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant hover:text-on-surface transition-colors">ANNULER</button>
+<button class="px-6 py-2 bg-primary-container text-on-primary-fixed rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">save</span>
+                                SAUVEGARDER
+                            </button>
+</div>
+</div>
+<!-- JSON Editor View -->
+<div class="p-6 font-mono text-sm leading-relaxed code-editor">
+<div class="code-line"><span class="text-secondary">{</span></div>
+<div class="code-line ml-4"><span class="text-on-tertiary-fixed-variant">"profile_name"</span>: <span class="text-primary">"Elite_Sprint_Analysis"</span>,</div>
+<div class="code-line ml-4"><span class="text-on-tertiary-fixed-variant">"sampling_rate"</span>: <span class="text-secondary">1000</span>,</div>
+<div class="code-line ml-4"><span class="text-on-tertiary-fixed-variant">"biometric_thresholds"</span>: <span class="text-secondary">{</span></div>
+<div class="code-line ml-8"><span class="text-on-tertiary-fixed-variant">"heart_rate_max"</span>: <span class="text-secondary">195</span>,</div>
+<div class="code-line ml-8"><span class="text-on-tertiary-fixed-variant">"lactic_acid_peak"</span>: <span class="text-secondary">4.2</span>,</div>
+<div class="code-line ml-8"><span class="text-on-tertiary-fixed-variant">"oxygen_saturation_min"</span>: <span class="text-secondary">92</span></div>
+<div class="code-line ml-4"><span class="text-secondary">}</span>,</div>
+<div class="code-line ml-4"><span class="text-on-tertiary-fixed-variant">"auto_sync"</span>: <span class="text-primary">true</span>,</div>
+<div class="code-line ml-4"><span class="text-on-tertiary-fixed-variant">"cloud_buffer_size"</span>: <span class="text-primary">"512MB"</span></div>
+<div class="code-line"><span class="text-secondary">}</span></div>
+</div>
+</div>
+<!-- Mode 2 Preview (Stacked or Integrated) -->
+<div class="bg-surface-container-low rounded-xl p-8 border-2 border-dashed border-outline-variant/30 text-center space-y-4">
+<div class="w-16 h-16 bg-surface-container-highest rounded-full flex items-center justify-center mx-auto mb-4">
+<span class="material-symbols-outlined text-3xl text-on-surface-variant">cloud_upload</span>
+</div>
+<div class="space-y-1">
+<h4 class="font-headline text-xl font-bold">Importation de données</h4>
+<p class="text-on-surface-variant text-sm">Glissez-déposez vos fichiers .xlsx, .json ou .csv pour l'ingestion massive.</p>
+</div>
+<button class="px-8 py-3 bg-surface-container-highest border border-outline-variant text-on-surface rounded-full text-xs font-bold uppercase tracking-widest hover:bg-surface-container-high transition-colors">
+                        PARCOURIR LES FICHIERS
+                    </button>
+</div>
+</div>
+</div>
+<!-- No Access Overlay (Absolute/Hidden by default, shown here for representation) -->
+<!-- In a real app, this would replace the content if isAdmin is false -->
+<div class="fixed inset-0 z-[100] glass-panel flex flex-col items-center justify-center p-6 text-center backdrop-blur-3xl hidden">
+<div class="w-24 h-24 rounded-full bg-error/20 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-5xl text-error" style="font-variation-settings: 'FILL' 1;">lock</span>
+</div>
+<h3 class="font-headline text-4xl font-bold mb-2 tracking-tighter uppercase">ACCÈS REFUSÉ</h3>
+<p class="text-on-surface-variant max-w-sm mb-8 font-medium">Vous n’avez pas accès à la console d'ingénierie. Veuillez contacter l'administrateur système pour obtenir des privilèges élevés.</p>
+<button class="px-10 py-4 bg-on-surface text-background font-black rounded-full text-sm uppercase tracking-widest flex items-center gap-3">
+<span class="material-symbols-outlined">arrow_back</span>
+                RETOUR AU DASHBOARD
+            </button>
+</div>
+</main>
+<!-- NavigationDrawer (Visible on large screens) -->
+<div class="fixed inset-y-0 left-0 w-80 z-[60] flex flex-col p-8 bg-[#131313] rounded-r-[1.5rem] shadow-[40px_0_60px_rgba(197,126,255,0.1)] -translate-x-full lg:translate-x-0 hidden lg:flex">
+<div class="mb-12">
+<h2 class="text-[#c57eff] font-black font-['Space_Grotesk'] text-xl uppercase tracking-tighter">Sync Details</h2>
+</div>
+<nav class="flex-1 space-y-6">
+<div class="space-y-4">
+<a class="flex items-center gap-4 text-[#f3ffca] font-bold border-l-4 border-[#f3ffca] pl-4 transition-all" href="#">
+<span class="material-symbols-outlined">sync</span>
+<span class="font-headline">Sync Logs</span>
+</a>
+<a class="flex items-center gap-4 text-white/60 pl-4 hover:bg-[#262626] py-2 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">devices</span>
+<span class="font-headline">Device Status</span>
+</a>
+<a class="flex items-center gap-4 text-white/60 pl-4 hover:bg-[#262626] py-2 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">cloud_done</span>
+<span class="font-headline">Cloud Backup</span>
+</a>
+</div>
+</nav>
+<div class="mt-auto pt-8 border-t border-outline-variant/20">
+<div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-container-highest">
+<div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+<span class="text-[10px] font-bold tracking-widest text-primary uppercase">System Active</span>
+</div>
+</div>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-center px-8 pb-6 pt-2 bg-[#0e0e0e]/80 backdrop-blur-xl z-50 rounded-t-[1.5rem] shadow-[0_-10px_40px_rgba(202,253,0,0.1)]">
+<a class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">bolt</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined">history</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#cafd00] text-[#0e0e0e] rounded-full p-3 transition-all active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+</a>
+</nav>
+</body></html>

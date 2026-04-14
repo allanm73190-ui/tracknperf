@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#6a0baa",
+                        "secondary": "#c57eff",
+                        "surface-tint": "#f3ffca",
+                        "tertiary-container": "#fce047",
+                        "surface-container-low": "#131313",
+                        "on-surface": "#ffffff",
+                        "surface": "#0e0e0e",
+                        "secondary-dim": "#c57eff",
+                        "primary-container": "#cafd00",
+                        "surface-variant": "#262626",
+                        "surface-container-highest": "#262626",
+                        "on-tertiary-fixed-variant": "#685900",
+                        "on-error-container": "#ffd2c8",
+                        "on-background": "#ffffff",
+                        "on-surface-variant": "#adaaaa",
+                        "tertiary": "#ffeea5",
+                        "inverse-surface": "#fcf9f8",
+                        "inverse-primary": "#516700",
+                        "on-secondary-fixed-variant": "#7520b5",
+                        "primary-fixed": "#cafd00",
+                        "on-tertiary": "#665800",
+                        "on-primary-container": "#4a5e00",
+                        "on-secondary": "#340058",
+                        "surface-bright": "#2c2c2c",
+                        "surface-container-high": "#201f1f",
+                        "error": "#ff7351",
+                        "surface-container": "#1a1919",
+                        "on-error": "#450900",
+                        "on-tertiary-fixed": "#483d00",
+                        "primary": "#f3ffca",
+                        "inverse-on-surface": "#565555",
+                        "tertiary-fixed-dim": "#edd13a",
+                        "secondary-fixed": "#e7c5ff",
+                        "outline": "#767575",
+                        "primary-fixed-dim": "#beee00",
+                        "tertiary-fixed": "#fce047",
+                        "tertiary-dim": "#edd13a",
+                        "on-primary-fixed-variant": "#526900",
+                        "background": "#0e0e0e",
+                        "on-secondary-container": "#e6c3ff",
+                        "on-tertiary-container": "#5d5000",
+                        "error-container": "#b92902",
+                        "surface-dim": "#0e0e0e",
+                        "outline-variant": "#484847",
+                        "error-dim": "#d53d18",
+                        "on-primary-fixed": "#3a4a00",
+                        "secondary-fixed-dim": "#deb3ff",
+                        "on-secondary-fixed": "#510085",
+                        "on-primary": "#516700"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Manrope', sans-serif;
+            background-color: #0e0e0e;
+            color: #ffffff;
+        }
+        .headline-font {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(38, 38, 38, 0.4);
+            backdrop-filter: blur(20px);
+        }
+        .aero-gradient {
+            background: linear-gradient(45deg, #beee00, #f3ffca);
+        }
+    </style>
+</head>
+<body class="bg-surface selection:bg-primary-container selection:text-black min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full bg-[#0e0e0e]/60 backdrop-blur-xl flex justify-between items-center px-6 h-16 z-50 shadow-[0_0_40px_rgba(202,253,0,0.1)]">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#f3ffca] active:scale-95 transition-transform cursor-pointer" data-icon="sync">sync</span>
+<h1 class="text-2xl font-bold text-[#f3ffca] font-['Space_Grotesk'] tracking-tight">TrackNPerf</h1>
+</div>
+<!-- Desktop Navigation Integration (Based on System Pivot Rule) -->
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-[#f3ffca] font-['Space_Grotesk'] hover:text-[#cafd00] transition-colors duration-300" href="#">Today</a>
+<a class="text-white/60 font-['Space_Grotesk'] hover:text-[#cafd00] transition-colors duration-300" href="#">History</a>
+<a class="text-white/60 font-['Space_Grotesk'] hover:text-[#cafd00] transition-colors duration-300" href="#">Analysis</a>
+<a class="text-white/60 font-['Space_Grotesk'] hover:text-[#cafd00] transition-colors duration-300" href="#">Profile</a>
+</nav>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#f3ffca] active:scale-95 transition-transform cursor-pointer" data-icon="event">event</span>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-[1440px] mx-auto">
+<!-- Dashboard Header -->
+<div class="mb-12">
+<p class="text-primary font-headline tracking-widest text-sm mb-2 opacity-80">MONDAY, OCTOBER 24</p>
+<h2 class="text-6xl headline-font font-bold tracking-tighter">Daily <span class="text-primary-container">Pulse.</span></h2>
+</div>
+<!-- 2-Column Main Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+<!-- Left Column: Planned Sessions + AI Recommendation -->
+<div class="md:col-span-7 space-y-8">
+<!-- AI Recommendation Card (Bento Style Large) -->
+<section class="relative overflow-hidden rounded-xl bg-surface-container-low p-8 shadow-2xl border-l-4 border-primary">
+<div class="absolute top-0 right-0 p-6 opacity-10">
+<span class="material-symbols-outlined text-9xl" data-icon="bolt">bolt</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-6">
+<span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">AI Recommendation</span>
+</div>
+<h3 class="text-4xl headline-font font-bold mb-4 leading-tight">Optimal Recovery Window Detected.</h3>
+<p class="text-on-surface-variant text-lg max-w-xl mb-8 leading-relaxed">
+                            Based on your HRV sync from Oura and yesterday's 15km threshold run, we suggest a high-cadence mobility session before 11:00 AM to flush metabolic waste.
+                        </p>
+<button class="bg-primary-container text-black font-bold px-8 py-4 rounded-xl flex items-center gap-3 hover:scale-[1.02] transition-transform active:scale-95">
+<span>Adjust Session</span>
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- Planned Sessions List -->
+<section class="space-y-4">
+<div class="flex justify-between items-end mb-6">
+<h4 class="text-2xl headline-font font-bold">Planned Sessions</h4>
+<span class="text-on-surface-variant font-label text-sm">3 SESSIONS TODAY</span>
+</div>
+<!-- Session Item 1 -->
+<div class="group bg-surface-container-highest rounded-xl p-6 flex items-center justify-between hover:bg-surface-bright transition-colors">
+<div class="flex items-center gap-6">
+<div class="w-16 h-16 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl" data-icon="directions_run">directions_run</span>
+</div>
+<div>
+<span class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">07:30 AM</span>
+<h5 class="text-xl font-bold headline-font">Morning Threshold Run</h5>
+<p class="text-on-surface-variant text-sm">12.5km • Zone 4 Focus</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors cursor-pointer" data-icon="check_circle">check_circle</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+<!-- Session Item 2 -->
+<div class="group bg-surface-container-highest rounded-xl p-6 flex items-center justify-between hover:bg-surface-bright transition-colors">
+<div class="flex items-center gap-6">
+<div class="w-16 h-16 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-3xl" data-icon="self_improvement">self_improvement</span>
+</div>
+<div>
+<span class="text-xs font-bold text-secondary uppercase tracking-widest mb-1 block">10:15 AM</span>
+<h5 class="text-xl font-bold headline-font">Dynamic Mobility Flow</h5>
+<p class="text-on-surface-variant text-sm">20 min • Active Recovery</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors cursor-pointer" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer" data-icon="more_vert">more_vert</span>
+</div>
+</div>
+<!-- Session Item 3 -->
+<div class="group bg-surface-container-highest rounded-xl p-6 flex items-center justify-between border-2 border-dashed border-outline-variant/30 opacity-60">
+<div class="flex items-center gap-6">
+<div class="w-16 h-16 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-3xl" data-icon="fitness_center">fitness_center</span>
+</div>
+<div>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1 block">05:00 PM</span>
+<h5 class="text-xl font-bold headline-font">Strength &amp; Stability</h5>
+<p class="text-on-surface-variant text-sm">45 min • Core/Glutes Focus</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="lock">lock</span>
+</div>
+</section>
+</div>
+<!-- Right Column: Profile Summary + Sync Queue -->
+<div class="md:col-span-5 space-y-8">
+<!-- Profile Summary Card -->
+<section class="bg-surface-container-low rounded-xl p-8">
+<div class="flex items-center gap-6 mb-10">
+<div class="relative">
+<img alt="Athlete Profile" class="w-24 h-24 rounded-full object-cover grayscale contrast-125" data-alt="extreme close-up of a high-performance athlete in dark gear, focused expression, moody dramatic studio lighting with deep shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsATlWzaA5zqZSYf59z3TDY-cKIw79O3jI-h_isx1Ut3HJfU5qvzRFQslg_a6ifqp3OOSAoIa_f6ZSdlPw8yUJbG1BMu7uXHY6a69vSsNMuZj76YQ3PSw34W5Wz8Bif4lPGkVEcFVE2Hr7ulUrJwf_aLpoyIIgJ8fAIavmQhjGJ_BseMvG93t1uyxmFTSES70gFSfPFEOFMZbS2jWd4hE8tcc8nPverKLNaRvPLBBrLClktouSTa2vKP7DvrduYAjG9hXDmOF1Izon"/>
+<div class="absolute -bottom-2 -right-2 bg-primary w-8 h-8 rounded-full border-4 border-surface flex items-center justify-center">
+<span class="material-symbols-outlined text-black text-xs font-bold" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div>
+<h3 class="text-3xl headline-font font-bold">Alex Thorne</h3>
+<p class="text-primary-container font-label text-sm uppercase tracking-widest">ELITE LEVEL MARATHONER</p>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-highest p-5 rounded-lg">
+<span class="text-on-surface-variant text-xs font-bold uppercase block mb-1">Weekly Volume</span>
+<div class="flex items-baseline gap-1">
+<span class="text-3xl font-bold headline-font">68.4</span>
+<span class="text-on-surface-variant text-sm">KM</span>
+</div>
+</div>
+<div class="bg-surface-container-highest p-5 rounded-lg">
+<span class="text-on-surface-variant text-xs font-bold uppercase block mb-1">Load Status</span>
+<div class="flex items-center gap-2">
+<span class="text-3xl font-bold headline-font text-primary-container">Optimal</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Sync Queue Details Panel -->
+<section class="bg-surface-container-low rounded-xl p-8">
+<div class="flex justify-between items-center mb-8">
+<h4 class="text-xl headline-font font-bold flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container" data-icon="cloud_sync">cloud_sync</span>
+                            Sync Queue
+                        </h4>
+<span class="bg-surface-variant px-3 py-1 rounded-full text-[10px] font-bold">4 ACTIVE SOURCES</span>
+</div>
+<div class="space-y-6">
+<!-- Sync Item: Garmin -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-white/5 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="watch">watch</span>
+</div>
+<div>
+<p class="font-bold text-sm">Garmin Connect</p>
+<p class="text-xs text-primary-container">Synchronizing workout data...</p>
+</div>
+</div>
+<div class="w-12 h-1 bg-surface-variant rounded-full overflow-hidden">
+<div class="bg-primary-container h-full w-[65%]"></div>
+</div>
+</div>
+<!-- Sync Item: Oura -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-white/5 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="ring_volume">ring_volume</span>
+</div>
+<div>
+<p class="font-bold text-sm">Oura Ring</p>
+<p class="text-xs text-on-surface-variant">Last synced 2m ago</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-primary-container text-sm" data-icon="check_circle">check_circle</span>
+</div>
+<!-- Sync Item: Strava -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-white/5 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="share">share</span>
+</div>
+<div>
+<p class="font-bold text-sm">Strava</p>
+<p class="text-xs text-on-surface-variant">Connected</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm" data-icon="pause_circle">pause_circle</span>
+</div>
+<div class="mt-8 pt-6 border-t border-outline-variant/20">
+<button class="w-full text-center text-sm font-bold text-primary-container hover:underline transition-all">
+                                Manage Data Sources
+                            </button>
+</div>
+</div>
+</section>
+<!-- Small Activity Snippet -->
+<div class="rounded-xl overflow-hidden relative group cursor-pointer h-48">
+<img alt="Training Map" class="w-full h-full object-cover brightness-50 group-hover:scale-110 transition-transform duration-700" data-alt="high contrast satellite map of urban running routes in a dark neon aesthetic with vibrant glowing paths" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-QALRtAgkOnnC9JQd_QZIyAp8KyXKa72YZrr91yStbQTIhT2VOvrAyILbtTkcIXgIfmQ5yMMvC88ej7MPb4C46uijVc0Y8gFSFQE6W7rDAma3ELDvT5AH8szmHqhbaaFDArHeyL3bKfjK78GAMPVe8FSPstTjTedEX12kG0safU2rPyldFRXluzQsBkRlffFyscoGzF_QDQpMePRxwADbjSr7EhXBg0bI6T4vMHVbdHOI9CMurFEQC2hzztUOTpb2ElJk1_KySshQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-6 flex flex-col justify-end">
+<span class="text-xs font-bold text-primary-container uppercase mb-1">Local Route</span>
+<h5 class="text-lg font-bold headline-font">Coastal Ridge Loop</h5>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only suppression handled via md:hidden) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full h-20 z-50 flex justify-around items-center px-4 pb-4 bg-[#0e0e0e]/80 backdrop-blur-2xl rounded-t-[1.5rem] shadow-[0_-10px_50px_rgba(202,253,0,0.05)]">
+<div class="bg-[#cafd00] text-black rounded-full p-3 active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="today">today</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</div>
+</nav>
+</body></html>

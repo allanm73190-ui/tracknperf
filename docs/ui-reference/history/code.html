@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#e6c3ff",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "tertiary-container": "#fce047",
+                    "error": "#ff7351",
+                    "on-tertiary-fixed": "#483d00",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "surface-dim": "#0e0e0e",
+                    "on-surface": "#ffffff",
+                    "on-tertiary-container": "#5d5000",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "surface-container-high": "#201f1f",
+                    "outline-variant": "#484847",
+                    "surface-container-highest": "#262626",
+                    "outline": "#767575",
+                    "on-secondary-fixed": "#510085",
+                    "on-error": "#450900",
+                    "surface-bright": "#2c2c2c",
+                    "surface-variant": "#262626",
+                    "primary-dim": "#beee00",
+                    "inverse-surface": "#fcf9f8",
+                    "error-dim": "#d53d18",
+                    "background": "#0e0e0e",
+                    "surface": "#0e0e0e",
+                    "primary-fixed": "#cafd00",
+                    "secondary": "#c57eff",
+                    "surface-container": "#1a1919",
+                    "on-background": "#ffffff",
+                    "error-container": "#b92902",
+                    "primary-container": "#cafd00",
+                    "surface-container-lowest": "#000000",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-dim": "#c57eff",
+                    "secondary-container": "#6a0baa",
+                    "primary": "#f3ffca",
+                    "surface-tint": "#f3ffca",
+                    "on-error-container": "#ffd2c8",
+                    "primary-fixed-dim": "#beee00",
+                    "inverse-primary": "#516700",
+                    "secondary-fixed": "#e7c5ff",
+                    "tertiary-dim": "#edd13a",
+                    "on-surface-variant": "#adaaaa",
+                    "on-primary-fixed-variant": "#526900",
+                    "on-primary": "#516700",
+                    "inverse-on-surface": "#565555",
+                    "tertiary": "#ffeea5",
+                    "on-tertiary": "#665800",
+                    "on-secondary": "#340058",
+                    "surface-container-low": "#131313",
+                    "tertiary-fixed": "#fce047"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface font-body selection:bg-secondary selection:text-on-secondary">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0e0e0e] tonal-shift bg-[#131313] flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#f3ffca] hover:opacity-80 transition-opacity active:scale-95 duration-150 cursor-pointer">menu</span>
+<h1 class="text-lg font-bold text-[#f3ffca] font-['Space_Grotesk'] tracking-tighter uppercase">24 MAY 2024</h1>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-highest px-3 py-1 rounded-full border border-outline-variant/20">
+<span class="material-symbols-outlined text-[14px] text-secondary" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+<span class="text-[10px] font-bold tracking-widest text-[#f3ffca] uppercase font-headline">SYNCED</span>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-5xl mx-auto">
+<!-- Editorial Header -->
+<section class="mb-12">
+<div class="flex flex-col gap-1">
+<span class="text-secondary font-headline font-bold tracking-widest text-xs uppercase">ARCHIVES DE PERFORMANCE</span>
+<h2 class="text-6xl font-headline font-bold text-on-surface tracking-tighter">HISTORIQUE.</h2>
+</div>
+</section>
+<!-- Range Selector - Kinetic High-Performance Editorial style -->
+<section class="mb-10 overflow-x-auto no-scrollbar">
+<div class="flex items-center gap-3">
+<button class="bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-6 py-3 rounded-xl font-headline font-bold text-sm transition-all border border-outline-variant/10">7 JOURS</button>
+<button class="bg-secondary-container text-on-secondary-container px-6 py-3 rounded-xl font-headline font-bold text-sm transition-all border border-secondary/20">14 JOURS</button>
+<button class="bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-6 py-3 rounded-xl font-headline font-bold text-sm transition-all border border-outline-variant/10">30 JOURS</button>
+<button class="bg-surface-container-highest text-on-surface-variant hover:text-on-surface px-6 py-3 rounded-xl font-headline font-bold text-sm transition-all border border-outline-variant/10">90 JOURS</button>
+</div>
+</section>
+<!-- Bento Grid / Asymmetric Layout for History -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Large Focus Session Card -->
+<div class="md:col-span-8 bg-surface-container-low rounded-[1.5rem] p-8 flex flex-col justify-between group relative overflow-hidden">
+<div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-9xl text-secondary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<div class="flex justify-between items-start mb-12">
+<div class="flex flex-col">
+<span class="text-secondary font-bold text-xs tracking-widest uppercase mb-1">SESSION RÉCENTE</span>
+<span class="text-on-surface-variant text-sm font-medium uppercase">Hier • 18:45 • Parc Monceau</span>
+</div>
+<div class="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-[10px] font-black tracking-widest border border-secondary/20">INTENSITÉ MAX</div>
+</div>
+<div class="flex items-baseline gap-4 mb-2">
+<h3 class="text-8xl font-headline font-bold text-on-surface leading-none tracking-tighter">12.4</h3>
+<span class="text-2xl font-headline font-light text-on-surface-variant uppercase">KM</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-8 pt-12 border-t border-outline-variant/10">
+<div>
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-1">DURÉE</p>
+<p class="text-2xl font-headline font-bold">52:14</p>
+</div>
+<div>
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-1">ALLURE</p>
+<p class="text-2xl font-headline font-bold text-secondary">4:12</p>
+</div>
+<div>
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-1">CALORIES</p>
+<p class="text-2xl font-headline font-bold">842</p>
+</div>
+</div>
+</div>
+<!-- Side Card: Stats Aggregation -->
+<div class="md:col-span-4 bg-surface-container-highest rounded-[1.5rem] p-8 flex flex-col justify-center border border-outline-variant/10">
+<div class="space-y-8">
+<div>
+<span class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-3 block">RÉCUPÉRATION</span>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[85%]"></div>
+</div>
+<p class="mt-2 text-on-surface text-sm font-bold">85% Prêt pour demain</p>
+</div>
+<div>
+<span class="text-on-surface-variant text-[10px] font-bold tracking-widest uppercase mb-2 block">CHARGE TOTALE</span>
+<p class="text-4xl font-headline font-bold text-on-surface">324</p>
+<p class="text-xs text-secondary mt-1">+12% vs semaine dernière</p>
+</div>
+</div>
+</div>
+<!-- Row of Historical Sessions -->
+<div class="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Session 2 -->
+<div class="bg-surface-container-low rounded-[1.5rem] p-6 border border-outline-variant/5 hover:border-secondary/30 transition-all cursor-pointer">
+<div class="flex justify-between items-center mb-6">
+<span class="text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">22 MAI</span>
+<span class="material-symbols-outlined text-secondary text-sm">trending_up</span>
+</div>
+<div class="flex items-baseline gap-2 mb-4">
+<h4 class="text-4xl font-headline font-bold text-on-surface">8.2</h4>
+<span class="text-sm font-headline text-on-surface-variant uppercase">KM</span>
+</div>
+<div class="flex justify-between text-xs font-medium text-on-surface-variant">
+<span>38 min</span>
+<span class="text-on-surface">142 BPM</span>
+</div>
+</div>
+<!-- Session 3 -->
+<div class="bg-surface-container-low rounded-[1.5rem] p-6 border border-outline-variant/5 hover:border-secondary/30 transition-all cursor-pointer">
+<div class="flex justify-between items-center mb-6">
+<span class="text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">20 MAI</span>
+<span class="material-symbols-outlined text-secondary text-sm">schedule</span>
+</div>
+<div class="flex items-baseline gap-2 mb-4">
+<h4 class="text-4xl font-headline font-bold text-on-surface">15.0</h4>
+<span class="text-sm font-headline text-on-surface-variant uppercase">KM</span>
+</div>
+<div class="flex justify-between text-xs font-medium text-on-surface-variant">
+<span>1h 12m</span>
+<span class="text-on-surface">138 BPM</span>
+</div>
+</div>
+<!-- Session 4 -->
+<div class="bg-surface-container-low rounded-[1.5rem] p-6 border border-outline-variant/5 hover:border-secondary/30 transition-all cursor-pointer overflow-hidden relative">
+<div class="absolute inset-0 z-0 opacity-20 pointer-events-none">
+<div class="w-full h-full" data-alt="minimalist neon purple topographic map lines on a dark background representing GPS data and routes" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDs99XQhaI6QdTlNfDGpMnLkvX4ZcmW9Pq_fKI6XMdMHODRtjP9HgwcmxC05kPrwt03a7LteWGqEem7YOTcB1QDl3_VE5Wr81T4oBMoE8rC6S6M1wz4MyTbBr6b459XfF9hgf5XBMGGHMpb6Q_ew8eY7OjiZ9t7-v_CHLdcnIjzGpwMH-LTpjCCzKt5Q5c4G4lQaXvJSw5dykIPZfTP1SZk-bYojSkx5nU3BsTxM-0L9jVfGY47nbtCmgGMr7hxdOESDw2l-O2ZXxwf'); background-size: cover;"></div>
+</div>
+<div class="relative z-10">
+<div class="flex justify-between items-center mb-6">
+<span class="text-[10px] font-bold tracking-widest text-on-surface-variant uppercase">18 MAI</span>
+<span class="material-symbols-outlined text-secondary text-sm">map</span>
+</div>
+<div class="flex items-baseline gap-2 mb-4">
+<h4 class="text-4xl font-headline font-bold text-on-surface">5.4</h4>
+<span class="text-sm font-headline text-on-surface-variant uppercase">KM</span>
+</div>
+<div class="flex justify-between text-xs font-medium text-on-surface-variant">
+<span>22 min</span>
+<span class="text-on-surface">158 BPM</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Long Banner Statistics -->
+<div class="md:col-span-12 bg-surface-container-highest rounded-[1.5rem] p-10 flex flex-col md:flex-row justify-between items-center gap-8 border border-outline-variant/10">
+<div class="flex flex-col items-center md:items-start text-center md:text-left">
+<span class="text-secondary font-bold text-[10px] tracking-widest uppercase mb-2">PROGRESSION MENSUELLE</span>
+<h3 class="text-4xl font-headline font-bold text-on-surface">+128.4 <span class="text-sm text-on-surface-variant uppercase font-medium">KM TOTAL</span></h3>
+</div>
+<div class="flex gap-4">
+<div class="flex flex-col items-center px-6 border-r border-outline-variant/20">
+<span class="text-[2rem] font-headline font-bold text-on-surface">12</span>
+<span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">SÉANCES</span>
+</div>
+<div class="flex flex-col items-center px-6">
+<span class="text-[2rem] font-headline font-bold text-on-surface">9.2K</span>
+<span class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">ÉNERGIE (CAL)</span>
+</div>
+</div>
+<button class="bg-primary-container text-on-primary-fixed px-8 py-4 rounded-full font-headline font-black text-sm uppercase tracking-widest hover:scale-105 active:scale-95 transition-all">
+                    RAPPORT COMPLET
+                </button>
+</div>
+</div>
+</main>
+<!-- NavigationDrawer (Contextual Detail Panel, hidden by default) -->
+<!-- Not rendered in main canvas as it's a detail element -->
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-8 pb-6 pt-2 bg-[#0e0e0e]/80 backdrop-blur-xl z-50 rounded-t-[1.5rem] shadow-[0_-10px_40px_rgba(202,253,0,0.1)]">
+<div class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 transition-all active:scale-90 tap-highlight-none">
+<span class="material-symbols-outlined">bolt</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 transition-all active:scale-90 tap-highlight-none">
+<span class="material-symbols-outlined">monitoring</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-[#cafd00] text-[#0e0e0e] rounded-full p-3 transition-all active:scale-90 tap-highlight-none">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history</span>
+</div>
+<div class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 transition-all active:scale-90 tap-highlight-none">
+<span class="material-symbols-outlined">settings</span>
+</div>
+</nav>
+</body></html>

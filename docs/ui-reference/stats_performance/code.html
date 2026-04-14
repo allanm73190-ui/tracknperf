@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#e6c3ff",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "tertiary-container": "#fce047",
+                    "error": "#ff7351",
+                    "on-tertiary-fixed": "#483d00",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "surface-dim": "#0e0e0e",
+                    "on-surface": "#ffffff",
+                    "on-tertiary-container": "#5d5000",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "surface-container-high": "#201f1f",
+                    "outline-variant": "#484847",
+                    "surface-container-highest": "#262626",
+                    "outline": "#767575",
+                    "on-secondary-fixed": "#510085",
+                    "on-error": "#450900",
+                    "surface-bright": "#2c2c2c",
+                    "surface-variant": "#262626",
+                    "primary-dim": "#beee00",
+                    "inverse-surface": "#fcf9f8",
+                    "error-dim": "#d53d18",
+                    "background": "#0e0e0e",
+                    "surface": "#0e0e0e",
+                    "primary-fixed": "#cafd00",
+                    "secondary": "#c57eff",
+                    "surface-container": "#1a1919",
+                    "on-background": "#ffffff",
+                    "error-container": "#b92902",
+                    "primary-container": "#cafd00",
+                    "surface-container-lowest": "#000000",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-dim": "#c57eff",
+                    "secondary-container": "#6a0baa",
+                    "primary": "#f3ffca",
+                    "surface-tint": "#f3ffca",
+                    "on-error-container": "#ffd2c8",
+                    "primary-fixed-dim": "#beee00",
+                    "inverse-primary": "#516700",
+                    "secondary-fixed": "#e7c5ff",
+                    "tertiary-dim": "#edd13a",
+                    "on-surface-variant": "#adaaaa",
+                    "on-primary-fixed-variant": "#526900",
+                    "on-primary": "#516700",
+                    "inverse-on-surface": "#565555",
+                    "tertiary": "#ffeea5",
+                    "on-tertiary": "#665800",
+                    "on-secondary": "#340058",
+                    "surface-container-low": "#131313",
+                    "tertiary-fixed": "#fce047"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .chart-gradient-purple {
+            background: linear-gradient(180deg, rgba(197, 126, 255, 0.4) 0%, rgba(197, 126, 255, 0) 100%);
+        }
+        .breathing-layout {
+            padding-bottom: 120px;
+        }
+        body {
+            background-color: #0e0e0e;
+            color: #ffffff;
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0e0e0e] tonal-shift bg-[#131313] flat no shadows flex justify-between items-center px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#f3ffca]">menu</span>
+<h1 class="text-lg font-bold text-[#f3ffca] font-['Space_Grotesk'] tracking-tighter uppercase">24 MAY 2024</h1>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-['Space_Grotesk'] tracking-tighter uppercase text-[#f3ffca] opacity-80">SYNCED</span>
+<span class="material-symbols-outlined text-[#f3ffca] text-sm" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+</div>
+</header>
+<main class="pt-24 px-6 breathing-layout max-w-5xl mx-auto">
+<!-- Hero Stats Header -->
+<section class="mb-12">
+<p class="font-headline text-secondary text-sm font-bold uppercase tracking-widest mb-2">Performance Globale</p>
+<h2 class="font-headline text-6xl md:text-8xl font-bold tracking-tighter leading-none mb-4">94<span class="text-secondary">%</span></h2>
+<p class="text-on-surface-variant max-w-md">Votre efficacité de récupération a augmenté de 12% cette semaine. Continuez sur cette lancée.</p>
+</section>
+<!-- Bento Grid Stats -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<!-- Large Activity Chart Card -->
+<div class="md:col-span-2 bg-surface-container-low rounded-xl p-8 border border-white/5 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+<span class="material-symbols-outlined text-9xl">monitoring</span>
+</div>
+<div class="relative z-10">
+<div class="flex justify-between items-start mb-12">
+<div>
+<h3 class="font-headline text-2xl font-bold">Activité Hebdomadaire</h3>
+<p class="text-on-surface-variant text-sm">Minutes d'intensité</p>
+</div>
+<div class="bg-secondary-container/30 px-3 py-1 rounded-full border border-secondary/20">
+<span class="text-secondary text-xs font-bold">+24% vs Moy.</span>
+</div>
+</div>
+<!-- Simple Bar Chart -->
+<div class="flex items-end justify-between h-48 gap-2">
+<div class="flex flex-col items-center flex-1 gap-4">
+<div class="w-full bg-secondary/10 rounded-t-lg h-[40%] group-hover:bg-secondary/20 transition-all duration-500"></div>
+<span class="text-[10px] uppercase font-bold text-on-surface-variant">Lun</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-4">
+<div class="w-full bg-secondary/20 rounded-t-lg h-[65%] group-hover:bg-secondary/30 transition-all duration-500"></div>
+<span class="text-[10px] uppercase font-bold text-on-surface-variant">Mar</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-4">
+<div class="w-full bg-secondary/40 rounded-t-lg h-[50%] group-hover:bg-secondary/50 transition-all duration-500"></div>
+<span class="text-[10px] uppercase font-bold text-on-surface-variant">Mer</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-4">
+<div class="w-full bg-secondary rounded-t-lg h-[90%] shadow-[0_0_20px_rgba(197,126,255,0.4)]"></div>
+<span class="text-[10px] uppercase font-bold text-secondary">Jeu</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-4">
+<div class="w-full bg-secondary/30 rounded-t-lg h-[70%] group-hover:bg-secondary/40 transition-all duration-500"></div>
+<span class="text-[10px] uppercase font-bold text-on-surface-variant">Ven</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-4">
+<div class="w-full bg-secondary/15 rounded-t-lg h-[30%] group-hover:bg-secondary/25 transition-all duration-500"></div>
+<span class="text-[10px] uppercase font-bold text-on-surface-variant">Sam</span>
+</div>
+<div class="flex flex-col items-center flex-1 gap-4">
+<div class="w-full bg-secondary/10 rounded-t-lg h-[20%] group-hover:bg-secondary/20 transition-all duration-500"></div>
+<span class="text-[10px] uppercase font-bold text-on-surface-variant">Dim</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Small Metric Card 1 -->
+<div class="bg-surface-container-highest rounded-xl p-8 flex flex-col justify-between">
+<span class="material-symbols-outlined text-secondary text-3xl mb-4" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<div>
+<p class="text-on-surface-variant text-sm font-medium">Calories Brûlées</p>
+<h4 class="font-headline text-4xl font-bold tracking-tight">12,450</h4>
+<p class="text-secondary text-xs mt-2 font-bold uppercase tracking-wider">Objectif : 85%</p>
+</div>
+</div>
+<!-- Small Metric Card 2 -->
+<div class="bg-surface-container-highest rounded-xl p-8 flex flex-col justify-between">
+<span class="material-symbols-outlined text-secondary text-3xl mb-4" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<div>
+<p class="text-on-surface-variant text-sm font-medium">Rythme Cardiaque Moy.</p>
+<h4 class="font-headline text-4xl font-bold tracking-tight">68 <span class="text-lg">BPM</span></h4>
+<div class="w-full bg-white/5 h-1 mt-4 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[68%]"></div>
+</div>
+</div>
+</div>
+<!-- Large Recovery Line Chart -->
+<div class="md:col-span-2 bg-surface-container-low rounded-xl p-8 border border-white/5">
+<div class="flex justify-between items-center mb-8">
+<h3 class="font-headline text-2xl font-bold">Indice de Récupération</h3>
+<div class="flex gap-4">
+<span class="text-xs font-bold text-secondary uppercase border-b-2 border-secondary pb-1">7 Jours</span>
+<span class="text-xs font-bold text-on-surface-variant uppercase pb-1">30 Jours</span>
+</div>
+</div>
+<div class="relative h-48 w-full">
+<!-- SVG Simple Line Chart -->
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<defs>
+<lineargradient id="line-grad" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:rgba(197, 126, 255, 0.4);stop-opacity:1"></stop>
+<stop offset="100%" style="stop-color:rgba(197, 126, 255, 0);stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+<path d="M 0,80 Q 20,70 40,85 T 80,40 T 100,20 L 100,100 L 0,100 Z" fill="url(#line-grad)"></path>
+<path d="M 0,80 Q 20,70 40,85 T 80,40 T 100,20" fill="none" stroke="#c57eff" stroke-width="2"></path>
+<circle cx="80" cy="40" fill="#c57eff" r="2"></circle>
+<circle cx="100" cy="20" fill="#c57eff" r="2"></circle>
+</svg>
+<!-- Tooltip Marker -->
+<div class="absolute top-[15%] right-[15%] bg-secondary text-on-secondary px-2 py-1 rounded text-[10px] font-bold">88%</div>
+</div>
+</div>
+</div>
+<!-- Secondary Insights -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="flex flex-col gap-6">
+<h5 class="font-headline text-xl font-bold">Insights du Jour</h5>
+<div class="bg-surface-container-highest/50 backdrop-blur-md rounded-xl p-6 border border-white/5">
+<div class="flex gap-4 items-start">
+<div class="p-3 bg-secondary/10 rounded-lg">
+<span class="material-symbols-outlined text-secondary">lightbulb</span>
+</div>
+<div>
+<p class="font-bold text-on-surface mb-1">Optimisation du Sommeil</p>
+<p class="text-on-surface-variant text-sm">Votre phase de sommeil profond était 15% plus courte que d'habitude. Envisagez une séance de mobilité douce ce soir.</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-highest/50 backdrop-blur-md rounded-xl p-6 border border-white/5">
+<div class="flex gap-4 items-start">
+<div class="p-3 bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-primary">speed</span>
+</div>
+<div>
+<p class="font-bold text-on-surface mb-1">Pic de Puissance</p>
+<p class="text-on-surface-variant text-sm">Record battu sur le 5km. Votre endurance musculaire progresse de manière linéaire.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-2xl overflow-hidden min-h-[300px] flex items-end p-8">
+<img alt="Performance Visual" class="absolute inset-0 w-full h-full object-cover grayscale opacity-40" data-alt="athlete intense training session in a dark high-tech gym with purple neon lighting accents and moody atmospheric shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3NAp-xv0uY5JQNqOyzz8fUyzC6kgt8G_Ug0JW2cqAkN6jo0ydnp7ymRvRGv7sXNj7VPzmbvQCzht6q6gdFQSiFvCK-TJHxtAB1hVGBN4DtP8jNXZl2U7PeSteJ4lvR2p76jwy0liwYBvCOTLoJ5BIbIvKVPVqU4MBKV2GY12n4SkkE060E1ZMTyRYhtnPegVSb5w_h0C5a81BDjE0dVo4u0UWKzBIOZp7gXCaUh5Nc7HcNAj_HMj02-KRkgxF5z3KklnaHSZDyHTS"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+<div class="relative z-10">
+<h4 class="font-headline text-3xl font-bold leading-tight mb-2">Prêt pour le prochain niveau ?</h4>
+<p class="text-on-surface-variant mb-6 text-sm">Votre profil de données suggère que vous êtes prêt pour un cycle de haute intensité.</p>
+<button class="bg-secondary text-on-secondary px-6 py-3 rounded-full font-bold text-sm tracking-wider uppercase transition-transform active:scale-95">
+                        Démarrer le Cycle
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-8 pb-6 pt-2 bg-[#0e0e0e]/80 backdrop-blur-xl rounded-t-[1.5rem] shadow-[0_-10px_40px_rgba(202,253,0,0.1)] z-50">
+<a class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 tap-highlight-none active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">bolt</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#cafd00] text-[#0e0e0e] rounded-full p-3 tap-highlight-none active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 tap-highlight-none active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">history</span>
+</a>
+<a class="flex flex-col items-center justify-center text-white/40 p-3 hover:text-white/80 tap-highlight-none active:scale-90 transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sync Details - TrackNPerf</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#6a0baa",
+                    "secondary": "#c57eff",
+                    "surface-tint": "#f3ffca",
+                    "tertiary-container": "#fce047",
+                    "surface-container-low": "#131313",
+                    "on-surface": "#ffffff",
+                    "surface": "#0e0e0e",
+                    "secondary-dim": "#c57eff",
+                    "primary-container": "#cafd00",
+                    "surface-variant": "#262626",
+                    "surface-container-highest": "#262626",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "on-error-container": "#ffd2c8",
+                    "on-background": "#ffffff",
+                    "on-surface-variant": "#adaaaa",
+                    "tertiary": "#ffeea5",
+                    "inverse-surface": "#fcf9f8",
+                    "inverse-primary": "#516700",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "primary-fixed": "#cafd00",
+                    "on-tertiary": "#665800",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary": "#340058",
+                    "surface-bright": "#2c2c2c",
+                    "surface-container-high": "#201f1f",
+                    "error": "#ff7351",
+                    "surface-container": "#1a1919",
+                    "on-error": "#450900",
+                    "on-tertiary-fixed": "#483d00",
+                    "primary": "#f3ffca",
+                    "inverse-on-surface": "#565555",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "secondary-fixed": "#e7c5ff",
+                    "outline": "#767575",
+                    "primary-fixed-dim": "#beee00",
+                    "tertiary-fixed": "#fce047",
+                    "tertiary-dim": "#edd13a",
+                    "on-primary-fixed-variant": "#526900",
+                    "background": "#0e0e0e",
+                    "on-secondary-container": "#e6c3ff",
+                    "on-tertiary-container": "#5d5000",
+                    "error-container": "#b92902",
+                    "surface-dim": "#0e0e0e",
+                    "outline-variant": "#484847",
+                    "error-dim": "#d53d18",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "on-secondary-fixed": "#510085",
+                    "on-primary": "#516700"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(14, 14, 14, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+<!-- Background Content (Dashboard Mockup) -->
+<main class="min-h-screen pb-32">
+<header class="bg-[#0e0e0e]/60 backdrop-blur-xl text-[#f3ffca] font-['Space_Grotesk'] tracking-tight fixed top-0 w-full shadow-[0_0_40px_rgba(202,253,0,0.1)] flex justify-between items-center px-6 h-16 z-10">
+<div class="text-2xl font-bold">TrackNPerf</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined hover:text-[#cafd00] transition-colors duration-300 active:scale-95 transition-transform cursor-pointer">sync</span>
+<span class="material-symbols-outlined hover:text-[#cafd00] transition-colors duration-300 active:scale-95 transition-transform cursor-pointer">event</span>
+</div>
+</header>
+<section class="pt-24 px-6 space-y-8">
+<div class="space-y-2">
+<h2 class="text-on-surface-variant font-medium text-sm tracking-widest uppercase">Performance Today</h2>
+<div class="text-7xl font-headline font-bold leading-none tracking-tighter">98.2</div>
+<div class="text-on-surface-variant text-lg">Score Global de Forme</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-highest p-6 rounded-xl space-y-4">
+<span class="material-symbols-outlined text-primary text-3xl">bolt</span>
+<div>
+<div class="text-2xl font-headline font-bold">2,450</div>
+<div class="text-xs text-on-surface-variant uppercase tracking-wider">Kcal Brûlées</div>
+</div>
+</div>
+<div class="bg-surface-container-highest p-6 rounded-xl space-y-4">
+<span class="material-symbols-outlined text-secondary text-3xl">favorite</span>
+<div>
+<div class="text-2xl font-headline font-bold">64 bpm</div>
+<div class="text-xs text-on-surface-variant uppercase tracking-wider">Repos</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Glassmorphism Overlay (Sync Drawer) -->
+<div class="fixed inset-0 z-50 flex items-end">
+<!-- Backdrop Scrim -->
+<div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+<!-- The Drawer Content -->
+<div class="relative w-full max-h-[751px] glass-panel rounded-t-[2.5rem] border-t border-white/5 flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-500">
+<!-- Handle -->
+<div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mt-4 mb-6"></div>
+<div class="px-8 pb-8 flex-1 overflow-y-auto">
+<!-- Header & Status Pill -->
+<div class="flex justify-between items-start mb-8">
+<div class="space-y-1">
+<h1 class="text-3xl font-headline font-bold tracking-tight">Sync Details</h1>
+<p class="text-on-surface-variant font-medium">Statut de la synchronisation</p>
+</div>
+<div class="bg-surface-container-highest px-4 py-2 rounded-full flex items-center gap-2 border border-white/10">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">sync_saved_locally</span>
+<span class="text-xs font-bold tracking-widest text-primary uppercase">LOCAL</span>
+</div>
+</div>
+<!-- Offline Alert Banner -->
+<div class="bg-error-container/20 border border-error/20 p-4 rounded-xl mb-8 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-error">cloud_off</span>
+</div>
+<div>
+<div class="font-bold text-error tracking-tight">HORS LIGNE</div>
+<div class="text-xs text-on-surface-variant">Vérifiez votre connexion réseau</div>
+</div>
+</div>
+<button class="bg-error text-on-error px-4 py-2 rounded-lg text-xs font-bold tracking-tighter uppercase active:scale-95 transition-transform">
+                        REESSAYER
+                    </button>
+</div>
+<!-- Summary Grid -->
+<div class="grid grid-cols-2 gap-4 mb-10">
+<div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+<div class="text-4xl font-headline font-bold text-tertiary mb-1">3</div>
+<div class="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">EN ATTENTE</div>
+</div>
+<div class="bg-white/5 p-6 rounded-2xl border border-white/5">
+<div class="text-4xl font-headline font-bold text-primary mb-1">12</div>
+<div class="text-[10px] font-bold text-on-surface-variant tracking-widest uppercase">APPLIQUÉS</div>
+</div>
+</div>
+<!-- Operations List -->
+<div class="space-y-6">
+<h3 class="text-xs font-bold text-on-surface-variant tracking-widest uppercase">Opérations Récentes</h3>
+<!-- Item 1: Pending -->
+<div class="flex items-center gap-4 group">
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary">update</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-0.5">
+<span class="font-bold text-on-surface truncate">Update Session GPS</span>
+<span class="text-[10px] font-medium text-tertiary px-2 py-0.5 rounded bg-tertiary/10">QUEUE</span>
+</div>
+<p class="text-xs text-on-surface-variant">Session Matinale • 12.4 MB</p>
+</div>
+</div>
+<!-- Item 2: Applied -->
+<div class="flex items-center gap-4 group">
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-0.5">
+<span class="font-bold text-on-surface truncate">Profil Utilisateur</span>
+<span class="text-[10px] font-medium text-primary px-2 py-0.5 rounded bg-primary/10">SYNCED</span>
+</div>
+<p class="text-xs text-on-surface-variant">Il y a 5 minutes • 2 KB</p>
+</div>
+</div>
+<!-- Item 3: Applied -->
+<div class="flex items-center gap-4 group">
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-0.5">
+<span class="font-bold text-on-surface truncate">Metrics Biométriques</span>
+<span class="text-[10px] font-medium text-primary px-2 py-0.5 rounded bg-primary/10">SYNCED</span>
+</div>
+<p class="text-xs text-on-surface-variant">Il y a 12 minutes • 450 KB</p>
+</div>
+</div>
+<!-- Item 4: Pending -->
+<div class="flex items-center gap-4 group opacity-60">
+<div class="w-12 h-12 rounded-xl bg-surface-container-highest flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant">pending</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-0.5">
+<span class="font-bold text-on-surface truncate">Données Sommeil</span>
+<span class="text-[10px] font-medium text-on-surface-variant px-2 py-0.5 rounded bg-white/5">WAITING</span>
+</div>
+<p class="text-xs text-on-surface-variant">Aujourd'hui, 08:45 • 800 KB</p>
+</div>
+</div>
+</div>
+<!-- Footer CTA -->
+<div class="mt-12">
+<button class="w-full bg-primary-container text-on-primary-container h-16 rounded-2xl font-headline font-bold text-lg flex items-center justify-center gap-3 active:scale-[0.98] transition-transform">
+<span class="material-symbols-outlined">sync</span>
+                        FORCE SYNCHRONIZATION
+                    </button>
+<p class="text-center text-[10px] text-on-surface-variant mt-4 tracking-widest uppercase font-medium">Last full sync: 04 May 2024, 14:32</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Persistent Bottom Nav -->
+<nav class="fixed bottom-0 left-0 w-full h-20 z-50 flex justify-around items-center px-4 pb-4 bg-[#0e0e0e]/80 backdrop-blur-2xl rounded-t-[1.5rem] shadow-[0_-10px_50px_rgba(202,253,0,0.05)]">
+<div class="bg-[#cafd00] text-black rounded-full p-3 active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">today</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">history</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">bar_chart</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">person</span>
+</div>
+</nav>
+</body></html>

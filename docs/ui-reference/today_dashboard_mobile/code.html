@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#6a0baa",
+                    "secondary": "#c57eff",
+                    "surface-tint": "#f3ffca",
+                    "tertiary-container": "#fce047",
+                    "surface-container-low": "#131313",
+                    "on-surface": "#ffffff",
+                    "surface": "#0e0e0e",
+                    "secondary-dim": "#c57eff",
+                    "primary-container": "#cafd00",
+                    "surface-variant": "#262626",
+                    "surface-container-highest": "#262626",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "on-error-container": "#ffd2c8",
+                    "on-background": "#ffffff",
+                    "on-surface-variant": "#adaaaa",
+                    "tertiary": "#ffeea5",
+                    "inverse-surface": "#fcf9f8",
+                    "inverse-primary": "#516700",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "primary-fixed": "#cafd00",
+                    "on-tertiary": "#665800",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary": "#340058",
+                    "surface-bright": "#2c2c2c",
+                    "surface-container-high": "#201f1f",
+                    "error": "#ff7351",
+                    "surface-container": "#1a1919",
+                    "on-error": "#450900",
+                    "on-tertiary-fixed": "#483d00",
+                    "primary": "#f3ffca",
+                    "inverse-on-surface": "#565555",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "secondary-fixed": "#e7c5ff",
+                    "outline": "#767575",
+                    "primary-fixed-dim": "#beee00",
+                    "surface-container-lowest": "#000000",
+                    "primary-dim": "#beee00",
+                    "tertiary-fixed": "#fce047",
+                    "tertiary-dim": "#edd13a",
+                    "on-primary-fixed-variant": "#526900",
+                    "background": "#0e0e0e",
+                    "on-secondary-container": "#e6c3ff",
+                    "on-tertiary-container": "#5d5000",
+                    "error-container": "#b92902",
+                    "surface-dim": "#0e0e0e",
+                    "outline-variant": "#484847",
+                    "error-dim": "#d53d18",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "on-secondary-fixed": "#510085",
+                    "on-primary": "#516700"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #0e0e0e;
+            color: #ffffff;
+            font-family: 'Manrope', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .kinetic-gradient {
+            background: linear-gradient(45deg, #beee00 0%, #cafd00 100%);
+        }
+        .glass-panel {
+            background: rgba(44, 44, 44, 0.4);
+            backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen pb-24 overflow-x-hidden">
+<header class="fixed top-0 w-full bg-[#0e0e0e]/60 backdrop-blur-xl z-50 flex justify-between items-center px-6 h-16 shadow-[0_0_40px_rgba(202,253,0,0.1)]">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#f3ffca]" data-icon="sync">sync</span>
+<span class="font-headline tracking-tight text-2xl font-bold text-[#f3ffca]">TrackNPerf</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 bg-primary-container/10 px-3 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px] text-primary-container" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-[10px] font-bold text-primary-container uppercase tracking-widest">Synced</span>
+</div>
+<span class="material-symbols-outlined text-white/60 hover:text-[#cafd00] transition-colors duration-300 active:scale-95 transition-transform" data-icon="event">event</span>
+</div>
+</header>
+<main class="mt-20 px-6 space-y-8">
+<section class="space-y-4">
+<div class="flex flex-col">
+<span class="text-on-surface-variant font-label text-sm tracking-[0.2em] uppercase">24 MAI</span>
+<h1 class="text-4xl font-headline font-bold text-on-surface">Tableau de Bord</h1>
+</div>
+</section>
+<section class="space-y-4">
+<div class="flex justify-between items-center">
+<h2 class="font-headline text-lg font-bold tracking-tight text-on-surface-variant">PLANIFIÉ AUJOURD'HUI</h2>
+<span class="material-symbols-outlined text-primary-container" data-icon="add_circle">add_circle</span>
+</div>
+<div class="w-full aspect-[16/6] rounded-xl bg-surface-container-low border border-white/5 flex flex-col items-center justify-center space-y-2 opacity-80">
+<span class="material-symbols-outlined text-on-surface-variant text-4xl" data-icon="event_busy">event_busy</span>
+<p class="text-on-surface-variant text-sm font-medium">Aucune séance prévue</p>
+</div>
+</section>
+<section>
+<div class="relative overflow-hidden rounded-xl bg-surface-container-highest shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+<div class="absolute inset-0 z-0 opacity-40">
+<img class="w-full h-full object-cover" data-alt="dramatic low angle shot of a focused athlete resting in a dark gym with moody green lighting and atmospheric smoke" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvlbaZ9ziLpaumQeoT1PkfznA4-UkSeycwQ-w1rZ2N3hNydxhGLPW9Tb-3W_7X6BDzgDWHHpnkusPvgoGR8pQaOj9N0291IS1dR_9Fr1V6uNTEWg3dTqPkXac5ibqD-8s4yyRN1pIj9yHkBmCgSTlovF2QmTooak1nC8k2Bzz50bRXbhssSf6zCtt9_dp8SpwHzbcv00Mur1uiFUOsGJmHIH74k-lwmYz4O5YziJiGgqIipllezXncwN7Ytr2KU_V1M5YZtbWaMlDK"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-highest via-surface-container-highest/60 to-transparent"></div>
+</div>
+<div class="relative z-10 p-6 space-y-6">
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="psychology" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="text-xs font-bold text-secondary tracking-widest uppercase">RECOMMANDATION IA</span>
+</div>
+<h3 class="text-3xl font-headline font-extrabold text-on-surface leading-none">RÉCUPÉRATION ACTIVE</h3>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-3">
+<div class="w-1 h-1 rounded-full bg-primary-container"></div>
+<span class="text-on-surface font-medium">VRC Stable</span>
+<span class="text-on-surface-variant text-sm">/ 72ms moyenne</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-1 h-1 rounded-full bg-primary-container"></div>
+<span class="text-on-surface font-medium">Sommeil Profond</span>
+<span class="text-on-surface-variant text-sm">/ 2h15 atteint</span>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-1 h-1 rounded-full bg-primary-container"></div>
+<span class="text-on-surface font-medium">Charge Basse</span>
+<span class="text-on-surface-variant text-sm">/ Récupération optimale</span>
+</div>
+</div>
+<button class="w-full py-4 rounded-xl kinetic-gradient text-on-primary-fixed font-headline font-bold text-lg active:scale-95 transition-transform">
+                        VOIR DÉTAILS
+                    </button>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-2 gap-4">
+<div class="bg-surface-container-low p-5 rounded-xl flex flex-col justify-between aspect-square border border-white/5 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary-container text-3xl" data-icon="edit_note">edit_note</span>
+<div class="space-y-1">
+<p class="text-on-surface font-bold text-lg leading-tight tracking-tight uppercase">JOURNAL</p>
+<p class="text-on-surface-variant text-xs font-medium">Saisir les sensations</p>
+</div>
+</div>
+<div class="bg-surface-container-low p-5 rounded-xl flex flex-col justify-between aspect-square border border-white/5 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="restaurant">restaurant</span>
+<div class="space-y-1">
+<p class="text-on-surface font-bold text-lg leading-tight tracking-tight uppercase">NUTRITION</p>
+<p class="text-on-surface-variant text-xs font-medium">Log repas rapide</p>
+</div>
+</div>
+</section>
+</main>
+<nav class="fixed bottom-0 left-0 w-full h-20 z-50 flex justify-around items-center px-4 pb-4 bg-[#0e0e0e]/80 backdrop-blur-2xl shadow-[0_-10px_50px_rgba(202,253,0,0.05)] rounded-t-[1.5rem]">
+<div class="bg-[#cafd00] text-black rounded-full p-3 active:scale-90 duration-200">
+<span class="material-symbols-outlined block" data-icon="today" style="font-variation-settings: 'FILL' 1;">today</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined block" data-icon="history">history</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined block" data-icon="bar_chart">bar_chart</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined block" data-icon="person">person</span>
+</div>
+</nav>
+</body></html>

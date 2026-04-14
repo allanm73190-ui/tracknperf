@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#6a0baa",
+                    "secondary": "#c57eff",
+                    "surface-tint": "#f3ffca",
+                    "tertiary-container": "#fce047",
+                    "surface-container-low": "#131313",
+                    "on-surface": "#ffffff",
+                    "surface": "#0e0e0e",
+                    "secondary-dim": "#c57eff",
+                    "primary-container": "#cafd00",
+                    "surface-variant": "#262626",
+                    "surface-container-highest": "#262626",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "on-error-container": "#ffd2c8",
+                    "on-background": "#ffffff",
+                    "on-surface-variant": "#adaaaa",
+                    "tertiary": "#ffeea5",
+                    "inverse-surface": "#fcf9f8",
+                    "inverse-primary": "#516700",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "primary-fixed": "#cafd00",
+                    "on-tertiary": "#665800",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary": "#340058",
+                    "surface-bright": "#2c2c2c",
+                    "surface-container-high": "#201f1f",
+                    "error": "#ff7351",
+                    "surface-container": "#1a1919",
+                    "on-error": "#450900",
+                    "on-tertiary-fixed": "#483d00",
+                    "primary": "#f3ffca",
+                    "inverse-on-surface": "#565555",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "secondary-fixed": "#e7c5ff",
+                    "outline": "#767575",
+                    "primary-fixed-dim": "#beee00",
+                    "tertiary-fixed": "#fce047",
+                    "tertiary-dim": "#edd13a",
+                    "on-primary-fixed-variant": "#526900",
+                    "background": "#0e0e0e",
+                    "on-secondary-container": "#e6c3ff",
+                    "on-tertiary-container": "#5d5000",
+                    "error-container": "#b92902",
+                    "surface-dim": "#0e0e0e",
+                    "outline-variant": "#484847",
+                    "error-dim": "#d53d18",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "on-secondary-fixed": "#510085",
+                    "on-primary": "#516700"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(44, 44, 44, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .aero-gradient {
+            background: linear-gradient(45deg, #beee00, #f3ffca);
+        }
+        .purple-glow {
+            box-shadow: 0 0 30px rgba(106, 11, 170, 0.15);
+        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body selection:bg-secondary-container selection:text-white">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full bg-[#0e0e0e]/60 backdrop-blur-xl flex justify-between items-center px-6 h-16 z-50 shadow-[0_0_40px_rgba(202,253,0,0.1)]">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#f3ffca] active:scale-95 transition-transform cursor-pointer">sync</span>
+<h1 class="text-2xl font-bold text-[#f3ffca] font-headline tracking-tight">CENTRE DE CONTRÔLE</h1>
+</div>
+<span class="material-symbols-outlined text-white/60 hover:text-[#cafd00] transition-colors duration-300 cursor-pointer">event</span>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-5xl mx-auto space-y-8">
+<!-- Mode Selector (Asymmetric Tabs) -->
+<div class="flex items-end gap-4">
+<button class="bg-primary-container text-black font-headline font-bold px-8 py-4 rounded-xl purple-glow transition-all active:scale-95">
+                Engine
+            </button>
+<button class="bg-surface-container-high text-on-surface-variant font-headline font-medium px-8 py-3 rounded-xl hover:text-white transition-all">
+                Import
+            </button>
+<div class="flex-grow flex justify-end">
+<div class="bg-secondary-container/20 border border-secondary/10 px-4 py-2 rounded-full flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+<span class="text-xs font-headline font-bold text-secondary uppercase tracking-widest">Admin Active</span>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Left Column: Config List (30%) -->
+<div class="md:col-span-4 space-y-6">
+<div class="bg-surface-container-low rounded-xl p-6 border-l-4 border-secondary shadow-xl">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline text-lg font-bold">Profiles</h3>
+<span class="material-symbols-outlined text-secondary cursor-pointer">add_circle</span>
+</div>
+<ul class="space-y-4">
+<li class="p-4 bg-surface-container-highest rounded-lg border border-primary/10 flex items-center justify-between group cursor-pointer hover:bg-secondary/10 transition-colors">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-primary">Prod_v2.4</span>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-wider">Active Engine</span>
+</div>
+<span class="material-symbols-outlined text-primary text-sm">check_circle</span>
+</li>
+<li class="p-4 bg-surface-container-low rounded-lg flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex flex-col">
+<span class="text-sm font-medium">Stage_Beta</span>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-wider">Standby</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm opacity-0 group-hover:opacity-100">play_arrow</span>
+</li>
+<li class="p-4 bg-surface-container-low rounded-lg flex items-center justify-between group cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex flex-col">
+<span class="text-sm font-medium">Debug_Local</span>
+<span class="text-[10px] text-on-surface-variant uppercase tracking-wider">Manual</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-sm opacity-0 group-hover:opacity-100">settings</span>
+</li>
+</ul>
+</div>
+<div class="bg-surface-container-highest rounded-xl p-6 relative overflow-hidden group">
+<div class="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[120px]" style="font-variation-settings: 'FILL' 1;">speed</span>
+</div>
+<h4 class="font-headline text-xs font-bold text-on-surface-variant mb-2 uppercase tracking-widest">Perf Metrics</h4>
+<div class="space-y-1">
+<p class="text-3xl font-headline font-bold text-secondary">0.42ms</p>
+<p class="text-[10px] text-on-surface-variant">Config Parse Latency</p>
+</div>
+</div>
+</div>
+<!-- Right Column: JSON Editor View (70%) -->
+<div class="md:col-span-8">
+<div class="bg-surface-container-low rounded-xl overflow-hidden shadow-2xl flex flex-col h-full border border-outline-variant/10">
+<!-- Editor Header -->
+<div class="bg-surface-container-high px-6 py-4 flex justify-between items-center border-b border-white/5">
+<div class="flex items-center gap-4">
+<div class="flex gap-1.5">
+<div class="w-3 h-3 rounded-full bg-error/40"></div>
+<div class="w-3 h-3 rounded-full bg-tertiary/40"></div>
+<div class="w-3 h-3 rounded-full bg-primary/40"></div>
+</div>
+<span class="text-xs font-mono text-on-surface-variant">config_v2.4.json</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant hover:text-white transition-colors">
+<span class="material-symbols-outlined text-base">history</span>
+                                History
+                            </button>
+<button class="bg-secondary px-4 py-1.5 rounded-lg text-black text-xs font-bold flex items-center gap-2 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">save</span>
+                                Deploy
+                            </button>
+</div>
+</div>
+<!-- Editor Canvas -->
+<div class="p-6 font-mono text-sm leading-relaxed overflow-y-auto max-h-[500px] bg-[#0c0c0c]">
+<div class="flex gap-4">
+<div class="text-on-surface-variant/30 text-right select-none">
+                                01<br/>02<br/>03<br/>04<br/>05<br/>06<br/>07<br/>08<br/>09<br/>10<br/>11<br/>12<br/>13<br/>14<br/>15
+                            </div>
+<div class="text-on-surface-variant">
+<span class="text-secondary">{</span><br/>
+                                  <span class="text-primary">"engine_version"</span>: <span class="text-secondary-dim">"2.4.0-stable"</span>,<br/>
+                                  <span class="text-primary">"performance_mode"</span>: <span class="text-secondary-dim">"ultra"</span>,<br/>
+                                  <span class="text-primary">"sync_interval"</span>: <span class="text-secondary-dim">300</span>,<br/>
+                                  <span class="text-primary">"features"</span>: <span class="text-secondary">[</span><br/>
+                                    <span class="text-secondary-dim">"live_tracking"</span>,<br/>
+                                    <span class="text-secondary-dim">"biometric_mesh"</span>,<br/>
+                                    <span class="text-secondary-dim">"auto_export"</span><br/>
+                                  <span class="text-secondary">]</span>,<br/>
+                                  <span class="text-primary">"thresholds"</span>: <span class="text-secondary">{</span><br/>
+                                    <span class="text-primary">"heart_rate_max"</span>: <span class="text-secondary-dim">195</span>,<br/>
+                                    <span class="text-primary">"power_spike"</span>: <span class="text-secondary-dim">850</span><br/>
+                                  <span class="text-secondary">}</span><br/>
+<span class="text-secondary">}</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Import Section (Hidden/Below for this view) -->
+<section class="mt-12">
+<h2 class="text-xs font-bold text-on-surface-variant uppercase tracking-[0.3em] mb-6">Import Module</h2>
+<div class="bg-surface-container-low border-2 border-dashed border-outline-variant/30 rounded-2xl p-12 text-center group hover:border-secondary transition-colors cursor-pointer relative overflow-hidden">
+<div class="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="relative z-10 flex flex-col items-center">
+<div class="w-16 h-16 bg-surface-container-highest rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-secondary text-3xl">upload_file</span>
+</div>
+<p class="text-lg font-headline font-bold mb-1">Drag and drop raw performance data</p>
+<p class="text-sm text-on-surface-variant">Supports .xlsx, .json, .csv (Max 50MB)</p>
+<div class="mt-8 flex gap-4">
+<div class="bg-surface-container-highest px-4 py-2 rounded-lg flex items-center gap-2 border border-white/5">
+<img alt="FR" class="w-4 h-3 rounded-sm" data-alt="French flag icon small representing localization" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnMSNcAa9b45LpG-glBigaa_c-DAlFVArfN-A6kYePRaZ--66jq5c1Te9lVQxlEg0UNdw01FKWgYLb8-qQXgWjRR8zNL98IhCWF7iE2zE9Z0FCWfWRJ0RjQQnsPtRBgdioXORWfIO6TASxVA421OOsMdWJN4tKHrXFa1h6xtcuE0MnbVSsw79u_O9zTfmE9ejfmxWAtTsPfe-X1nlgFh7gL70_hWZDJcYvro9r_ELMj_H6V3ph_KdXS2Dngls3uCBDKnnrvC2JiA4X"/>
+<span class="text-xs font-bold">FR_METRICS.xlsx</span>
+<span class="material-symbols-outlined text-xs text-error cursor-pointer">close</span>
+</div>
+<div class="bg-surface-container-highest px-4 py-2 rounded-lg flex items-center gap-2 border border-white/5">
+<span class="material-symbols-outlined text-xs text-primary">description</span>
+<span class="text-xs font-bold">Global_Config.json</span>
+<span class="material-symbols-outlined text-xs text-error cursor-pointer">close</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full h-20 z-50 flex justify-around items-center px-4 pb-4 bg-[#0e0e0e]/80 backdrop-blur-2xl shadow-[0_-10px_50px_rgba(202,253,0,0.05)] rounded-t-[1.5rem]">
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">today</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">history</span>
+</div>
+<div class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined">bar_chart</span>
+</div>
+<div class="bg-[#cafd00] text-black rounded-full p-3 active:scale-90 duration-200 cursor-pointer">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+</nav>
+<!-- Decorative Background Glows -->
+<div class="fixed -top-24 -left-24 w-96 h-96 bg-primary/10 blur-[100px] rounded-full pointer-events-none"></div>
+<div class="fixed top-1/2 -right-24 w-64 h-64 bg-secondary/10 blur-[100px] rounded-full pointer-events-none"></div>
+</body></html>

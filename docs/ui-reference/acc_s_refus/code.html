@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="fr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-dim": "#beee00",
+                        "primary-fixed-dim": "#beee00",
+                        "tertiary-container": "#fce047",
+                        "on-primary": "#516700",
+                        "tertiary": "#ffeea5",
+                        "inverse-primary": "#516700",
+                        "secondary-container": "#6a0baa",
+                        "on-background": "#ffffff",
+                        "tertiary-fixed": "#fce047",
+                        "secondary-fixed": "#e7c5ff",
+                        "secondary-fixed-dim": "#deb3ff",
+                        "surface-container-lowest": "#000000",
+                        "error": "#ff7351",
+                        "tertiary-dim": "#edd13a",
+                        "inverse-surface": "#fcf9f8",
+                        "outline": "#767575",
+                        "on-secondary-container": "#e6c3ff",
+                        "surface-bright": "#2c2c2c",
+                        "surface-variant": "#262626",
+                        "surface-tint": "#f3ffca",
+                        "on-tertiary-fixed-variant": "#685900",
+                        "error-container": "#b92902",
+                        "surface-container": "#1a1919",
+                        "outline-variant": "#484847",
+                        "inverse-on-surface": "#565555",
+                        "on-tertiary-container": "#5d5000",
+                        "surface": "#0e0e0e",
+                        "on-surface": "#ffffff",
+                        "on-secondary": "#340058",
+                        "tertiary-fixed-dim": "#edd13a",
+                        "surface-container-low": "#131313",
+                        "on-tertiary-fixed": "#483d00",
+                        "on-secondary-fixed-variant": "#7520b5",
+                        "error-dim": "#d53d18",
+                        "background": "#0e0e0e",
+                        "surface-dim": "#0e0e0e",
+                        "surface-container-high": "#201f1f",
+                        "on-error": "#450900",
+                        "on-tertiary": "#665800",
+                        "primary-fixed": "#cafd00",
+                        "on-surface-variant": "#adaaaa",
+                        "surface-container-highest": "#262626",
+                        "on-primary-fixed-variant": "#526900",
+                        "on-error-container": "#ffd2c8",
+                        "secondary-dim": "#c57eff",
+                        "on-primary-container": "#4a5e00",
+                        "primary": "#f3ffca",
+                        "on-secondary-fixed": "#510085",
+                        "primary-container": "#cafd00",
+                        "on-primary-fixed": "#3a4a00",
+                        "secondary": "#c57eff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Manrope"],
+                        "label": ["Manrope"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen overflow-hidden flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#0e0e0e]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#f3ffca] hover:opacity-80 transition-opacity active:scale-95 duration-200">menu</span>
+<h1 class="font-['Space_Grotesk'] font-bold tracking-tighter text-2xl italic text-[#f3ffca] tracking-widest">SÉCURITÉ</h1>
+</div>
+<div class="flex items-center">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<img alt="user profile avatar" class="w-full h-full object-cover" data-alt="Close-up portrait of a determined elite athlete with sweat on brow, dramatic lighting, high contrast cinematic style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChJFM6eRrVs2W6u9ahnyOf4X5_PodI1VZF4c7cM1M3YjNR5P2QQZrWi6lKIW9OqoUqwRR9TUFh7vtOIlrrwVgKZ6-LeaLFw_jS8mpPa64XYa1c33O6ulqDSNc53dnC46dPLwn2SyfZJQiUkSNF2lvIv-B3wvZ5z66n3_D6wGIMehHdlvgC_TM9ue9vn1zeiFFhzf5gzXdLkyGALCsTItby5H-1P718IrEFGb8-tBwkBStjr_6gIn3nGt8DxphsCmInZMQ5VUOrkDNJ"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow flex items-center justify-center p-6 relative">
+<!-- Atmospheric Background Elements -->
+<div class="absolute inset-0 pointer-events-none">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-secondary/10 blur-[120px] rounded-full"></div>
+<div class="absolute bottom-0 right-0 w-[300px] h-[300px] bg-error/5 blur-[100px] rounded-full"></div>
+</div>
+<section class="max-w-xl w-full text-center z-10 flex flex-col items-center">
+<!-- Neon Glow Icon Container -->
+<div class="relative mb-12">
+<div class="absolute inset-0 bg-secondary blur-[40px] opacity-20 rounded-full"></div>
+<div class="relative bg-surface-container-highest p-10 rounded-[2.5rem] border border-outline-variant/10 shadow-[0_0_60px_rgba(197,126,255,0.1)]">
+<span class="material-symbols-outlined text-[120px] text-secondary leading-none" style="font-variation-settings: 'FILL' 1;">
+                        lock
+                    </span>
+</div>
+</div>
+<!-- Typography Hierarchy -->
+<div class="space-y-4 mb-12">
+<h2 class="font-headline text-6xl md:text-7xl font-black tracking-tight text-on-surface uppercase italic leading-none">
+                    ACCÈS <br/> <span class="text-secondary">REFUSÉ</span>
+</h2>
+<p class="text-on-surface-variant text-lg md:text-xl font-body max-w-sm mx-auto leading-relaxed">
+                    Vous n'avez pas les permissions nécessaires pour accéder au Panneau de Contrôle.
+                </p>
+</div>
+<!-- Kinetic Trigger (Button) -->
+<button class="group relative px-10 py-5 bg-primary-container text-on-primary-fixed font-headline font-bold text-sm tracking-[0.2em] rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(202,253,0,0.2)]">
+<span class="relative z-10">RETOUR AU TABLEAU DE BORD</span>
+<div class="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</button>
+<!-- Security Badge -->
+<div class="mt-16 flex items-center gap-3 bg-surface-container-low px-6 py-3 rounded-full border border-outline-variant/10">
+<span class="material-symbols-outlined text-secondary text-sm" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+<span class="font-headline text-[10px] tracking-widest text-on-surface-variant uppercase">Protocole de Sécurité Actif</span>
+</div>
+</section>
+</main>
+<!-- BottomNavBar (Suppressed due to focused security state, but layout space maintained if needed for footer) -->
+<footer class="h-8 w-full"></footer>
+<!-- Decorative Corner Elements -->
+<div class="fixed bottom-0 left-0 p-8 pointer-events-none opacity-20">
+<div class="font-headline font-black italic text-4xl text-on-surface-variant tracking-tighter">004</div>
+<div class="w-12 h-1 bg-secondary mt-2"></div>
+</div>
+<div class="fixed top-1/2 right-0 -translate-y-1/2 rotate-90 origin-right p-8 pointer-events-none opacity-10">
+<div class="font-headline text-sm tracking-[1em] text-on-surface uppercase">Unauthorized Attempt Logged</div>
+</div>
+</body></html>

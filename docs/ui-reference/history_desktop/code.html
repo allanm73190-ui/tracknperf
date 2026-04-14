@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TrackNPerf | ARCHIVES</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#6a0baa",
+                    "secondary": "#c57eff",
+                    "surface-tint": "#f3ffca",
+                    "tertiary-container": "#fce047",
+                    "surface-container-low": "#131313",
+                    "on-surface": "#ffffff",
+                    "surface": "#0e0e0e",
+                    "secondary-dim": "#c57eff",
+                    "primary-container": "#cafd00",
+                    "surface-variant": "#262626",
+                    "surface-container-highest": "#262626",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "on-error-container": "#ffd2c8",
+                    "on-background": "#ffffff",
+                    "on-surface-variant": "#adaaaa",
+                    "tertiary": "#ffeea5",
+                    "inverse-surface": "#fcf9f8",
+                    "inverse-primary": "#516700",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "primary-fixed": "#cafd00",
+                    "on-tertiary": "#665800",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary": "#340058",
+                    "surface-bright": "#2c2c2c",
+                    "surface-container-high": "#201f1f",
+                    "error": "#ff7351",
+                    "surface-container": "#1a1919",
+                    "on-error": "#450900",
+                    "on-tertiary-fixed": "#483d00",
+                    "primary": "#f3ffca",
+                    "inverse-on-surface": "#565555",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "secondary-fixed": "#e7c5ff",
+                    "outline": "#767575",
+                    "primary-fixed-dim": "#beee00",
+                    "surface-container-lowest": "#000000",
+                    "primary-dim": "#beee00",
+                    "tertiary-fixed": "#fce047",
+                    "tertiary-dim": "#edd13a",
+                    "on-primary-fixed-variant": "#526900",
+                    "background": "#0e0e0e",
+                    "on-secondary-container": "#e6c3ff",
+                    "on-tertiary-container": "#5d5000",
+                    "error-container": "#b92902",
+                    "surface-dim": "#0e0e0e",
+                    "outline-variant": "#484847",
+                    "error-dim": "#d53d18",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "on-secondary-fixed": "#510085",
+                    "on-primary": "#516700"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; background-color: #0e0e0e; color: #ffffff; }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .kinetic-glow { box-shadow: 0 0 40px rgba(202, 253, 0, 0.08); }
+        .glass-panel { background: rgba(26, 25, 25, 0.6); backdrop-filter: blur(20px); }
+        .performance-gradient { background: linear-gradient(45deg, #beee00 0%, #f3ffca 100%); }
+    </style>
+</head>
+<body class="bg-background text-on-surface min-h-screen pb-24">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 w-full bg-[#0e0e0e]/60 backdrop-blur-xl z-50 h-16 flex justify-between items-center px-6 shadow-[0_0_40px_rgba(202,253,0,0.1)]">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#f3ffca]" data-icon="sync">sync</span>
+<h1 class="text-2xl font-bold text-[#f3ffca] font-headline tracking-tight">TrackNPerf</h1>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-white/60 font-headline font-medium hover:text-[#cafd00] transition-colors duration-300" href="#">today</a>
+<a class="text-[#f3ffca] font-headline font-medium hover:text-[#cafd00] transition-colors duration-300" href="#">history</a>
+<a class="text-white/60 font-headline font-medium hover:text-[#cafd00] transition-colors duration-300" href="#">bar_chart</a>
+<a class="text-white/60 font-headline font-medium hover:text-[#cafd00] transition-colors duration-300" href="#">person</a>
+</nav>
+<div class="flex items-center">
+<button class="active:scale-95 transition-transform text-[#f3ffca]">
+<span class="material-symbols-outlined" data-icon="event">event</span>
+</button>
+</div>
+</header>
+<main class="pt-24 px-6 md:px-12 max-w-7xl mx-auto">
+<!-- Page Title Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-8">
+<div>
+<span class="text-primary-container font-headline text-sm tracking-[0.3em] font-bold">PERFORMANCE DATA</span>
+<h2 class="text-6xl md:text-8xl font-headline font-bold text-on-surface tracking-tighter leading-none">ARCHIVES</h2>
+</div>
+<!-- Range Filter Bar -->
+<div class="bg-surface-container-low p-1.5 rounded-full flex gap-1 self-start md:self-auto shadow-inner border border-outline-variant/10">
+<button class="px-6 py-2 rounded-full text-sm font-headline font-bold transition-all duration-300 text-on-surface-variant hover:text-on-surface">7D</button>
+<button class="px-6 py-2 rounded-full text-sm font-headline font-bold transition-all duration-300 bg-primary-container text-black">14D</button>
+<button class="px-6 py-2 rounded-full text-sm font-headline font-bold transition-all duration-300 text-on-surface-variant hover:text-on-surface">30D</button>
+<button class="px-6 py-2 rounded-full text-sm font-headline font-bold transition-all duration-300 text-on-surface-variant hover:text-on-surface">90D</button>
+</div>
+</div>
+<!-- History Content: Asymmetrical Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Feature Large Card (Most Recent) -->
+<div class="md:col-span-8 bg-surface-container-highest rounded-xl overflow-hidden group relative kinetic-glow">
+<div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10 opacity-80"></div>
+<img class="w-full h-[400px] object-cover group-hover:scale-105 transition-transform duration-700" data-alt="professional athlete running on a modern track in a high-tech stadium at night with dramatic neon lighting and motion blur" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBh4hPfqOUjI1g4AjtOsp0mDiIFFyXGLCOrONz2Q4b0mXCTB-0oBko4hRMJZJLfh4OC4OqQr3EYuGf2L6syLhcafe9-CIDeu8F9EtGN3HpaPOJ_iTjA7bDg4ZnbqUKV-h9bMO_7AXN6W5O7S0NENrE2Rv32mryKJak6LHE2Nx66m7oiPlf9i2LhnqVWfpo9t4oi4GDuBlrv33DGIdYpk1D18sWp_xtYlSzu0W2hAskBNwdH5gaXvBRw53KQoob-yqyf8EwVVtZNJwcF"/>
+<div class="absolute bottom-0 left-0 p-8 z-20 w-full flex flex-col md:flex-row justify-between items-end gap-6">
+<div>
+<div class="flex items-center gap-2 mb-2">
+<span class="bg-secondary-container text-on-secondary-container text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider">INTENSE RECOVERY</span>
+<span class="text-on-surface-variant text-sm font-medium">Oct 24, 2023 • 08:30 AM</span>
+</div>
+<h3 class="text-4xl font-headline font-bold text-on-surface">Interval Sprint Protocol</h3>
+</div>
+<div class="flex gap-8 items-center bg-black/40 backdrop-blur-md p-4 rounded-xl border border-white/10">
+<div class="text-center">
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-1">Distance</p>
+<p class="text-2xl font-headline font-bold text-primary">12.4<span class="text-xs ml-1">KM</span></p>
+</div>
+<div class="w-px h-8 bg-outline-variant/30"></div>
+<div class="text-center">
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-1">Duration</p>
+<p class="text-2xl font-headline font-bold text-on-surface">48<span class="text-xs ml-1">MIN</span></p>
+</div>
+<div class="w-px h-8 bg-outline-variant/30"></div>
+<div class="text-center">
+<p class="text-on-surface-variant text-[10px] uppercase font-bold tracking-widest mb-1">Intensity</p>
+<p class="text-2xl font-headline font-bold text-secondary">92<span class="text-xs ml-1">%</span></p>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Card (Stats Summary) -->
+<div class="md:col-span-4 bg-surface-container-low rounded-xl p-8 flex flex-col justify-between border border-outline-variant/5">
+<div>
+<h4 class="text-on-surface-variant font-headline font-bold text-sm tracking-widest uppercase mb-6">Aggregate Insight</h4>
+<div class="space-y-6">
+<div class="flex justify-between items-end">
+<div>
+<p class="text-on-surface-variant text-xs">Total Volume</p>
+<p class="text-3xl font-headline font-bold text-on-surface">142.8 km</p>
+</div>
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="trending_up">trending_up</span>
+</div>
+<div class="flex justify-between items-end">
+<div>
+<p class="text-on-surface-variant text-xs">Avg. Intensity</p>
+<p class="text-3xl font-headline font-bold text-on-surface">78%</p>
+</div>
+<span class="material-symbols-outlined text-secondary text-4xl" data-icon="bolt">bolt</span>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-8 border-t border-outline-variant/10">
+<button class="w-full py-4 bg-surface-container-highest text-on-surface font-headline font-bold rounded-xl hover:bg-white hover:text-black transition-all duration-300 flex items-center justify-center gap-2">
+                        GENERATE REPORT
+                        <span class="material-symbols-outlined text-sm" data-icon="download">download</span>
+</button>
+</div>
+</div>
+<!-- Past Session Cards (List) -->
+<div class="md:col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+<!-- Session 1 -->
+<div class="bg-surface-container-low rounded-xl p-6 group hover:bg-surface-container-high transition-colors duration-300">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-on-surface-variant text-xs mb-1">Oct 22, 2023</p>
+<h4 class="text-xl font-headline font-bold text-on-surface">Zone 2 Endurance</h4>
+</div>
+<span class="bg-primary/10 text-primary px-2 py-1 rounded text-[10px] font-bold">STAMINA</span>
+</div>
+<div class="grid grid-cols-3 gap-4">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">DIST</p>
+<p class="text-lg font-headline font-medium text-on-surface">18.2k</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">TIME</p>
+<p class="text-lg font-headline font-medium text-on-surface">1:12h</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">LOAD</p>
+<p class="text-lg font-headline font-medium text-on-surface">64%</p>
+</div>
+</div>
+</div>
+<!-- Session 2 -->
+<div class="bg-surface-container-low rounded-xl p-6 group hover:bg-surface-container-high transition-colors duration-300">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-on-surface-variant text-xs mb-1">Oct 20, 2023</p>
+<h4 class="text-xl font-headline font-bold text-on-surface">VO2 Max Push</h4>
+</div>
+<span class="bg-error/10 text-error px-2 py-1 rounded text-[10px] font-bold">PEAK</span>
+</div>
+<div class="grid grid-cols-3 gap-4">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">DIST</p>
+<p class="text-lg font-headline font-medium text-on-surface">5.4k</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">TIME</p>
+<p class="text-lg font-headline font-medium text-on-surface">22m</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">LOAD</p>
+<p class="text-lg font-headline font-medium text-on-surface">98%</p>
+</div>
+</div>
+</div>
+<!-- Session 3 -->
+<div class="bg-surface-container-low rounded-xl p-6 group hover:bg-surface-container-high transition-colors duration-300">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-on-surface-variant text-xs mb-1">Oct 18, 2023</p>
+<h4 class="text-xl font-headline font-bold text-on-surface">Hill Repeats</h4>
+</div>
+<span class="bg-secondary/10 text-secondary px-2 py-1 rounded text-[10px] font-bold">POWER</span>
+</div>
+<div class="grid grid-cols-3 gap-4">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">DIST</p>
+<p class="text-lg font-headline font-medium text-on-surface">8.9k</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">TIME</p>
+<p class="text-lg font-headline font-medium text-on-surface">45m</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase font-bold tracking-tighter">LOAD</p>
+<p class="text-lg font-headline font-medium text-on-surface">82%</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Secondary High-Performance Grid Row -->
+<div class="md:col-span-5 bg-surface-container-highest rounded-xl p-8 border border-outline-variant/10 overflow-hidden relative">
+<div class="absolute -right-8 -bottom-8 opacity-10">
+<span class="material-symbols-outlined text-[180px]" data-icon="monitoring">monitoring</span>
+</div>
+<h4 class="text-on-surface-variant font-headline font-bold text-sm tracking-widest uppercase mb-8">Intensity Flux</h4>
+<div class="flex items-end gap-3 h-32">
+<div class="w-full bg-outline-variant/20 rounded-t-sm h-[40%]"></div>
+<div class="w-full bg-primary-container rounded-t-sm h-[85%]"></div>
+<div class="w-full bg-outline-variant/20 rounded-t-sm h-[60%]"></div>
+<div class="w-full bg-outline-variant/20 rounded-t-sm h-[30%]"></div>
+<div class="w-full bg-primary-container rounded-t-sm h-[95%]"></div>
+<div class="w-full bg-outline-variant/20 rounded-t-sm h-[55%]"></div>
+<div class="w-full bg-secondary rounded-t-sm h-[75%]"></div>
+</div>
+<p class="mt-6 text-sm text-on-surface-variant leading-relaxed">Your output peaks are trending <span class="text-primary font-bold">12% higher</span> than the previous 14-day window. Recovery efficiency is stable.</p>
+</div>
+<div class="md:col-span-7 rounded-xl overflow-hidden relative">
+<img class="w-full h-full object-cover grayscale opacity-60" data-alt="close up of a high tech running shoe hitting rain-slicked asphalt with neon lights reflecting in the water droplets" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPi8Wcq82MfsJqPVmivmSg5-l2LPth4KVDoLUdD1HmK7ZY_lNRXQnn1C8q-ROaRCeQxfnsdyAWw7yifGbwQaw3gHBrmVdGnv7LAkMnrl9OMugp7qYrcaZXf8vkv9TaqOJbPfqDKNmmstjU3WmlyDS-T-7cVJlagA_IzTpxveX2pGHwzQPYBK0RcUIs-zDzipzmk7yzDbsGjAC1b8jSkD4v0YTSpU7ux-VYJlRzaquSJ3mvCfSs_H7Co8Qpa-3hLLNVRr9-aVx2F94D"/>
+<div class="absolute inset-0 bg-secondary/20 mix-blend-overlay"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="text-center">
+<p class="text-primary font-headline text-5xl font-bold">READY FOR</p>
+<p class="text-on-surface font-headline text-7xl font-extrabold tracking-tighter">THE NEXT?</p>
+<button class="mt-6 px-12 py-4 bg-primary text-black font-headline font-bold rounded-full hover:scale-105 active:scale-95 transition-all">START TRACKING</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar Shell (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full h-20 z-50 flex justify-around items-center px-4 pb-4 bg-[#0e0e0e]/80 backdrop-blur-2xl rounded-t-[1.5rem] shadow-[0_-10px_50px_rgba(202,253,0,0.05)]">
+<button class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="today">today</span>
+</button>
+<button class="bg-[#cafd00] text-black rounded-full p-3 active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</button>
+<button class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+</button>
+<button class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+</button>
+</nav>
+</body></html>

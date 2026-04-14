@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DÉTAILS SESSION | TrackNPerf</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-container": "#6a0baa",
+                    "secondary": "#c57eff",
+                    "surface-tint": "#f3ffca",
+                    "tertiary-container": "#fce047",
+                    "surface-container-low": "#131313",
+                    "on-surface": "#ffffff",
+                    "surface": "#0e0e0e",
+                    "secondary-dim": "#c57eff",
+                    "primary-container": "#cafd00",
+                    "surface-variant": "#262626",
+                    "surface-container-highest": "#262626",
+                    "on-tertiary-fixed-variant": "#685900",
+                    "on-error-container": "#ffd2c8",
+                    "on-background": "#ffffff",
+                    "on-surface-variant": "#adaaaa",
+                    "tertiary": "#ffeea5",
+                    "inverse-surface": "#fcf9f8",
+                    "inverse-primary": "#516700",
+                    "on-secondary-fixed-variant": "#7520b5",
+                    "primary-fixed": "#cafd00",
+                    "on-tertiary": "#665800",
+                    "on-primary-container": "#4a5e00",
+                    "on-secondary": "#340058",
+                    "surface-bright": "#2c2c2c",
+                    "surface-container-high": "#201f1f",
+                    "error": "#ff7351",
+                    "surface-container": "#1a1919",
+                    "on-error": "#450900",
+                    "on-tertiary-fixed": "#483d00",
+                    "primary": "#f3ffca",
+                    "inverse-on-surface": "#565555",
+                    "tertiary-fixed-dim": "#edd13a",
+                    "secondary-fixed": "#e7c5ff",
+                    "outline": "#767575",
+                    "primary-fixed-dim": "#beee00",
+                    "tertiary-fixed": "#fce047",
+                    "tertiary-dim": "#edd13a",
+                    "on-primary-fixed-variant": "#526900",
+                    "background": "#0e0e0e",
+                    "on-secondary-container": "#e6c3ff",
+                    "on-tertiary-container": "#5d5000",
+                    "error-container": "#b92902",
+                    "surface-dim": "#0e0e0e",
+                    "outline-variant": "#484847",
+                    "error-dim": "#d53d18",
+                    "on-primary-fixed": "#3a4a00",
+                    "secondary-fixed-dim": "#deb3ff",
+                    "on-secondary-fixed": "#510085",
+                    "on-primary": "#516700"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "1.5rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Space Grotesk"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-accent {
+            box-shadow: 0 0 40px rgba(202, 253, 0, 0.1);
+        }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #0e0e0e; }
+        ::-webkit-scrollbar-thumb { background: #262626; border-radius: 10px; }
+        .performance-gradient {
+            background: linear-gradient(45deg, #beee00 0%, #f3ffca 100%);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-black">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full bg-[#0e0e0e]/60 backdrop-blur-xl flex justify-between items-center px-6 h-16 z-50 shadow-[0_0_40px_rgba(202,253,0,0.1)]">
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="text-2xl font-bold text-[#f3ffca] font-headline tracking-tight">TrackNPerf</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden md:flex gap-8 font-headline text-sm font-medium">
+<a class="text-white/60 hover:text-[#cafd00] transition-colors duration-300" href="#">TODAY</a>
+<a class="text-[#f3ffca]" href="#">HISTORY</a>
+<a class="text-white/60 hover:text-[#cafd00] transition-colors duration-300" href="#">INSIGHTS</a>
+<a class="text-white/60 hover:text-[#cafd00] transition-colors duration-300" href="#">PROFILE</a>
+</div>
+<span class="material-symbols-outlined text-[#f3ffca] active:scale-95 transition-transform">event</span>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Main Content (Left Canvas) -->
+<div class="lg:col-span-9 space-y-10">
+<!-- Hero Session Title -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<span class="inline-flex items-center gap-2 px-3 py-1 bg-primary-container/10 border border-primary-container/20 rounded-full text-xs font-bold text-primary-container tracking-widest mb-4">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                        HIGH INTENSITY
+                    </span>
+<h2 class="text-5xl md:text-7xl font-headline font-extrabold tracking-tighter uppercase leading-none">DÉTAILS SESSION</h2>
+<p class="text-on-surface-variant mt-2 font-medium">Monday, Oct 24 • 08:42 AM • Parc des Buttes-Chaumont</p>
+</div>
+<div class="flex gap-2">
+<div class="bg-surface-container-highest p-4 rounded-xl flex flex-col items-center justify-center min-w-[100px]">
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-1">Score</span>
+<span class="text-3xl font-headline font-bold text-secondary">94</span>
+</div>
+</div>
+</div>
+<!-- Big Numbers Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<!-- Primary Metric -->
+<div class="md:col-span-2 bg-surface-container-highest rounded-xl p-8 relative overflow-hidden flex flex-col justify-between group">
+<div class="z-10">
+<p class="text-on-surface-variant font-bold text-sm tracking-widest uppercase mb-1">Distance</p>
+<h3 class="text-8xl font-headline font-bold text-on-surface leading-none tracking-tighter">12.4</h3>
+<p class="text-primary-container font-headline font-bold text-2xl mt-1">KILOMETERS</p>
+</div>
+<div class="absolute -right-8 -bottom-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+<span class="material-symbols-outlined text-[200px]" style="font-variation-settings: 'wght' 700;">route</span>
+</div>
+</div>
+<div class="bg-surface-container-low rounded-xl p-8 flex flex-col justify-between border-l-4 border-secondary shadow-lg">
+<div>
+<p class="text-on-surface-variant font-bold text-sm tracking-widest uppercase mb-1">Avg Pace</p>
+<h3 class="text-5xl font-headline font-bold text-on-surface leading-none tracking-tighter">4'12"</h3>
+</div>
+<span class="material-symbols-outlined text-secondary text-4xl">speed</span>
+</div>
+<div class="bg-surface-container-low rounded-xl p-8 flex flex-col justify-between">
+<div>
+<p class="text-on-surface-variant font-bold text-sm tracking-widest uppercase mb-1">Time</p>
+<h3 class="text-5xl font-headline font-bold text-on-surface leading-none tracking-tighter">52:14</h3>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-4xl">timer</span>
+</div>
+</div>
+<!-- Heart Rate & Performance Graph Section -->
+<div class="bg-surface-container-low rounded-xl p-8 space-y-6">
+<div class="flex justify-between items-center">
+<div>
+<h4 class="text-xl font-headline font-bold tracking-tight">Heart Rate &amp; Intensity</h4>
+<p class="text-on-surface-variant text-sm">Zone 4: Threshold Focus (84% of time)</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-error"></span>
+<span class="text-xs font-bold text-on-surface-variant">MAX 182</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-secondary"></span>
+<span class="text-xs font-bold text-on-surface-variant">AVG 158</span>
+</div>
+</div>
+</div>
+<!-- Abstract SVG Graph -->
+<div class="h-64 w-full relative flex items-end overflow-hidden rounded-lg bg-surface-container-highest/50">
+<svg class="w-full h-full absolute inset-0" preserveaspectratio="none" viewbox="0 0 1000 200">
+<defs>
+<lineargradient id="line-gradient" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" stop-color="#ff7351" stop-opacity="0.8"></stop>
+<stop offset="100%" stop-color="#ff7351" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<path d="M0,150 Q50,120 100,140 T200,100 T300,110 T400,60 T500,80 T600,40 T700,50 T800,20 T900,30 T1000,10 L1000,200 L0,200 Z" fill="url(#line-gradient)"></path>
+<path d="M0,150 Q50,120 100,140 T200,100 T300,110 T400,60 T500,80 T600,40 T700,50 T800,20 T900,30 T1000,10" fill="none" stroke="#ff7351" stroke-linecap="round" stroke-width="4"></path>
+</svg>
+<!-- Vertical Grid Lines -->
+<div class="absolute inset-0 flex justify-between px-2 opacity-10">
+<div class="h-full border-l border-white"></div>
+<div class="h-full border-l border-white"></div>
+<div class="h-full border-l border-white"></div>
+<div class="h-full border-l border-white"></div>
+<div class="h-full border-l border-white"></div>
+</div>
+</div>
+</div>
+<!-- Performance Peaks (Asymmetrical Layout) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-4">
+<h4 class="text-2xl font-headline font-bold">PERFORMANCE PEAKS</h4>
+<div class="space-y-2">
+<div class="flex items-center justify-between p-4 bg-surface-container-highest rounded-lg">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-black">
+<span class="material-symbols-outlined text-sm font-bold">trending_up</span>
+</div>
+<span class="font-bold">Fastest Kilometer</span>
+</div>
+<span class="text-primary font-headline font-bold">3'54" <span class="text-xs text-on-surface-variant font-normal uppercase">KM 8</span></span>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-highest rounded-lg">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm font-bold">elevation</span>
+</div>
+<span class="font-bold">Max Elevation Gain</span>
+</div>
+<span class="text-secondary font-headline font-bold">+142m <span class="text-xs text-on-surface-variant font-normal uppercase">Segment 3</span></span>
+</div>
+<div class="flex items-center justify-between p-4 bg-surface-container-highest rounded-lg">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-error flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-sm font-bold">favorite</span>
+</div>
+<span class="font-bold">Peak VO2 Max</span>
+</div>
+<span class="text-error font-headline font-bold">58.2 <span class="text-xs text-on-surface-variant font-normal uppercase">Elite Range</span></span>
+</div>
+</div>
+</div>
+<!-- Session Map Photo (Decorative) -->
+<div class="rounded-xl overflow-hidden relative min-h-[300px] shadow-2xl group">
+<img class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" data-alt="Modern cinematic aerial photography of a winding forest trail at sunset with heavy contrast and deep shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuArjwYc1G0jNmL1ZlCyYhSmGU3n-GVnIhAH-5O1aWOndETfjEzzBYqmijyW76J7J5CoGTQpD86-E68lWtWZjuhPX3LuodlKuidHcn6s2EVYCZK_HGM26mikbGz1ahR3mPiZjHU1KWNrvrITcMDuvpTgMtpNMyKzLIdzisLt-hh7uZZqti6k9FVQ5RA8VodaPTSjJbBoHydW0oqE_qbreParghVI3JmGG1W26-7RcfGHHdnoEtc8BvsgSuGj6V0QivHxwcXw5fMj6C7I"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+<div class="absolute bottom-6 left-6">
+<p class="text-xs font-bold text-primary-container uppercase tracking-widest mb-1">Route Visualization</p>
+<h5 class="text-2xl font-headline font-bold">Buttes-Chaumont Loop</h5>
+</div>
+<div class="absolute top-6 right-6 p-3 bg-black/40 backdrop-blur-md rounded-full text-white/80">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">location_on</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Sidebar (JSON Explorer - Collapsible Style) -->
+<aside class="lg:col-span-3 space-y-6">
+<div class="bg-surface-container-low rounded-xl p-6 h-fit sticky top-24 border border-outline-variant/10">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline font-bold text-lg uppercase tracking-tight flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">data_object</span>
+                        Raw Stream
+                    </h3>
+<button class="p-2 hover:bg-surface-container-highest rounded-full transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">close_fullscreen</span>
+</button>
+</div>
+<div class="font-mono text-xs text-on-surface-variant bg-black/40 p-4 rounded-lg space-y-2 overflow-x-hidden">
+<p><span class="text-secondary">"session_id"</span>: "trk_8273x",</p>
+<p><span class="text-secondary">"athlete"</span>: {</p>
+<p class="pl-4">"id": "u_918",</p>
+<p class="pl-4">"hr_rest": 54,</p>
+<p class="pl-4">"hr_max": 192</p>
+<p>},</p>
+<p><span class="text-secondary">"stream"</span>: [</p>
+<p class="pl-4">{"ts": 1698136920, "hr": 154, "vel": 14.2},</p>
+<p class="pl-4">{"ts": 1698136925, "hr": 156, "vel": 14.5},</p>
+<p class="pl-4">{"ts": 1698136930, "hr": 158, "vel": 14.8},</p>
+<p class="pl-4">{"ts": 1698136935, "hr": 162, "vel": 15.1},</p>
+<p class="pl-4">{"ts": 1698136940, "hr": 165, "vel": 15.5},</p>
+<p class="pl-4">{"ts": 1698136945, "hr": 168, "vel": 15.2}</p>
+<p class="animate-pulse">...</p>
+<p>]</p>
+</div>
+<div class="mt-8 space-y-4">
+<button class="w-full py-4 bg-primary-container text-on-primary-container font-headline font-extrabold uppercase rounded-lg hover:brightness-110 active:scale-[0.98] transition-all">
+                        DOWNLOAD .FIT
+                    </button>
+<button class="w-full py-4 bg-surface-container-highest text-on-surface font-headline font-bold uppercase rounded-lg hover:bg-surface-bright transition-all">
+                        SHARE ANALYSIS
+                    </button>
+</div>
+</div>
+<!-- Mini Recovery Card -->
+<div class="bg-secondary-container/20 rounded-xl p-6 border-l-4 border-secondary">
+<div class="flex items-center gap-3 mb-2">
+<span class="material-symbols-outlined text-secondary">bedtime</span>
+<h4 class="font-headline font-bold text-sm text-secondary uppercase tracking-widest">Recovery Goal</h4>
+</div>
+<p class="text-sm text-on-surface-variant font-medium">Predicted recovery time: <span class="text-on-surface font-bold">22 hours</span>. Monitor HRV during sleep for adaptive planning.</p>
+</div>
+</aside>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full h-20 bg-[#0e0e0e]/80 backdrop-blur-2xl z-50 flex justify-around items-center px-4 pb-4 rounded-t-[1.5rem] shadow-[0_-10px_50px_rgba(202,253,0,0.05)]">
+<button class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined">today</span>
+</button>
+<button class="bg-[#cafd00] text-black rounded-full p-3 active:scale-90 duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history</span>
+</button>
+<button class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined">bar_chart</span>
+</button>
+<button class="text-white/40 p-3 hover:text-[#f3ffca] active:scale-90 duration-200">
+<span class="material-symbols-outlined">person</span>
+</button>
+</nav>
+</body></html>
