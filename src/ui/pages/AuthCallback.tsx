@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "../../infra/supabase/client";
+import { getSession } from "../../auth/authActions";
 
 export default function AuthCallbackPage() {
   const [message, setMessage] = useState("Completing sign-in…");
@@ -10,20 +10,15 @@ export default function AuthCallbackPage() {
     let ignore = false;
 
     async function run() {
-      if (!supabase) {
-        if (!ignore) setMessage("Supabase is not configured.");
+      let session: Awaited<ReturnType<typeof getSession>>;
+      try {
+        session = await getSession();
+      } catch (err) {
+        if (!ignore) setMessage(err instanceof Error ? err.message : "Supabase is not configured.");
         return;
       }
-
-      // For most Supabase flows, the client will pick up the session automatically.
-      // We keep this page so redirect URLs are stable and user-friendly.
-      const { data, error } = await supabase.auth.getSession();
       if (ignore) return;
-      if (error) {
-        setMessage(error.message);
-        return;
-      }
-      if (data.session) {
+      if (session) {
         let returnTo = "/today";
         try {
           const raw = window.sessionStorage.getItem("tnp:returnTo");
@@ -52,4 +47,3 @@ export default function AuthCallbackPage() {
     </main>
   );
 }
-

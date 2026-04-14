@@ -1,18 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { supabase } from "../../infra/supabase/client";
+import { getExecutedSessionHistory, type ExecutedSessionRow } from "../../application/usecases/getExecutedSessions";
 import { AppShell } from "../kit/AppShell";
 import { Button } from "../kit/Button";
 import { Card } from "../kit/Card";
 import { Pill } from "../kit/Pill";
-
-type ExecutedRow = {
-  id: string;
-  startedAt: string;
-  endedAt: string | null;
-  planId: string | null;
-  payload: Record<string, unknown>;
-};
 
 function isoDate(d: Date): string {
   const yyyy = String(d.getFullYear()).padStart(4, "0");
@@ -25,7 +17,7 @@ export default function HistoryPage() {
   const [days, setDays] = useState(7);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
-  const [rows, setRows] = useState<ExecutedRow[]>([]);
+  const [rows, setRows] = useState<ExecutedSessionRow[]>([]);
 
   const sinceIso = useMemo(() => {
     const d = new Date();
@@ -36,30 +28,12 @@ export default function HistoryPage() {
   useEffect(() => {
     let ignore = false;
     async function run() {
-      if (!supabase) {
-        setMessage("Supabase is not configured.");
-        setLoading(false);
-        return;
-      }
       setLoading(true);
       setMessage(null);
       try {
-        const { data, error } = await supabase
-          .from("executed_sessions")
-          .select("id, started_at, ended_at, plan_id, payload")
-          .gte("started_at", sinceIso)
-          .order("started_at", { ascending: false });
-        if (error) throw new Error(error.message);
+        const data = await getExecutedSessionHistory(sinceIso);
         if (ignore) return;
-        setRows(
-          (data ?? []).map((r) => ({
-            id: String(r.id),
-            startedAt: String(r.started_at),
-            endedAt: r.ended_at ? String(r.ended_at) : null,
-            planId: r.plan_id ? String(r.plan_id) : null,
-            payload: r.payload && typeof r.payload === "object" ? (r.payload as Record<string, unknown>) : {},
-          })),
-        );
+        setRows(data);
       } catch (err) {
         if (!ignore) setMessage(err instanceof Error ? err.message : "Could not load history.");
       } finally {
@@ -155,4 +129,3 @@ export default function HistoryPage() {
     </AppShell>
   );
 }
-

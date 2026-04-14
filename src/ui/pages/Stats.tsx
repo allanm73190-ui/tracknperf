@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "../../infra/supabase/client";
+import { getExecutedSessionStats } from "../../application/usecases/getExecutedSessions";
 import { AppShell } from "../kit/AppShell";
 import { Card } from "../kit/Card";
 import { Pill } from "../kit/Pill";
@@ -24,31 +24,12 @@ export default function StatsPage() {
   useEffect(() => {
     let ignore = false;
     async function run() {
-      if (!supabase) {
-        setMessage("Supabase is not configured.");
-        setLoading(false);
-        return;
-      }
       setLoading(true);
       setMessage(null);
       try {
-        const { data, error } = await supabase
-          .from("executed_sessions")
-          .select("payload, started_at")
-          .gte("started_at", sinceIso);
-        if (error) throw new Error(error.message);
+        const data = await getExecutedSessionStats(sinceIso);
         if (ignore) return;
-
-        let executedCount = 0;
-        let totalDurationMinutes = 0;
-        for (const r of data ?? []) {
-          executedCount++;
-          const payload = r.payload && typeof r.payload === "object" ? (r.payload as Record<string, unknown>) : {};
-          const dur = payload.durationMinutes;
-          if (typeof dur === "number" && Number.isFinite(dur)) totalDurationMinutes += dur;
-        }
-
-        setStats({ executedCount, totalDurationMinutes });
+        setStats(data);
       } catch (err) {
         if (!ignore) setMessage(err instanceof Error ? err.message : "Could not load stats.");
       } finally {
@@ -138,4 +119,3 @@ export default function StatsPage() {
     </AppShell>
   );
 }
-

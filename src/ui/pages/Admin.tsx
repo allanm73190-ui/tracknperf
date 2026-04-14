@@ -1,6 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
-import { supabase } from "../../infra/supabase/client";
+import {
+  loadAdminData,
+  createConfigProfile,
+  createAlgorithmVersion,
+  type ConfigProfileRow,
+  type AlgorithmVersionRow,
+} from "../../application/usecases/adminOperations";
 import type { PlanImport } from "../../domain/plan/planImport";
 import { importPlanFromJsonText } from "../../application/usecases/importPlanFromJson";
 import { importPlanFromCsvText } from "../../application/usecases/importPlanFromCsv";
@@ -13,9 +19,6 @@ import { Input } from "../kit/Input";
 import { Pill } from "../kit/Pill";
 
 type Format = "excel" | "json" | "csv";
-
-type ConfigProfileRow = { id: string; key: string; name: string };
-type AlgorithmVersionRow = { id: string; version: string };
 
 function guessFormat(file: File | null): Format {
   const name = file?.name?.toLowerCase() ?? "";
@@ -45,29 +48,20 @@ export default function AdminPage() {
 
   useEffect(() => {
     let ignore = false;
-    async function loadAdminData() {
-      if (!supabase || !user?.id) return;
-      const { data: cfg, error: cfgErr } = await supabase
-        .from("config_profiles")
-        .select("id, key, name")
-        .order("created_at", { ascending: false });
-      if (!ignore && !cfgErr && cfg) {
-        const rows = cfg.map((r) => ({ id: String(r.id), key: String(r.key), name: String(r.name) }));
-        setConfigProfiles(rows);
-        if (!selectedConfigProfileId && rows[0]) setSelectedConfigProfileId(rows[0].id);
-      }
-
-      const { data: av, error: avErr } = await supabase
-        .from("algorithm_versions")
-        .select("id, version")
-        .order("created_at", { ascending: false });
-      if (!ignore && !avErr && av) {
-        const rows = av.map((r) => ({ id: String(r.id), version: String(r.version) }));
-        setAlgoVersions(rows);
-        if (!selectedAlgorithmVersionId && rows[0]) setSelectedAlgorithmVersionId(rows[0].id);
+    async function run() {
+      if (!user?.id) return;
+      try {
+        const { configProfiles: cfg, algoVersions: av } = await loadAdminData();
+        if (ignore) return;
+        setConfigProfiles(cfg);
+        if (!selectedConfigProfileId && cfg[0]) setSelectedConfigProfileId(cfg[0].id);
+        setAlgoVersions(av);
+        if (!selectedAlgorithmVersionId && av[0]) setSelectedAlgorithmVersionId(av[0].id);
+      } catch {
+        // Non-critical: admin data load failure is silent
       }
     }
-    void loadAdminData();
+    void run();
     return () => {
       ignore = true;
     };
@@ -147,7 +141,6 @@ export default function AdminPage() {
   }
 
   async function onCreateConfigProfile() {
-    if (!supabase) return;
     setBusy(true);
     setMessage(null);
     try {
@@ -157,13 +150,7 @@ export default function AdminPage() {
       } catch {
         throw new Error("Config JSON is invalid.");
       }
-      const { data, error } = await supabase
-        .from("config_profiles")
-        .insert({ key: newConfigKey.trim(), name: newConfigName.trim(), config: cfg })
-        .select("id, key, name")
-        .single();
-      if (error) throw new Error(error.message);
-      const row = { id: String(data.id), key: String(data.key), name: String(data.name) };
+      const row = await createConfigProfile(newConfigKey.trim(), newConfigName.trim(), cfg);
       setConfigProfiles((prev) => [row, ...prev]);
       setSelectedConfigProfileId(row.id);
       setMessage("Config profile created.");
@@ -175,17 +162,10 @@ export default function AdminPage() {
   }
 
   async function onCreateAlgorithmVersion() {
-    if (!supabase) return;
     setBusy(true);
     setMessage(null);
     try {
-      const { data, error } = await supabase
-        .from("algorithm_versions")
-        .insert({ version: newAlgoVersion.trim(), metadata: {} })
-        .select("id, version")
-        .single();
-      if (error) throw new Error(error.message);
-      const row = { id: String(data.id), version: String(data.version) };
+      const row = await createAlgorithmVersion(newAlgoVersion.trim());
       setAlgoVersions((prev) => [row, ...prev]);
       setSelectedAlgorithmVersionId(row.id);
       setMessage("Algorithm version created.");
@@ -414,4 +394,3 @@ export default function AdminPage() {
     </AppShell>
   );
 }
-

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "../../infra/supabase/client";
+import { authSignIn, authSignInWithOtp, authSignUp, isSupabaseConfigured } from "../../auth/authActions";
 import { Button } from "../kit/Button";
 import { Card } from "../kit/Card";
 import { Input } from "../kit/Input";
@@ -17,7 +17,7 @@ export default function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const isConfigured = Boolean(supabase);
+  const isConfigured = isSupabaseConfigured();
 
   const heading = useMemo(() => {
     switch (mode) {
@@ -37,14 +37,6 @@ export default function AuthPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setMessage(null);
-
-    if (!supabase) {
-      setMessage(
-        "Supabase is not configured. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.",
-      );
-      return;
-    }
-
     setBusy(true);
     try {
       const state = location.state as { returnTo?: unknown } | null;
@@ -57,28 +49,18 @@ export default function AuthPage() {
       }
 
       if (mode === "signUp") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: redirectTo },
-        });
-        if (error) throw error;
+        await authSignUp(email, password, redirectTo);
         setMessage("Check your email to confirm your account (if required).");
         return;
       }
 
       if (mode === "signIn") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await authSignIn(email, password);
         navigate(returnTo, { replace: true });
         return;
       }
 
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: redirectTo },
-      });
-      if (error) throw error;
+      await authSignInWithOtp(email, redirectTo);
       setMessage("Magic link sent. Check your inbox.");
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Unknown error";
@@ -160,4 +142,3 @@ export default function AuthPage() {
     </main>
   );
 }
-
