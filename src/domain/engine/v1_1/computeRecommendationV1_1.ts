@@ -12,6 +12,9 @@ import type {
   RuleFired,
   SignalContribution,
 } from "./types";
+import { computeFatigueSnapshot } from "../fatigue/computeFatigueSnapshot";
+import type { ExecutedSessionSummary, SessionFeedback } from "../fatigue/computeFatigueSnapshot";
+import { computeReadinessSnapshot } from "../readiness/computeReadinessSnapshot";
 
 function clamp01(x: number): number {
   if (!Number.isFinite(x)) return 0;
@@ -54,12 +57,14 @@ export function computeLoadStateV1_1(inputs: NormalizedInputs): LoadState {
   return { last7dCount: last7d, monotonyProxy: monotony, strainProxy: strain };
 }
 
+/** @deprecated Use computeFatigueSnapshot from domain/engine/fatigue */
 export function computeFatigueStateV1_1(load: LoadState): FatigueState {
   // Proxy fatigue: rises with strain; capped.
   const score = clamp01(load.strainProxy / 10);
   return { score, dimensions: { general: score } };
 }
 
+/** @deprecated Use computeReadinessSnapshot from domain/engine/readiness */
 export function computeReadinessV1_1(inputQuality: InputQuality, fatigue: FatigueState): ReadinessState {
   if (inputQuality.completenessScore < 0.4) {
     return { score: 0.35, limitingFactor: "data" };
@@ -234,6 +239,8 @@ export function computeRecommendationV1_1(args: {
   last7dExecutedCount: number;
   config?: unknown;
   algorithmVersion: string;
+  recentSessions?: ExecutedSessionSummary[];
+  feedback?: SessionFeedback[];
 }): EngineResultV1_1 {
   const config = engineConfigV1_1Schema.parse(args.config ?? defaultEngineConfigV1_1());
   const inputs = normalizeInputsV1_1({
@@ -244,8 +251,12 @@ export function computeRecommendationV1_1(args: {
   });
   const inputQuality = computeInputQualityV1_1(inputs);
   const load = computeLoadStateV1_1(inputs);
-  const fatigue = computeFatigueStateV1_1(load);
-  const readiness = computeReadinessV1_1(inputQuality, fatigue);
+  const fatigue = computeFatigueSnapshot(
+    args.recentSessions ?? [],
+    args.feedback ?? [],
+    { todayIso: args.todayIso, algorithmVersion: args.algorithmVersion }
+  );
+  const readiness = computeReadinessSnapshot(fatigue, "mixed", { algorithmVersion: args.algorithmVersion });
   const { decisionState, constraints, rulesFired } = rulesEngineV1_1({
     config: config as EngineConfigV1_1,
     inputs,
@@ -298,4 +309,3 @@ export function computeRecommendationV1_1(args: {
 
   return { inputs, load, fatigue, readiness, recommendation, explanation };
 }
-
