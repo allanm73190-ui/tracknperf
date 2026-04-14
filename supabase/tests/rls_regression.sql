@@ -39,6 +39,83 @@ begin
   end;
 end $$;
 
+-- Profiles isolation: user2 cannot read or update user1 profile.
+do $$
+declare
+  u1 uuid := gen_random_uuid();
+  u2 uuid := gen_random_uuid();
+begin
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  perform set_config('request.jwt.claim.sub', u1::text, true);
+
+  insert into public.profiles (id, display_name) values (u1, 'User1');
+
+  perform set_config('request.jwt.claim.sub', u2::text, true);
+
+  if exists (select 1 from public.profiles where id = u1) then
+    raise exception 'RLS FAIL: user2 can read user1 profile';
+  end if;
+
+  begin
+    update public.profiles set display_name = 'Hacked' where id = u1;
+    if found then
+      raise exception 'RLS FAIL: user2 updated user1 profile';
+    end if;
+  exception when others then
+    -- expected
+  end;
+end $$;
+
+-- planned_sessions isolation: user2 cannot see or insert into user1 planned sessions.
+do $$
+declare
+  u1 uuid := gen_random_uuid();
+  u2 uuid := gen_random_uuid();
+  plan1 uuid;
+  ps1 uuid;
+begin
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  perform set_config('request.jwt.claim.sub', u1::text, true);
+
+  insert into public.plans (user_id, name) values (u1, 'Plan U1') returning id into plan1;
+  insert into public.planned_sessions (user_id, plan_id, scheduled_date, name)
+    values (u1, plan1, current_date, 'Session U1') returning id into ps1;
+
+  perform set_config('request.jwt.claim.sub', u2::text, true);
+
+  if exists (select 1 from public.planned_sessions where id = ps1) then
+    raise exception 'RLS FAIL: user2 can read user1 planned_session';
+  end if;
+
+  begin
+    insert into public.planned_sessions (user_id, plan_id, scheduled_date, name)
+      values (u2, plan1, current_date, 'Injected');
+    raise exception 'RLS FAIL: user2 inserted planned_session under user1 plan';
+  exception when others then
+    -- expected
+  end;
+end $$;
+
+-- sync_ops isolation: user2 cannot read user1 sync operations.
+do $$
+declare
+  u1 uuid := gen_random_uuid();
+  u2 uuid := gen_random_uuid();
+  op1 uuid;
+begin
+  perform set_config('request.jwt.claim.role', 'authenticated', true);
+  perform set_config('request.jwt.claim.sub', u1::text, true);
+
+  insert into public.sync_ops (user_id, op_type, table_name, payload)
+    values (u1, 'upsert', 'executed_sessions', '{}'::jsonb) returning id into op1;
+
+  perform set_config('request.jwt.claim.sub', u2::text, true);
+
+  if exists (select 1 from public.sync_ops where id = op1) then
+    raise exception 'RLS FAIL: user2 can read user1 sync_ops';
+  end if;
+end $$;
+
 -- Admin probing protection: non-admin should not be able to test other user's admin status.
 do $$
 declare
@@ -59,4 +136,3 @@ begin
     raise exception 'SEC FAIL: non-admin can probe admin status of other user';
   end if;
 end $$;
-
