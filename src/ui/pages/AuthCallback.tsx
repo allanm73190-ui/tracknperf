@@ -42,7 +42,7 @@ export default function AuthCallbackPage() {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <main className="container">

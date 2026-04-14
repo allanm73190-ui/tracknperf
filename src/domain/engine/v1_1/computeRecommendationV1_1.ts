@@ -254,7 +254,7 @@ export function computeRecommendationV1_1(args: {
     readiness,
     inputQuality,
   });
-  const { patch, reasonCodes } = optimizationLayerV1_1({ decisionState, constraints });
+  const { patch } = optimizationLayerV1_1({ decisionState, constraints });
   const expl = buildExplainabilityV1_1({
     config: config as EngineConfigV1_1,
     inputs,
