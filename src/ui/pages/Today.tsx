@@ -3,12 +3,11 @@ import { useAuth } from "../../auth/AuthProvider";
 import { Link } from "react-router-dom";
 import { AppShell } from "../kit/AppShell";
 import { Button } from "../kit/Button";
-import { Card } from "../kit/Card";
 import { Drawer } from "../kit/Drawer";
-import { Input } from "../kit/Input";
 import { Pill } from "../kit/Pill";
+import { SessionStateCard } from "../components/SessionStateCard";
+import { FeedbackForm } from "../components/FeedbackForm";
 import { getTodayOverview, type TodayOverview } from "../../application/usecases/getTodayOverview";
-import { logExecutedSession } from "../../application/usecases/logExecutedSession";
 import {
   computeAndPersistTodayRecommendation,
   type PersistedRecommendation,
@@ -16,21 +15,24 @@ import {
 import { flushSyncQueue } from "../../application/sync/syncClient";
 import { getQueueStats, listRecentOps, type SyncOp } from "../../infra/offline/db";
 
-function nowIsoTime(d: Date): string {
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mm = String(d.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
+function getRecoTitle(reco: PersistedRecommendation): string {
+  const out = reco.output as { recommendedTemplateName?: unknown } | null;
+  if (typeof out?.recommendedTemplateName === "string") return out.recommendedTemplateName;
+  return "Séance recommandée";
 }
 
-function parseLocalTimeToDate(today: Date, time: string): Date | null {
-  const m = time.match(/^(\d{2}):(\d{2})$/);
-  if (!m) return null;
-  const h = Number(m[1]);
-  const min = Number(m[2]);
-  if (!Number.isFinite(h) || !Number.isFinite(min) || h < 0 || h > 23 || min < 0 || min > 59) return null;
-  const d = new Date(today);
-  d.setHours(h, min, 0, 0);
-  return d;
+function getRecoHeadline(reco: PersistedRecommendation): string {
+  const exp = reco.explanation as { summary?: { headline?: unknown } } | null;
+  if (typeof exp?.summary?.headline === "string") return exp.summary.headline;
+  return "";
+}
+
+function getRecoReasons(reco: PersistedRecommendation): string[] {
+  const exp = reco.explanation as { summary?: { reasonsTop3?: Array<{ text?: unknown }> } } | null;
+  if (!Array.isArray(exp?.summary?.reasonsTop3)) return [];
+  return exp!.summary!.reasonsTop3!
+    .slice(0, 3)
+    .map((r) => (typeof r.text === "string" ? r.text : JSON.stringify(r)));
 }
 
 export default function TodayPage() {
@@ -42,48 +44,41 @@ export default function TodayPage() {
   const [syncStatus, setSyncStatus] = useState<{ pending: number; applied: number } | null>(null);
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
+  const [logDrawerOpen, setLogDrawerOpen] = useState(false);
   const [recentOps, setRecentOps] = useState<SyncOp[]>([]);
 
-  // Log form state
-  const today = useMemo(() => new Date(), []);
-  const [startTime, setStartTime] = useState(() => nowIsoTime(new Date(Date.now() - 60 * 60 * 1000)));
-  const [endTime, setEndTime] = useState(() => nowIsoTime(new Date()));
-  const [durationMinutes, setDurationMinutes] = useState<number | "">("");
-  const [rpe, setRpe] = useState<number | "">("");
-  const [notes, setNotes] = useState("");
-  const [busy, setBusy] = useState(false);
+  const plannedCandidate = useMemo(() => overview?.planned?.[0] ?? null, [overview?.planned]);
 
-  const plannedCandidate = useMemo(() => {
-    const p = overview?.planned?.[0];
-    return p ?? null;
-  }, [overview?.planned]);
+  const todayLabel = useMemo(() => {
+    return new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase();
+  }, []);
 
-  useEffect(() => {
-    let ignore = false;
-    async function run() {
-      setLoading(true);
-      setMessage(null);
-      try {
-        const res = await getTodayOverview();
-        if (ignore) return;
-        setOverview(res);
-        const reco = await computeAndPersistTodayRecommendation(res);
-        if (!ignore) setRecommendation(reco);
-        const stats = await getQueueStats();
-        if (!ignore) setSyncStatus(stats);
-        const recent = await listRecentOps(50);
-        if (!ignore) setRecentOps(recent);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : "Could not load today.";
-        if (!ignore) setMessage(msg);
-      } finally {
-        if (!ignore) setLoading(false);
+  async function refreshData(ignoreSignal?: { ignore: boolean }) {
+    try {
+      const next = await getTodayOverview();
+      if (ignoreSignal?.ignore) return;
+      setOverview(next);
+      const reco = await computeAndPersistTodayRecommendation(next);
+      if (!ignoreSignal?.ignore) setRecommendation(reco);
+      const stats = await getQueueStats();
+      if (!ignoreSignal?.ignore) setSyncStatus(stats);
+      const recent = await listRecentOps(50);
+      if (!ignoreSignal?.ignore) setRecentOps(recent);
+    } catch (err) {
+      if (!ignoreSignal?.ignore) {
+        setMessage(err instanceof Error ? err.message : "Could not load today.");
       }
     }
-    void run();
-    return () => {
-      ignore = true;
-    };
+  }
+
+  useEffect(() => {
+    const signal = { ignore: false };
+    setLoading(true);
+    setMessage(null);
+    void refreshData(signal).finally(() => {
+      if (!signal.ignore) setLoading(false);
+    });
+    return () => { signal.ignore = true; };
   }, []);
 
   async function onSyncNow() {
@@ -98,50 +93,16 @@ export default function TodayPage() {
       setRecentOps(recent);
       setMessage(`Sync done. Applied: ${res.applied}, failed: ${res.failed}.`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Sync failed.";
-      setMessage(msg);
+      setMessage(err instanceof Error ? err.message : "Sync failed.");
     } finally {
       setSyncBusy(false);
     }
   }
 
-  async function onLog() {
-    if (busy) return;
-    setBusy(true);
-    setMessage(null);
-    try {
-      const startedAt = parseLocalTimeToDate(today, startTime);
-      const endedAt = parseLocalTimeToDate(today, endTime);
-      if (!startedAt || !endedAt) throw new Error("Please provide valid start/end times.");
-      const res = await logExecutedSession({
-        plannedSessionId: plannedCandidate?.id ?? null,
-        planId: plannedCandidate?.planId ?? null,
-        startedAt,
-        endedAt,
-        payload: {
-          durationMinutes: durationMinutes === "" ? null : durationMinutes,
-          rpe: rpe === "" ? null : rpe,
-          notes: notes.trim().length ? notes.trim() : null,
-        },
-      });
-
-      // Refresh overview
-      const next = await getTodayOverview();
-      setOverview(next);
-      const reco = await computeAndPersistTodayRecommendation(next);
-      setRecommendation(reco);
-      const stats = await getQueueStats();
-      setSyncStatus(stats);
-      const recent = await listRecentOps(50);
-      setRecentOps(recent);
-      setNotes("");
-      setMessage(`Session logged. (${res.id})`);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Could not log session.";
-      setMessage(msg);
-    } finally {
-      setBusy(false);
-    }
+  function onFeedbackSuccess(sessionId: string) {
+    setLogDrawerOpen(false);
+    setMessage(`Séance enregistrée. (${sessionId})`);
+    void refreshData();
   }
 
   return (
@@ -162,306 +123,204 @@ export default function TodayPage() {
           ) : (
             <Pill tone="neutral">Sync</Pill>
           )}
-          <Button variant="ghost" onClick={() => setSyncDrawerOpen(true)}>
-            Details
-          </Button>
-          <Button variant="ghost" onClick={() => void onSyncNow()} disabled={syncBusy}>
-            {syncBusy ? "Syncing…" : "Sync now"}
-          </Button>
-          <Button variant="ghost" onClick={() => void signOut()} disabled={!isConfigured}>
-            Sign out
-          </Button>
+          <Button variant="ghost" onClick={() => setSyncDrawerOpen(true)}>Sync</Button>
+          <Button variant="ghost" onClick={() => void signOut()} disabled={!isConfigured}>Sign out</Button>
         </>
       }
     >
-      <div className="muted" style={{ marginBottom: 18 }}>
-        Signed in as <code>{user?.email ?? user?.id ?? "unknown"}</code>
+      {/* Background ambient glow */}
+      <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
+        <div className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] bg-primary-container/5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[10%] right-[10%] w-[30vw] h-[30vw] bg-secondary/5 blur-[100px] rounded-full" />
       </div>
 
-      {loading ? <Card tone="low">Loading…</Card> : null}
-      {message ? (
-        <Card tone="highest">
-          <div style={{ whiteSpace: "pre-wrap" }}>{message}</div>
-        </Card>
-      ) : null}
+      {/* Date header */}
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="font-headline text-lg font-bold tracking-tighter uppercase text-primary">
+          {todayLabel}
+        </h1>
+        {user?.email && (
+          <span className="text-[10px] text-on-surface-variant truncate max-w-[160px]">{user.email}</span>
+        )}
+      </div>
 
-      {!loading && overview ? (
-        <div style={{ display: "grid", gap: 14 }}>
-          <Card tone="low">
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <h2 className="h2">What’s planned</h2>
-              <span className="muted" style={{ fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                Today
-              </span>
+      {/* Error / status message */}
+      {message && (
+        <div className="mb-6 p-4 rounded-[1rem] bg-surface-container-highest text-sm text-on-surface-variant whitespace-pre-wrap">
+          {message}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid gap-4">
+          <div className="rounded-[1.5rem] bg-surface-container-low h-48 animate-pulse" />
+          <div className="rounded-[1rem] bg-surface-container-highest h-20 animate-pulse" />
+          <div className="rounded-[1rem] bg-surface-container-highest h-20 animate-pulse" />
+        </div>
+      ) : overview ? (
+        <div className="grid gap-4">
+          {/* Recommendation hero */}
+          {recommendation ? (
+            <SessionStateCard
+              state="recommended"
+              title={getRecoTitle(recommendation)}
+              subtitle={getRecoHeadline(recommendation)}
+              reasons={getRecoReasons(recommendation)}
+              recommendationId={recommendation.recommendationId}
+              onStart={() => setLogDrawerOpen(true)}
+            />
+          ) : (
+            <div className="rounded-[1.5rem] bg-surface-container-low p-8">
+              <div className="text-on-surface-variant text-sm">Aucune recommandation pour aujourd'hui.</div>
             </div>
-            {overview.planned.length === 0 ? (
-              <div className="muted">No planned session for today.</div>
-            ) : (
-              <div style={{ display: "grid", gap: 10 }}>
+          )}
+
+          {/* Planned sessions */}
+          {overview.planned.length > 0 && (
+            <div className="rounded-[1.5rem] bg-surface-container-low p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-headline font-bold uppercase tracking-tight text-sm">Planifié</h3>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
+                  {overview.planned.length} session{overview.planned.length > 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="grid gap-2">
                 {overview.planned.map((p) => (
-                  <Card key={p.id} tone="highest">
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                      <div style={{ display: "grid", gap: 6 }}>
-                        <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                          {p.templateName ?? "Session"}
-                        </div>
-                        <div className="muted" style={{ fontSize: 13 }}>
-                          Scheduled: {p.scheduledFor}
-                        </div>
-                      </div>
-                      <Pill tone="primary">Plan</Pill>
-                    </div>
-                  </Card>
+                  <SessionStateCard
+                    key={p.id}
+                    state="planned"
+                    title={p.templateName ?? "Session"}
+                    subtitle={p.scheduledFor}
+                  />
                 ))}
               </div>
-            )}
-          </Card>
-
-          <Card tone="low">
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <h2 className="h2">What to do</h2>
-              <Pill tone="secondary">Why</Pill>
             </div>
+          )}
 
-            {!recommendation ? (
-              <div className="muted">No recommendation yet.</div>
-            ) : (
-              <Card tone="highest">
-                <div style={{ display: "grid", gap: 10 }}>
-                  <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                    {typeof (recommendation.output as { recommendedTemplateName?: unknown })?.recommendedTemplateName ===
-                    "string"
-                      ? String((recommendation.output as { recommendedTemplateName: unknown }).recommendedTemplateName)
-                      : "Recommended session"}
-                  </div>
-
-                  <div className="muted" style={{ fontSize: 13 }}>
-                    {typeof (recommendation.explanation as { summary?: unknown }) === "object" &&
-                    recommendation.explanation &&
-                    "summary" in (recommendation.explanation as Record<string, unknown>) &&
-                    (recommendation.explanation as { summary: unknown }).summary &&
-                    typeof (recommendation.explanation as { summary: unknown }).summary === "object" &&
-                    "headline" in ((recommendation.explanation as { summary: Record<string, unknown> }).summary ?? {})
-                      ? String(
-                          (
-                            recommendation.explanation as {
-                              summary: { headline?: unknown };
-                            }
-                          ).summary.headline ?? "",
-                        )
-                      : "Explanation"}
-                  </div>
-
-                  {Array.isArray((recommendation.explanation as { summary?: { reasonsTop3?: unknown } })?.summary?.reasonsTop3) ? (
-                    <ol style={{ margin: 0, paddingLeft: 18, display: "grid", gap: 8 }}>
-                      {(
-                        (recommendation.explanation as { summary: { reasonsTop3: Array<{ text?: unknown }> } }).summary
-                          .reasonsTop3 ?? []
-                      )
-                        .slice(0, 3)
-                        .map((r, idx) => (
-                          <li key={idx} style={{ color: "var(--text-muted)", lineHeight: 1.35 }}>
-                            {typeof r.text === "string" ? r.text : JSON.stringify(r)}
-                          </li>
-                        ))}
-                    </ol>
-                  ) : null}
-
-                  <details>
-                    <summary style={{ cursor: "pointer" }}>Details</summary>
-                    <div className="muted" style={{ marginTop: 10 }}>
-                      Recommendation id: <code>{recommendation.recommendationId}</code>
-                    </div>
-                  </details>
-                </div>
-              </Card>
-            )}
-          </Card>
-
-          <Card tone="low">
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <h2 className="h2">Log a session</h2>
-              <Pill tone="neutral">Journal</Pill>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
-              <Input label="Start (HH:MM)" value={startTime} onChange={setStartTime} placeholder="08:30" />
-              <Input label="End (HH:MM)" value={endTime} onChange={setEndTime} placeholder="09:30" />
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
-              <Input
-                label="Duration (min)"
-                value={durationMinutes === "" ? "" : String(durationMinutes)}
-                onChange={(v) => {
-                  const raw = v.trim();
-                  if (!raw) return setDurationMinutes("");
-                  const n = Number(raw);
-                  if (!Number.isFinite(n)) return;
-                  setDurationMinutes(Math.max(1, Math.min(24 * 60, Math.floor(n))));
-                }}
-                placeholder="60"
-              />
-              <Input
-                label="RPE (1-10)"
-                value={rpe === "" ? "" : String(rpe)}
-                onChange={(v) => {
-                  const raw = v.trim();
-                  if (!raw) return setRpe("");
-                  const n = Number(raw);
-                  if (!Number.isFinite(n)) return;
-                  setRpe(Math.max(1, Math.min(10, Math.floor(n))));
-                }}
-                placeholder="7"
-              />
-            </div>
-
-            <label style={{ display: "grid", gap: 8 }}>
-              <span style={{ fontSize: 12, color: "var(--text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
-                Notes
-              </span>
-              <textarea
-                value={notes}
-                onChange={(e) => setNotes(e.currentTarget.value)}
-                rows={4}
-                style={{
-                  border: 0,
-                  borderRadius: "var(--radius-md)",
-                  background: "rgba(38, 38, 38, 0.7)",
-                  color: "var(--text)",
-                  padding: 12,
-                  fontFamily: "var(--font-body)",
-                  resize: "vertical",
-                }}
-              />
-            </label>
-
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
-              <Button variant="primary" onClick={() => void onLog()} disabled={busy}>
-                {busy ? "Logging…" : "Log"}
-              </Button>
-              <span className="muted" style={{ fontSize: 13 }}>
-                {plannedCandidate?.templateName ? `Linked to: ${plannedCandidate.templateName}` : "No planned session linked."}
-              </span>
-            </div>
-          </Card>
-
-          <Card tone="low">
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12 }}>
-              <h2 className="h2">Recent execution</h2>
-              <Pill tone="neutral">{overview.executed.length} sessions</Pill>
-            </div>
-            {overview.executed.length === 0 ? (
-              <div className="muted">Nothing logged yet.</div>
-            ) : (
-              <div style={{ display: "grid", gap: 10 }}>
+          {/* Executed sessions today */}
+          {overview.executed.length > 0 && (
+            <div className="rounded-[1.5rem] bg-surface-container-low p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-headline font-bold uppercase tracking-tight text-sm">Réalisé</h3>
+                <span className="text-[10px] font-bold text-primary-container uppercase tracking-widest">
+                  {overview.executed.length} session{overview.executed.length > 1 ? "s" : ""}
+                </span>
+              </div>
+              <div className="grid gap-2">
                 {overview.executed.slice(0, 6).map((e) => (
                   <Link key={e.id} to={`/session/${e.id}`}>
-                    <Card tone="highest">
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                        <div style={{ display: "grid", gap: 6 }}>
-                          <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
-                            {e.startedAt.slice(11, 16)} → {e.endedAt ? e.endedAt.slice(11, 16) : "—"}
-                          </div>
-                          <div className="muted" style={{ fontSize: 13 }}>
-                            {e.id}
-                          </div>
-                        </div>
-                        <Pill tone="neutral">Log</Pill>
-                      </div>
-                    </Card>
+                    <SessionStateCard
+                      state="executed"
+                      title={`${e.startedAt.slice(11, 16)} → ${e.endedAt ? e.endedAt.slice(11, 16) : "—"}`}
+                      subtitle={e.id.slice(0, 8)}
+                    />
                   </Link>
                 ))}
               </div>
-            )}
-          </Card>
+            </div>
+          )}
+
+          {/* No sessions at all */}
+          {overview.planned.length === 0 && overview.executed.length === 0 && !recommendation && (
+            <div className="rounded-[1.5rem] bg-surface-container-low p-8 text-center">
+              <div className="text-on-surface-variant text-sm">Journée libre — aucune session planifiée.</div>
+            </div>
+          )}
+
+          {/* Quick log FAB */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => setLogDrawerOpen(true)}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full font-bold text-sm uppercase tracking-widest text-[#3a4a00] active:scale-95 transition-all"
+              style={{ background: "linear-gradient(45deg, #beee00 0%, #f3ffca 100%)" }}
+            >
+              + Journal
+            </button>
+          </div>
         </div>
       ) : null}
 
-      <Drawer open={syncDrawerOpen} title="Sync details" onClose={() => setSyncDrawerOpen(false)}>
-        <Card tone="low">
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
-            <h2 className="h2">Status</h2>
-            {syncStatus ? (
-              <Pill tone={syncStatus.pending > 0 ? "secondary" : "primary"}>
-                {syncStatus.pending > 0 ? `Queued ${syncStatus.pending}` : "Synced"}
-              </Pill>
-            ) : (
-              <Pill tone="neutral">Unknown</Pill>
-            )}
-          </div>
-          {syncStatus ? (
-            <div className="muted" style={{ display: "grid", gap: 6 }}>
-              <div>
-                Pending: <strong>{syncStatus.pending}</strong>
-              </div>
-              <div>
-                Applied: <strong>{syncStatus.applied}</strong>
-              </div>
-            </div>
-          ) : null}
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Button variant="primary" onClick={() => void onSyncNow()} disabled={syncBusy}>
-              {syncBusy ? "Syncing…" : "Sync now"}
-            </Button>
-            <Button
-              variant="ghost"
-              onClick={() => {
-                void (async () => {
-                  const stats = await getQueueStats();
-                  const recent = await listRecentOps(50);
-                  setSyncStatus(stats);
-                  setRecentOps(recent);
-                })();
-              }}
-            >
-              Refresh
-            </Button>
-          </div>
-        </Card>
+      {/* Feedback / log session drawer */}
+      <Drawer open={logDrawerOpen} title="Journal de séance" onClose={() => setLogDrawerOpen(false)}>
+        <FeedbackForm
+          plannedSessionId={plannedCandidate?.id ?? null}
+          planId={plannedCandidate?.planId ?? null}
+          onSuccess={onFeedbackSuccess}
+          onCancel={() => setLogDrawerOpen(false)}
+        />
+      </Drawer>
 
-        <Card tone="low">
-          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
-            <h2 className="h2">Queue</h2>
-            <Pill tone="neutral">{recentOps.length} ops</Pill>
+      {/* Sync drawer */}
+      <Drawer open={syncDrawerOpen} title="Sync details" onClose={() => setSyncDrawerOpen(false)}>
+        <div className="grid gap-4">
+          <div className="rounded-[1.5rem] bg-surface-container-low p-6">
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-headline font-bold uppercase tracking-tight text-sm">Statut</span>
+              {syncStatus ? (
+                <Pill tone={syncStatus.pending > 0 ? "secondary" : "primary"}>
+                  {syncStatus.pending > 0 ? `Queued ${syncStatus.pending}` : "Synced"}
+                </Pill>
+              ) : (
+                <Pill tone="neutral">Unknown</Pill>
+              )}
+            </div>
+            {syncStatus && (
+              <div className="grid gap-1 text-sm text-on-surface-variant mb-4">
+                <div>Pending : <strong className="text-on-surface">{syncStatus.pending}</strong></div>
+                <div>Applied : <strong className="text-on-surface">{syncStatus.applied}</strong></div>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <Button variant="primary" onClick={() => void onSyncNow()} disabled={syncBusy}>
+                {syncBusy ? "Syncing…" : "Sync now"}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  void (async () => {
+                    const stats = await getQueueStats();
+                    const recent = await listRecentOps(50);
+                    setSyncStatus(stats);
+                    setRecentOps(recent);
+                  })();
+                }}
+              >
+                Refresh
+              </Button>
+            </div>
           </div>
-          {recentOps.length === 0 ? (
-            <div className="muted">No ops yet.</div>
-          ) : (
-            <div style={{ display: "grid", gap: 10 }}>
-              {recentOps.slice(0, 25).map((op) => (
-                <Card key={op.opId} tone="highest">
-                  <div style={{ display: "grid", gap: 8 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "baseline" }}>
-                      <div style={{ fontFamily: "var(--font-headline)", fontWeight: 900, letterSpacing: "-0.03em" }}>
+
+          <div className="rounded-[1.5rem] bg-surface-container-low p-6">
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-headline font-bold uppercase tracking-tight text-sm">Queue</span>
+              <span className="text-[10px] text-on-surface-variant">{recentOps.length} ops</span>
+            </div>
+            {recentOps.length === 0 ? (
+              <div className="text-on-surface-variant text-sm">No ops yet.</div>
+            ) : (
+              <div className="grid gap-2">
+                {recentOps.slice(0, 25).map((op) => (
+                  <div key={op.opId} className="p-4 rounded-[1rem] bg-surface-container-highest">
+                    <div className="flex items-center justify-between gap-3 mb-2">
+                      <span className="font-headline font-bold text-sm tracking-tight">
                         {op.entity} · {op.opType}
-                      </div>
+                      </span>
                       <Pill tone={op.status === "applied" ? "primary" : op.lastError ? "error" : "secondary"}>
                         {op.status === "applied" ? "Applied" : op.lastError ? "Error" : "Queued"}
                       </Pill>
                     </div>
-                    <div className="muted" style={{ fontSize: 13, display: "grid", gap: 4 }}>
-                      <div>
-                        attempts: <strong>{op.attempts}</strong>
-                      </div>
-                      <div>
-                        next try:{" "}
-                        <code>{op.nextAttemptAt ? new Date(op.nextAttemptAt).toISOString().slice(11, 19) : "—"}</code>
-                      </div>
-                      {op.lastError ? (
-                        <div style={{ whiteSpace: "pre-wrap" }}>
-                          lastError: <code>{op.lastError}</code>
-                        </div>
-                      ) : null}
+                    <div className="text-xs text-on-surface-variant grid gap-1">
+                      <div>attempts: <strong>{op.attempts}</strong></div>
+                      <div>next try: <code>{op.nextAttemptAt ? new Date(op.nextAttemptAt).toISOString().slice(11, 19) : "—"}</code></div>
+                      {op.lastError && <div className="text-error">lastError: <code>{op.lastError}</code></div>}
                     </div>
                   </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </Drawer>
     </AppShell>
   );
 }
-

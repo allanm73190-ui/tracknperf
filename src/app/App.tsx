@@ -9,6 +9,9 @@ import HistoryPage from "../ui/pages/History";
 import OnboardingPage from "../ui/pages/Onboarding";
 import SessionDetailPage from "../ui/pages/SessionDetail";
 import StatsPage from "../ui/pages/Stats";
+import ImportPlanPage from "../ui/pages/ImportPlan";
+import ProfileEditPage from "../ui/pages/ProfileEdit";
+import SettingsPage from "../ui/pages/Settings";
 import TodayPage from "../ui/pages/Today";
 
 function AppLoading(props: { title?: string }) {
@@ -106,6 +109,9 @@ export default function App() {
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />
           <Route path="/session/:sessionId" element={<SessionDetailPage />} />
+          <Route path="/import-plan" element={<ImportPlanPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/profile" element={<ProfileEditPage />} />
         </Route>
       </Route>
 

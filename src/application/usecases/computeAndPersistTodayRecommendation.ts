@@ -26,6 +26,11 @@ export async function computeAndPersistTodayRecommendation(
   const planned = overview.planned[0] ?? null;
   if (!planned) return null;
 
+  // Resolve authenticated user
+  const { data: { user }, error: userErr } = await supabase.auth.getUser();
+  if (userErr || !user) throw new Error("User not authenticated.");
+  const userId = user.id;
+
   // Best-effort de-dupe: if we already computed a recommendation for this planned session today,
   // reuse the latest one.
   const { data: existing, error: existingErr } = await supabase
@@ -56,7 +61,7 @@ export async function computeAndPersistTodayRecommendation(
     }
   }
 
-  const ctx = await loadEngineContext({ planId: planned.planId, planVersionId: planned.planVersionId });
+  const ctx = await loadEngineContext({ userId, planId: planned.planId, planVersionId: planned.planVersionId });
   const engineRes = computeRecommendationV1_1({
     todayIso: overview.todayIso,
     plannedSession: planned,
@@ -64,6 +69,7 @@ export async function computeAndPersistTodayRecommendation(
     last7dExecutedCount: overview.executed.length, // V1.1 pragmatic until History aggregation exists
     config: ctx.config,
     algorithmVersion: ctx.algorithmVersion,
+    feedback: ctx.recentFeedback,
   });
 
   const { data: recoRow, error: recoErr } = await supabase
@@ -112,4 +118,3 @@ export async function computeAndPersistTodayRecommendation(
     explanation: (expRow as { content: unknown }).content,
   };
 }
-
