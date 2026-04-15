@@ -60,12 +60,14 @@ export function FeedbackForm({ plannedSessionId, planId, onSuccess, onCancel }: 
       if (!startedAt || !endedAt) throw new Error("Horaires invalides (format HH:MM requis).");
       if (endedAt.getTime() < startedAt.getTime()) throw new Error("L'heure de fin doit être après le début.");
 
+      const durationMinutes = (endedAt.getTime() - startedAt.getTime()) / 60000;
       const res = await logExecutedSession({
         plannedSessionId,
         planId,
         startedAt,
         endedAt,
         payload: {
+          durationMinutes,
           rpe,
           painScore,
           painLocation: painScore > 0 && painLocation.trim() ? painLocation.trim() : null,

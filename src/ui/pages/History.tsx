@@ -47,7 +47,7 @@ async function loadHistory(sinceIso: string): Promise<{ planned: PlannedRow[]; e
   if (exRes.error) throw new Error(exRes.error.message);
 
   const planned: PlannedRow[] = (pvRes.data ?? []).map((r) => {
-    const tpl = r.session_templates as { name: string } | null;
+    const tpl = (r.session_templates as unknown) as { name: string } | null;
     return {
       id: String(r.id),
       scheduledFor: String(r.scheduled_for),

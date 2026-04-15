@@ -108,8 +108,8 @@ export function buildExplanation(args: {
     },
     {
       signalId: "volume_multiplier",
-      rawValue: args.patch.volumeMultiplier,
-      normalizedValue: args.patch.volumeMultiplier,
+      rawValue: args.patch.volumeMultiplier ?? 1,
+      normalizedValue: args.patch.volumeMultiplier ?? 1,
       weight: 0.25,
       direction: args.patch.volumeMultiplier < 1 ? "down" : args.patch.volumeMultiplier > 1 ? "up" : "neutral",
     },
@@ -119,7 +119,7 @@ export function buildExplanation(args: {
   const reasonsRaw: Array<{ code: string; text: string }> = [];
 
   if (args.decisionState === "rest") {
-    reasonsRaw.push({ code: "NO_PLAN_TODAY", text: REDUCE_TEXTS.NO_PLAN_TODAY });
+    reasonsRaw.push({ code: "NO_PLAN_TODAY", text: REDUCE_TEXTS["NO_PLAN_TODAY"] ?? "No session planned for today." });
     reasonsRaw.push({ code: "DATA_MISSING",  text: "Add a plan to get personalized recommendations." });
   } else {
     for (const rule of args.rulesFired) {
@@ -127,7 +127,7 @@ export function buildExplanation(args: {
       reasonsRaw.push({ code: rule.reasonCode, text });
     }
     if (reasonsRaw.length === 0) {
-      reasonsRaw.push({ code: "FOLLOW_PLAN", text: REDUCE_TEXTS.FOLLOW_PLAN });
+      reasonsRaw.push({ code: "FOLLOW_PLAN", text: REDUCE_TEXTS["FOLLOW_PLAN"] ?? "Your load metrics are healthy — follow the plan." });
     }
     if (args.progressionAxis) {
       reasonsRaw.push({ code: "PROGRESSION_AXIS", text: `Progressing on ${args.progressionAxis} axis this session.` });

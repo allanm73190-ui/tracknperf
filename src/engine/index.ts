@@ -61,7 +61,7 @@ export function runAdaptiveEngine(rawInputs: EngineInputs): EngineResult {
     configVersion: config.version,
   });
 
-  const action =
+  const action: "rest" | "execute_planned" | "substitute" | "defer" =
     decisionState === "rest"      ? "rest"      :
     decisionState === "substitute" ? "substitute" :
     decisionState === "defer"      ? "defer"      :

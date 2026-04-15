@@ -64,21 +64,21 @@ describe("computeMultidimensionalFatigue", () => {
     expect(computeMultidimensionalFatigue(normalizeInputs(makeInputs())).global).toBeLessThanOrEqual(0.2);
   });
   it("muscular > cardiovascular after strength sessions", () => {
-    const sessions = [1,2,3].map(d => ({ id:`s${d}`, startedAt:`2026-04-${String(15-d).padStart(2,"0")}T10:00:00Z`, durationMinutes:90, rpe:9, sessionType:"strength" as const }));
+    const sessions = [1,2,3].map(d => ({ id:`s${d}`, startedAt:`2026-04-${String(15-d).padStart(2,"0")}T10:00:00Z`, durationMinutes:90, rpe:9, sessionType:"strength" as const, volumeMultiplierApplied: 1, intensityMultiplierApplied: 1 }));
     const f = computeMultidimensionalFatigue(normalizeInputs(makeInputs({ history: { recentSessions: sessions, last7dCount: 3 } })));
     expect(f.muscular).toBeGreaterThan(f.cardiovascular);
   });
   it("cardiovascular > muscular after endurance sessions", () => {
-    const sessions = [1,2,3].map(d => ({ id:`s${d}`, startedAt:`2026-04-${String(15-d).padStart(2,"0")}T10:00:00Z`, durationMinutes:90, rpe:8, sessionType:"endurance" as const }));
+    const sessions = [1,2,3].map(d => ({ id:`s${d}`, startedAt:`2026-04-${String(15-d).padStart(2,"0")}T10:00:00Z`, durationMinutes:90, rpe:8, sessionType:"endurance" as const, volumeMultiplierApplied: 1, intensityMultiplierApplied: 1 }));
     const f = computeMultidimensionalFatigue(normalizeInputs(makeInputs({ history: { recentSessions: sessions, last7dCount: 3 } })));
     expect(f.cardiovascular).toBeGreaterThan(f.muscular);
   });
   it("dataQualityScore < 0.3 with fewer than 3 sessions", () => {
-    const f = computeMultidimensionalFatigue(normalizeInputs(makeInputs({ history: { recentSessions: [{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:60, rpe:6, sessionType:"mixed" }], last7dCount: 1 } })));
+    const f = computeMultidimensionalFatigue(normalizeInputs(makeInputs({ history: { recentSessions: [{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:60, rpe:6, sessionType:"mixed" , volumeMultiplierApplied: 1, intensityMultiplierApplied: 1}], last7dCount: 1 } })));
     expect(f.dataQualityScore).toBeLessThan(0.3);
   });
   it("all dimensions in [0,1]", () => {
-    const sessions = [1,2,3,4,5].map(d => ({ id:`s${d}`, startedAt:`2026-04-${String(15-d).padStart(2,"0")}T10:00:00Z`, durationMinutes:120, rpe:10, sessionType:"mixed" as const }));
+    const sessions = [1,2,3,4,5].map(d => ({ id:`s${d}`, startedAt:`2026-04-${String(15-d).padStart(2,"0")}T10:00:00Z`, durationMinutes:120, rpe:10, sessionType:"mixed" as const, volumeMultiplierApplied: 1, intensityMultiplierApplied: 1 }));
     const f = computeMultidimensionalFatigue(normalizeInputs(makeInputs({ history: { recentSessions: sessions, last7dCount: 5 } })));
     for (const dim of [f.muscular, f.cardiovascular, f.neural, f.articular, f.global]) {
       expect(dim).toBeGreaterThanOrEqual(0);
@@ -132,13 +132,13 @@ describe("computeConflictScore", () => {
     expect(computeConflictScore([], "strength")).toBe(0);
   });
   it("> 0.5 when same type done yesterday", () => {
-    expect(computeConflictScore([{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:90, rpe:8, sessionType:"strength" as const }], "strength")).toBeGreaterThan(0.5);
+    expect(computeConflictScore([{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:90, rpe:8, sessionType:"strength" as const , volumeMultiplierApplied: 1, intensityMultiplierApplied: 1}], "strength")).toBeGreaterThan(0.5);
   });
   it("< 0.3 when different types interleaved", () => {
-    expect(computeConflictScore([{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:60, rpe:6, sessionType:"endurance" as const }], "strength")).toBeLessThan(0.3);
+    expect(computeConflictScore([{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:60, rpe:6, sessionType:"endurance" as const , volumeMultiplierApplied: 1, intensityMultiplierApplied: 1}], "strength")).toBeLessThan(0.3);
   });
   it("in [0,1]", () => {
-    const s = computeConflictScore([{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:90, rpe:9, sessionType:"strength" as const }], "strength");
+    const s = computeConflictScore([{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:90, rpe:9, sessionType:"strength" as const , volumeMultiplierApplied: 1, intensityMultiplierApplied: 1}], "strength");
     expect(s).toBeGreaterThanOrEqual(0);
     expect(s).toBeLessThanOrEqual(1);
   });
@@ -187,17 +187,17 @@ describe("chooseDecisionState", () => {
 
 describe("chooseProgressionAxis", () => {
   it("returns one valid axis when progressing", () => {
-    const axis = chooseProgressionAxis({ decisionState:"progress", recentAxes:[], sessionType:"strength", goals:["strength"] });
+    const axis = chooseProgressionAxis({ decisionState:"progress", recentAxes:[], sessionType:"strength", goals:["strength"]});
     expect(["volume","intensity","density","complexity"]).toContain(axis);
   });
   it("avoids repeating last axis", () => {
-    const axis = chooseProgressionAxis({ decisionState:"progress", recentAxes:["volume"], sessionType:"strength", goals:["strength"] });
+    const axis = chooseProgressionAxis({ decisionState:"progress", recentAxes:["volume"], sessionType:"strength", goals:["strength"]});
     expect(axis).not.toBe("volume");
   });
   it("null for reduce_volume", () => {
-    expect(chooseProgressionAxis({ decisionState:"reduce_volume", recentAxes:[], sessionType:"strength", goals:["strength"] })).toBeNull();
+    expect(chooseProgressionAxis({ decisionState:"reduce_volume", recentAxes:[], sessionType:"strength", goals:["strength"]})).toBeNull();
   });
   it("null for rest", () => {
-    expect(chooseProgressionAxis({ decisionState:"rest", recentAxes:[], sessionType:"strength", goals:["strength"] })).toBeNull();
+    expect(chooseProgressionAxis({ decisionState:"rest", recentAxes:[], sessionType:"strength", goals:["strength"]})).toBeNull();
   });
 });

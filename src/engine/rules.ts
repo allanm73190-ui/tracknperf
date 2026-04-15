@@ -125,6 +125,7 @@ export function computeConflictScore(
   let conflict = 0;
   for (let i = 0; i < Math.min(sorted.length, 3); i++) {
     const s = sorted[i];
+    if (!s) continue;
     const daysAgo = daysBetween(new Date().toISOString(), s.startedAt);
     if (s.sessionType === plannedType && Math.floor(daysAgo) < 2) {
       conflict += (2 - Math.floor(daysAgo)) * 0.6;
@@ -200,5 +201,5 @@ export function chooseProgressionAxis(args: {
     ? ["density", "volume", "intensity", "complexity"]
     : ["volume", "intensity", "density", "complexity"];
 
-  return preferred.find(a => candidates.includes(a)) ?? candidates[0];
+  return preferred.find(a => candidates.includes(a)) ?? candidates[0] ?? null;
 }
