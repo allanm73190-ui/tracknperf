@@ -251,74 +251,188 @@ export default function TodayPage() {
       </Drawer>
 
       {/* Sync drawer */}
-      <Drawer open={syncDrawerOpen} title="Sync details" onClose={() => setSyncDrawerOpen(false)}>
-        <div className="grid gap-4">
-          <div className="rounded-[1.5rem] bg-surface-container-low p-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="font-headline font-bold uppercase tracking-tight text-sm">Statut</span>
-              {syncStatus ? (
-                <Pill tone={syncStatus.pending > 0 ? "secondary" : "primary"}>
-                  {syncStatus.pending > 0 ? `Queued ${syncStatus.pending}` : "Synced"}
-                </Pill>
-              ) : (
-                <Pill tone="neutral">Unknown</Pill>
-              )}
+      <Drawer open={syncDrawerOpen} title="" onClose={() => setSyncDrawerOpen(false)}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 24, paddingBottom: 8 }}>
+
+          {/* Header */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+            <div>
+              <h1 style={{ fontFamily: "var(--font-headline)", fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>
+                Sync Details
+              </h1>
+              <p style={{ color: "#adaaaa", fontSize: 13, fontWeight: 500, margin: "4px 0 0" }}>Statut de la synchronisation</p>
             </div>
-            {syncStatus && (
-              <div className="grid gap-1 text-sm text-on-surface-variant mb-4">
-                <div>Pending : <strong className="text-on-surface">{syncStatus.pending}</strong></div>
-                <div>Applied : <strong className="text-on-surface">{syncStatus.applied}</strong></div>
-              </div>
-            )}
-            <div className="flex gap-3">
-              <Button variant="primary" onClick={() => void onSyncNow()} disabled={syncBusy}>
-                {syncBusy ? "Syncing…" : "Sync now"}
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  void (async () => {
-                    const stats = await getQueueStats();
-                    const recent = await listRecentOps(50);
-                    setSyncStatus(stats);
-                    setRecentOps(recent);
-                  })();
-                }}
-              >
-                Refresh
-              </Button>
+            <div style={{
+              background: "#201f1f",
+              border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 999,
+              padding: "6px 14px",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}>
+              <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", color: syncStatus?.pending === 0 ? "#cafd00" : "#adaaaa", textTransform: "uppercase" }}>
+                {syncStatus?.pending === 0 ? "SYNCED" : "LOCAL"}
+              </span>
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] bg-surface-container-low p-6">
-            <div className="flex items-center justify-between mb-4">
-              <span className="font-headline font-bold uppercase tracking-tight text-sm">Queue</span>
-              <span className="text-[10px] text-on-surface-variant">{recentOps.length} ops</span>
-            </div>
-            {recentOps.length === 0 ? (
-              <div className="text-on-surface-variant text-sm">No ops yet.</div>
-            ) : (
-              <div className="grid gap-2">
-                {recentOps.slice(0, 25).map((op) => (
-                  <div key={op.opId} className="p-4 rounded-[1rem] bg-surface-container-highest">
-                    <div className="flex items-center justify-between gap-3 mb-2">
-                      <span className="font-headline font-bold text-sm tracking-tight">
-                        {op.entity} · {op.opType}
-                      </span>
-                      <Pill tone={op.status === "applied" ? "primary" : op.lastError ? "error" : "secondary"}>
-                        {op.status === "applied" ? "Applied" : op.lastError ? "Error" : "Queued"}
-                      </Pill>
-                    </div>
-                    <div className="text-xs text-on-surface-variant grid gap-1">
-                      <div>attempts: <strong>{op.attempts}</strong></div>
-                      <div>next try: <code>{op.nextAttemptAt ? new Date(op.nextAttemptAt).toISOString().slice(11, 19) : "—"}</code></div>
-                      {op.lastError && <div className="text-error">lastError: <code>{op.lastError}</code></div>}
-                    </div>
-                  </div>
-                ))}
+          {/* Offline banner — shown when there are pending ops */}
+          {(syncStatus?.pending ?? 0) > 0 && (
+            <div style={{
+              background: "rgba(185,41,2,0.15)",
+              border: "1px solid rgba(255,115,81,0.2)",
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: "rgba(255,115,81,0.1)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  fontSize: 18,
+                }}>☁</div>
+                <div>
+                  <div style={{ fontWeight: 700, color: "#ff7351", letterSpacing: "-0.01em", fontSize: 14 }}>HORS LIGNE</div>
+                  <div style={{ fontSize: 12, color: "#adaaaa", marginTop: 2 }}>Vérifiez votre connexion réseau</div>
+                </div>
               </div>
-            )}
+              <button
+                onClick={() => void onSyncNow()}
+                disabled={syncBusy}
+                style={{
+                  background: "#ff7351",
+                  color: "#450900",
+                  border: "none",
+                  borderRadius: 8,
+                  padding: "8px 16px",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  cursor: syncBusy ? "not-allowed" : "pointer",
+                  opacity: syncBusy ? 0.6 : 1,
+                }}
+              >
+                {syncBusy ? "…" : "RÉESSAYER"}
+              </button>
+            </div>
+          )}
+
+          {/* Summary grid */}
+          {syncStatus && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "20px 20px" }}>
+                <div style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 700, color: "#ffeea5", lineHeight: 1 }}>{syncStatus.pending}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#adaaaa", letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 6 }}>EN ATTENTE</div>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "20px 20px" }}>
+                <div style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 700, color: "#cafd00", lineHeight: 1 }}>{syncStatus.applied}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#adaaaa", letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 6 }}>APPLIQUÉS</div>
+              </div>
+            </div>
+          )}
+
+          {/* Operations list */}
+          {recentOps.length > 0 && (
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#adaaaa", letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 16 }}>
+                Opérations Récentes
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {recentOps.slice(0, 10).map((op) => {
+                  const isApplied = op.status === "applied";
+                  const isError = !!op.lastError;
+                  const statusLabel = isApplied ? "SYNCED" : isError ? "ERROR" : "QUEUE";
+                  const statusColor = isApplied ? "#cafd00" : isError ? "#ff7351" : "#ffeea5";
+                  const statusBg = isApplied ? "rgba(202,253,0,0.08)" : isError ? "rgba(255,115,81,0.08)" : "rgba(255,238,165,0.08)";
+                  return (
+                    <div key={op.opId} style={{ display: "flex", alignItems: "center", gap: 14, opacity: isApplied ? 1 : op.status === "pending" && !isError ? 0.65 : 1 }}>
+                      <div style={{
+                        width: 44,
+                        height: 44,
+                        borderRadius: 12,
+                        background: "#201f1f",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        fontSize: 18,
+                        color: statusColor,
+                      }}>
+                        {isApplied ? "✓" : isError ? "✕" : "↻"}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
+                          <span style={{ fontWeight: 700, fontSize: 14, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {op.entity} · {op.opType}
+                          </span>
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 700,
+                            color: statusColor,
+                            background: statusBg,
+                            padding: "2px 8px",
+                            borderRadius: 4,
+                            letterSpacing: "0.05em",
+                            flexShrink: 0,
+                            marginLeft: 8,
+                          }}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>
+                          {op.attempts} tentative{op.attempts !== 1 ? "s" : ""}
+                          {op.lastError ? ` · ${op.lastError}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Force sync CTA */}
+          <div style={{ marginTop: 8 }}>
+            <button
+              onClick={() => void onSyncNow()}
+              disabled={syncBusy}
+              style={{
+                width: "100%",
+                background: "linear-gradient(135deg, #cafd00 0%, #f3ffca 100%)",
+                color: "#0e0e0e",
+                border: "none",
+                borderRadius: 16,
+                height: 60,
+                fontFamily: "var(--font-headline)",
+                fontWeight: 700,
+                fontSize: 16,
+                letterSpacing: "0.04em",
+                cursor: syncBusy ? "not-allowed" : "pointer",
+                opacity: syncBusy ? 0.7 : 1,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              ↻ FORCE SYNCHRONIZATION
+            </button>
+            <p style={{ textAlign: "center", fontSize: 10, color: "#adaaaa", marginTop: 12, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500 }}>
+              {syncStatus ? `${syncStatus.applied} ops appliquées · ${syncStatus.pending} en attente` : "Chargement…"}
+            </p>
           </div>
+
         </div>
       </Drawer>
     </AppShell>
