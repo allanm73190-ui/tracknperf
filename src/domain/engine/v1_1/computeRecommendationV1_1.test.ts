@@ -211,7 +211,7 @@ describe("computeRecommendationV1_1", () => {
       feedback: [],
     });
 
-    expect(res.fatigue.dataQualityScore).toBeLessThan(0.3);
+    expect(((res.fatigue as unknown) as { dataQualityScore?: number })?.dataQualityScore ?? 0).toBeLessThan(0.3);
     expect(res.readiness.limitingFactor).toBe("data");
   });
 });

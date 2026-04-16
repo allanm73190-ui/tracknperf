@@ -36,7 +36,7 @@ describe("computeFatigueSnapshot", () => {
   it("feedback RPE overrides session RPE for the same day", () => {
     const sessions = [0, 1, 2, 3, 4, 5, 6].map((d) => session(d, 5));
     const feedback: SessionFeedback[] = [
-      { sessionStartedAt: sessions[0].startedAt, rpe: 9 },
+      { sessionStartedAt: sessions[0]!.startedAt, rpe: 9 },
     ];
     const withFeedback = computeFatigueSnapshot(sessions, feedback, { todayIso: TODAY });
     const withoutFeedback = computeFatigueSnapshot(sessions, [], { todayIso: TODAY });

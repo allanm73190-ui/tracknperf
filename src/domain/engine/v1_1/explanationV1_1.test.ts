@@ -60,11 +60,11 @@ describe("ExplanationV1_1 completeness", () => {
     });
 
     expect(res.explanation.rulesFired.length).toBeGreaterThan(0);
-    const rule = res.explanation.rulesFired[0];
+    const rule = res.explanation.rulesFired[0]!;
     expect(typeof rule.ruleId).toBe("string");
-    expect(rule.ruleVersion).toBe("1");
-    expect(Array.isArray(rule.reasonCodes)).toBe(true);
-    expect(rule.reasonCodes.length).toBeGreaterThan(0);
+    expect((rule as any).ruleVersion).toBe("1");
+    expect(Array.isArray((rule as any).reasonCodes)).toBe(true);
+    expect(((rule as any).reasonCodes || []).length).toBeGreaterThan(0);
   });
 
   it("explanation.summary.reasonsTop3 always has exactly 3 entries", () => {

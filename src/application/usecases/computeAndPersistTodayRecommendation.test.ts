@@ -45,9 +45,9 @@ function makeChain(terminalResult: unknown) {
   for (const m of methods) {
     chain[m] = vi.fn().mockReturnValue(chain);
   }
-  chain["single"].mockResolvedValue(terminalResult);
-  chain["maybeSingle"].mockResolvedValue(terminalResult);
-  chain["limit"].mockResolvedValue(terminalResult);
+  chain["single"]!.mockResolvedValue(terminalResult);
+  chain["maybeSingle"]!.mockResolvedValue(terminalResult);
+  chain["limit"]!.mockResolvedValue(terminalResult);
   return chain;
 }
 

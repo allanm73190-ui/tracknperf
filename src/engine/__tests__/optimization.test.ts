@@ -52,7 +52,7 @@ describe("reoptimizeMicrocycle", () => {
   it("never places two identical types back-to-back when fatigue is elevated", () => {
     const optimized = reoptimizeMicrocycle(week, makeFatigue({ global: 0.7 }));
     for (let i = 0; i < optimized.length - 1; i++) {
-      if (optimized[i].sessionType === "strength" && optimized[i+1].sessionType === "strength") {
+      if (optimized[i]?.sessionType === "strength" && optimized[i+1]?.sessionType === "strength") {
         // If two strength sessions are adjacent, fail
         expect(false).toBe(true);
       }

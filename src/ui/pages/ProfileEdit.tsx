@@ -40,7 +40,7 @@ export default function ProfileEditPage() {
       .then(({ data }) => {
         if (data?.display_name) setDisplayName(String(data.display_name));
       })
-      .finally(() => setLoadingProfile(false));
+      .then(() => setLoadingProfile(false), () => setLoadingProfile(false));
   }, [user]);
 
   function validate(): boolean {

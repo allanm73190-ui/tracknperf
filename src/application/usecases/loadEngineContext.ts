@@ -113,7 +113,7 @@ async function loadRecentFeedback(userId: string): Promise<SessionFeedback[]> {
     .limit(14);
   if (error || !data) return [];
   return data.map((row) => {
-    const session = row.executed_sessions as { started_at: string } | null;
+    const session = (row.executed_sessions as unknown) as { started_at: string } | null;
     return {
       sessionStartedAt: session?.started_at ?? new Date(0).toISOString(),
       rpe: row.rating !== null ? Number(row.rating) : null,
