@@ -74,6 +74,17 @@
 /* Base */
 :root {
   color-scheme: dark;
+  /* Short-form aliases for kit.module.css (CSS Modules don't use Tailwind v4 --color-* prefix) */
+  --primary-container: #cafd00;
+  --primary: #f3ffca;
+  --secondary: #c57eff;
+  --surface-low: #131313;
+  --surface-highest: #262626;
+  --text: #ffffff;
+  --text-muted: #adaaaa;
+  --error: #ff7351;
+  --shadow-ambient-purple: 0 24px 80px rgba(197, 126, 255, 0.12);
+  --shadow-ambient-lime: 0 24px 80px rgba(202, 253, 0, 0.09);
 }
 
 * {
