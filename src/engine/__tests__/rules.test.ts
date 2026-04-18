@@ -132,7 +132,8 @@ describe("computeConflictScore", () => {
     expect(computeConflictScore([], "strength")).toBe(0);
   });
   it("> 0.5 when same type done yesterday", () => {
-    expect(computeConflictScore([{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:90, rpe:8, sessionType:"strength" as const , volumeMultiplierApplied: 1, intensityMultiplierApplied: 1}], "strength")).toBeGreaterThan(0.5);
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString();
+    expect(computeConflictScore([{ id:"s1", startedAt: yesterday, durationMinutes:90, rpe:8, sessionType:"strength" as const , volumeMultiplierApplied: 1, intensityMultiplierApplied: 1}], "strength")).toBeGreaterThan(0.5);
   });
   it("< 0.3 when different types interleaved", () => {
     expect(computeConflictScore([{ id:"s1", startedAt:"2026-04-14T10:00:00Z", durationMinutes:60, rpe:6, sessionType:"endurance" as const , volumeMultiplierApplied: 1, intensityMultiplierApplied: 1}], "strength")).toBeLessThan(0.3);
