@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 import { useIsAdmin } from "../../auth/useIsAdmin";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "../../infra/supabase/client";
 import { AppShell } from "../kit/AppShell";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -59,6 +60,17 @@ export default function SettingsPage() {
   const { user, signOut } = useAuth();
   const { isAdmin } = useIsAdmin(user?.id ?? null);
   const [signingOut, setSigningOut] = useState(false);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!supabase || !user) return;
+    supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => { if (data?.display_name) setDisplayName(String(data.display_name)); });
+  }, [user]);
 
   async function handleSignOut() {
     setSigningOut(true);
@@ -90,6 +102,38 @@ export default function SettingsPage() {
             Réglages.
           </h1>
         </div>
+
+        {/* Profile card */}
+        <button
+          onClick={() => navigate("/settings/profile")}
+          style={{
+            width: "100%", background: "#131313", border: "none", cursor: "pointer",
+            borderRadius: 20, padding: "20px 18px", display: "flex", alignItems: "center",
+            gap: 16, marginBottom: 28, textAlign: "left",
+            transition: "background 120ms ease",
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a"; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#131313"; }}
+        >
+          <div style={{
+            width: 52, height: 52, borderRadius: "50%", flexShrink: 0,
+            background: "linear-gradient(135deg, #6a0baa 0%, #c57eff 100%)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 22, fontWeight: 900, color: "#fff",
+            fontFamily: "Space Grotesk, sans-serif",
+          }}>
+            {(displayName ?? user?.email ?? "?")[0]?.toUpperCase()}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: "#f5f5f5", marginBottom: 2 }}>
+              {displayName ?? "Profil athlète"}
+            </div>
+            <div style={{ fontSize: 12, color: "#555", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {user?.email}
+            </div>
+          </div>
+          <span style={{ color: "#333", fontSize: 20 }}>›</span>
+        </button>
 
         {/* Profil athlète */}
         <Section title="Profil athlète">
