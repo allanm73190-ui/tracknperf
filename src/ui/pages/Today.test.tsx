@@ -27,7 +27,7 @@ async function openSyncDrawer() {
   // Wait for syncStatus to load (pill shows "Queued 3"), then open drawer
   await screen.findAllByText(/queued 3/i);
   const syncBtns = screen.getAllByRole("button", { name: /^sync$/i });
-  fireEvent.click(syncBtns[0]);
+  fireEvent.click(syncBtns[0]!);
 }
 
 function renderToday() {

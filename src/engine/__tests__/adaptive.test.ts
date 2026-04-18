@@ -160,9 +160,10 @@ describe("detectRecurringFatiguePatterns", () => {
   });
 
   it("detects 'weekly_overload' when 6+ sessions in 7 days", () => {
-    const sessions = [1,2,3,4,5,6].map((d) =>
-      makeSession({ id:`s${d}`, startedAt:`2026-04-${String(15-d).padStart(2,"0")}T10:00:00Z`, sessionType:"mixed", rpe:7 })
-    );
+    const sessions = [1,2,3,4,5,6].map((d) => {
+      const date = new Date(Date.now() - d * 86_400_000).toISOString();
+      return makeSession({ id:`s${d}`, startedAt: date, sessionType:"mixed", rpe:7 });
+    });
     const patterns = detectRecurringFatiguePatterns(sessions);
     expect(patterns.some(p => p.includes("overload") || p.includes("weekly"))).toBe(true);
   });

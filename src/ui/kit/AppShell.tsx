@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { Pill } from "./Pill";
 import styles from "./kit.module.css";
 import { getQueueStats } from "../../infra/offline/db";
+import { SyncDetailDrawer, SyncOp } from "../components/SyncDetailDrawer";
 
 type NavItem = { to: string; label: string };
 
@@ -96,6 +97,7 @@ export function AppShell(props: {
   const location = useLocation();
   const nav = props.nav ?? [];
   const pendingCount = useSyncPendingCount();
+  const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
 
   return (
     <div className={styles.app}>
@@ -203,7 +205,10 @@ export function AppShell(props: {
               )}
 
               {/* Icon + optional sync badge */}
-              <span style={{ position: "relative", display: "inline-flex" }}>
+              <span
+                style={{ position: "relative", display: "inline-flex" }}
+                onClick={showBadge ? (e) => { e.preventDefault(); setSyncDrawerOpen(true); } : undefined}
+              >
                 {item.icon}
                 {showBadge && (
                   <span
@@ -264,6 +269,14 @@ export function AppShell(props: {
           .bottom-nav-mobile { display: flex !important; }
         }
       `}</style>
+
+      <SyncDetailDrawer
+        isOpen={syncDrawerOpen}
+        onClose={() => setSyncDrawerOpen(false)}
+        syncStatus={{ pending: pendingCount, applied: 0 }}
+        recentOps={[] as SyncOp[]}
+        onForceSync={() => {}}
+      />
     </div>
   );
 }
