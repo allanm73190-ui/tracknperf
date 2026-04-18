@@ -79,7 +79,7 @@ export default function StatsPage() {
               {loading ? "\u2014" : stats.executedCount}
             </span>
             <span style={{ fontFamily: "var(--font-headline)", fontSize: 28, fontWeight: 700, color: "#c57eff" }}>
-              \u00e9ances
+              séances
             </span>
           </div>
           <p style={{ color: "#adaaaa", fontSize: 13, marginTop: 8, maxWidth: 320 }}>
@@ -141,9 +141,9 @@ export default function StatsPage() {
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
               <div>
                 <h3 style={{ fontFamily: "var(--font-headline)", fontSize: 18, fontWeight: 700, margin: 0 }}>
-                  Activit\u00e9 Hebdomadaire
+                  Activité Hebdomadaire
                 </h3>
-                <p style={{ color: "#adaaaa", fontSize: 12, margin: "4px 0 0" }}>Minutes d'intensit\u00e9</p>
+                <p style={{ color: "#adaaaa", fontSize: 12, margin: "4px 0 0" }}>Minutes d'intensité</p>
               </div>
               <div style={{
                 background: "rgba(106,11,170,0.25)",
@@ -185,7 +185,7 @@ export default function StatsPage() {
           <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
             <span style={{ fontSize: 22, color: "#c57eff" }}>\u26a1</span>
             <div>
-              <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>S\u00e9ances compl\u00e8tes</p>
+              <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Séances complètes</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
                 {loading ? "\u2014" : stats.executedCount}
               </p>
@@ -212,7 +212,7 @@ export default function StatsPage() {
           {/* Recovery chart */}
           <div style={{ gridColumn: "1 / -1", background: "#131313", borderRadius: 16, padding: "24px 20px", border: "1px solid rgba(255,255,255,0.05)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h3 style={{ fontFamily: "var(--font-headline)", fontSize: 18, fontWeight: 700, margin: 0 }}>Indice de R\u00e9cup\u00e9ration</h3>
+              <h3 style={{ fontFamily: "var(--font-headline)", fontSize: 18, fontWeight: 700, margin: 0 }}>Indice de Récupération</h3>
               <div style={{ display: "flex", gap: 16 }}>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#c57eff", textTransform: "uppercase", borderBottom: "2px solid #c57eff", paddingBottom: 2 }}>7 Jours</span>
                 <span style={{ fontSize: 11, fontWeight: 700, color: "#adaaaa", textTransform: "uppercase" }}>30 Jours</span>

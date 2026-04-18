@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { getExecutedSessionById, type ExecutedSessionDetail } from "../../application/usecases/getExecutedSessionById";
 import { supabase } from "../../infra/supabase/client";
 import type { ExplanationV1_1 } from "../../domain/engine/v1_1/types";
@@ -31,6 +31,7 @@ async function loadExplanationForSession(session: ExecutedSessionDetail): Promis
 
 export default function SessionDetailPage() {
   const params = useParams();
+  const navigate = useNavigate();
   const sessionId = typeof params.sessionId === "string" ? params.sessionId : null;
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -71,12 +72,26 @@ export default function SessionDetailPage() {
   return (
     <AppShell
       title="Session"
-      nav={[
-        { to: "/today", label: "Today" },
-        { to: "/history", label: "History" },
-        { to: "/stats", label: "Stats" },
-        { to: "/admin", label: "Admin" },
-      ]}
+      rightSlot={
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            color: "rgba(255,255,255,0.6)",
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: "0.04em",
+            padding: "6px 0",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          ← Retour
+        </button>
+      }
     >
       {/* Background ambient glow */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
