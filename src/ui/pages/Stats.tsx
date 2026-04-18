@@ -187,7 +187,7 @@ export default function StatsPage() {
 
           {/* Metric: sessions */}
           <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <span style={{ fontSize: 22, color: "#c57eff" }}>\u26a1</span>
+            <span style={{ fontSize: 22, color: "#c57eff" }}>{"⚡"}</span>
             <div>
               <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Séances complètes</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
@@ -201,7 +201,7 @@ export default function StatsPage() {
 
           {/* Metric: time */}
           <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <span style={{ fontSize: 22, color: "#c57eff" }}>\u2665</span>
+            <span style={{ fontSize: 22, color: "#c57eff" }}>{"♥"}</span>
             <div>
               <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Temps total</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>

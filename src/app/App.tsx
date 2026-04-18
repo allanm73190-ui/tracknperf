@@ -19,7 +19,7 @@ function AppLoading(props: { title?: string }) {
   return (
     <main className="container">
       <h1>TrackNPerf</h1>
-      <p>{props.title ?? "Loading…"} </p>
+      <p>{props.title ?? "Chargement…"} </p>
     </main>
   );
 }
@@ -44,9 +44,9 @@ function RequireProfile() {
     return (
       <main className="container">
         <h1>TrackNPerf</h1>
-        <h2>Profile</h2>
+        <h2>Profil</h2>
         <p role="alert" style={{ maxWidth: 720 }}>
-          We couldn’t load your profile right now. Please check your connection or try again.
+          Impossible de charger votre profil. Vérifiez votre connexion et réessayez.
         </p>
         <pre style={{ whiteSpace: "pre-wrap", opacity: 0.8 }}>{error}</pre>
       </main>
@@ -68,7 +68,7 @@ function RequireAdmin() {
         <h1>TrackNPerf</h1>
         <h2>Admin</h2>
         <p role="alert" style={{ maxWidth: 720 }}>
-          You don’t have access to this page.
+          Vous n’avez pas accès à cette page.
         </p>
         {error ? <pre style={{ whiteSpace: "pre-wrap", opacity: 0.8 }}>{error}</pre> : null}
       </main>
@@ -86,8 +86,8 @@ function NotFound() {
   return (
     <main className="container">
       <h1>TrackNPerf</h1>
-      <h2>Not found</h2>
-      <p style={{ opacity: 0.85 }}>This page doesn’t exist.</p>
+      <h2>Page introuvable</h2>
+      <p style={{ opacity: 0.85 }}>Cette page n’existe pas.</p>
     </main>
   );
 }
