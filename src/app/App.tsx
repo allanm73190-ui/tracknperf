@@ -11,6 +11,7 @@ import SessionDetailPage from "../ui/pages/SessionDetail";
 import StatsPage from "../ui/pages/Stats";
 import ImportPlanPage from "../ui/pages/ImportPlan";
 import ProfileEditPage from "../ui/pages/ProfileEdit";
+import SettingsUnitsPage from "../ui/pages/SettingsUnits";
 import SettingsPage from "../ui/pages/Settings";
 import TodayPage from "../ui/pages/Today";
 
@@ -112,6 +113,7 @@ export default function App() {
           <Route path="/import-plan" element={<ImportPlanPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/profile" element={<ProfileEditPage />} />
+          <Route path="/settings/units" element={<SettingsUnitsPage />} />
         </Route>
       </Route>
 

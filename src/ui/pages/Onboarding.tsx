@@ -1,10 +1,14 @@
 import { useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/AuthProvider";
 import { saveProfile } from "../../application/usecases/saveProfile";
 import { Button } from "../kit/Button";
 import { Input } from "../kit/Input";
 
 export default function OnboardingPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const returnTo = (location.state as { returnTo?: string } | null)?.returnTo ?? "/today";
   const { user, signOut, isConfigured } = useAuth();
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -77,7 +81,7 @@ export default function OnboardingPage() {
             Votre profil est configuré. La performance n'attend pas.
           </p>
           <button
-            onClick={() => window.location.replace("/")}
+            onClick={() => navigate(returnTo, { replace: true })}
             style={{
               background: "#ffffff",
               color: "#0e0e0e",

@@ -4,7 +4,7 @@ import {
   updateUserToleranceProfile,
   detectRecurringFatiguePatterns,
 } from "../adaptive";
-import type { PlannedSessionPatch, ToleranceProfile, ExecutedSessionRecord } from "../../types/engine";
+import type { ToleranceProfile, ExecutedSessionRecord } from "../../types/engine";
 
 function makeSession(overrides: Partial<ExecutedSessionRecord> = {}): ExecutedSessionRecord {
   return {

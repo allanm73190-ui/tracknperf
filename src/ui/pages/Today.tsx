@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
+import { useIsAdmin } from "../../auth/useIsAdmin";
 import { Link } from "react-router-dom";
 import { AppShell } from "../kit/AppShell";
 import { Button } from "../kit/Button";
@@ -37,6 +38,7 @@ function getRecoReasons(reco: PersistedRecommendation): string[] {
 
 export default function TodayPage() {
   const { user, signOut, isConfigured } = useAuth();
+  const { isAdmin } = useIsAdmin(user?.id ?? null);
   const [overview, setOverview] = useState<TodayOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -112,7 +114,7 @@ export default function TodayPage() {
         { to: "/today", label: "Today" },
         { to: "/history", label: "History" },
         { to: "/stats", label: "Stats" },
-        { to: "/admin", label: "Admin" },
+        ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
       ]}
       rightSlot={
         <>

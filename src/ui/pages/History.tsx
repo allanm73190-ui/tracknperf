@@ -5,7 +5,7 @@ import { AppShell } from "../kit/AppShell";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type FilterPeriod = "week" | "month" | "3months";
+type FilterPeriod = "week" | "2weeks" | "month" | "3months";
 
 type PlannedRow = {
   id: string;
@@ -117,6 +117,7 @@ function todayIso(): string {
 function sinceIsoFromPeriod(period: FilterPeriod): string {
   const d = new Date();
   if (period === "week") d.setDate(d.getDate() - 7);
+  else if (period === "2weeks") d.setDate(d.getDate() - 14);
   else if (period === "month") d.setDate(d.getDate() - 30);
   else d.setDate(d.getDate() - 90);
   return d.toISOString();
@@ -258,6 +259,7 @@ function SessionCard({ entry }: { entry: MergedEntry }) {
 
 const PERIOD_OPTIONS: { value: FilterPeriod; label: string }[] = [
   { value: "week", label: "7 JOURS" },
+  { value: "2weeks", label: "14 JOURS" },
   { value: "month", label: "30 JOURS" },
   { value: "3months", label: "90 JOURS" },
 ];
