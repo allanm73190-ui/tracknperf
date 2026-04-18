@@ -33,7 +33,7 @@ async function loadHistory(sinceIso: string): Promise<{ planned: PlannedRow[]; e
   const [pvRes, exRes] = await Promise.all([
     supabase
       .from("planned_sessions")
-      .select("id, scheduled_for, session_templates(name)")
+      .select("id, scheduled_for, session_templates!session_template_id(name)")
       .gte("scheduled_for", sinceIso.slice(0, 10))
       .order("scheduled_for", { ascending: false }),
     supabase
