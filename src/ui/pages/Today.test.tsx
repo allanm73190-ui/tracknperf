@@ -24,8 +24,8 @@ vi.mock("../../infra/offline/db", () => ({
 }));
 
 async function openSyncDrawer() {
-  // Wait for syncStatus to load (pill shows "Queued 3"), then open drawer
-  await screen.findAllByText(/queued 3/i);
+  // Wait for syncStatus pill to appear ("En attente 3"), then open sync drawer
+  await screen.findAllByText(/en attente 3/i);
   const syncBtns = screen.getAllByRole("button", { name: /^sync$/i });
   fireEvent.click(syncBtns[0]!);
 }
@@ -35,10 +35,10 @@ function renderToday() {
 }
 
 describe("TodayPage sync drawer", () => {
-  it("shows FORCE SYNCHRONIZATION button when sync drawer is open", async () => {
+  it("shows FORCER LA SYNCHRO button when sync drawer is open", async () => {
     renderToday();
     await openSyncDrawer();
-    expect(await screen.findByText(/force synchronization/i)).toBeInTheDocument();
+    expect(await screen.findByText(/forcer la synchro/i)).toBeInTheDocument();
   });
 
   it("shows EN ATTENTE and APPLIQUÉS labels in sync drawer", async () => {
@@ -48,9 +48,9 @@ describe("TodayPage sync drawer", () => {
     expect((await screen.findAllByText(/appliqu/i)).length).toBeGreaterThan(0);
   });
 
-  it("shows Sync Details heading in sync drawer", async () => {
+  it("shows Détails de sync heading in sync drawer", async () => {
     renderToday();
     await openSyncDrawer();
-    expect((await screen.findAllByText(/sync details/i)).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText(/détails de sync/i)).length).toBeGreaterThan(0);
   });
 });

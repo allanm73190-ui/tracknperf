@@ -51,8 +51,8 @@ export default function StatsPage() {
     <AppShell
       title="Stats"
       nav={[
-        { to: "/today", label: "Today" },
-        { to: "/history", label: "History" },
+        { to: "/today", label: "Aujourd'hui" },
+        { to: "/history", label: "Historique" },
         { to: "/stats", label: "Stats" },
         ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
       ]}
@@ -119,8 +119,7 @@ export default function StatsPage() {
         {error && (
           <div style={{
             background: "rgba(255,115,81,0.08)",
-            border: "1px solid rgba(255,115,81,0.25)",
-            borderRadius: 12,
+            borderRadius: 16,
             padding: "12px 16px",
             color: "#ff7351",
             fontSize: 13,
@@ -138,7 +137,6 @@ export default function StatsPage() {
             background: "#131313",
             borderRadius: 16,
             padding: "24px 20px",
-            border: "1px solid rgba(255,255,255,0.05)",
             position: "relative",
             overflow: "hidden",
           }}>
@@ -150,8 +148,7 @@ export default function StatsPage() {
                 <p style={{ color: "#adaaaa", fontSize: 12, margin: "4px 0 0" }}>Minutes d'intensité</p>
               </div>
               <div style={{
-                background: "rgba(106,11,170,0.25)",
-                border: "1px solid rgba(197,126,255,0.2)",
+                background: "rgba(106,11,170,0.35)",
                 borderRadius: 999,
                 padding: "4px 10px",
                 fontSize: 11,
@@ -170,7 +167,7 @@ export default function StatsPage() {
                     height: `${h}%`,
                     background: h === 90 ? "#c57eff" : `rgba(197,126,255,${(h / 100 * 0.5).toFixed(2)})`,
                     borderRadius: "4px 4px 0 0",
-                    boxShadow: h === 90 ? "0 0 16px rgba(197,126,255,0.4)" : "none",
+                    filter: h === 90 ? "brightness(1.4)" : "none",
                   }} />
                   <span style={{
                     fontSize: 9,
@@ -187,7 +184,7 @@ export default function StatsPage() {
 
           {/* Metric: sessions */}
           <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <span style={{ fontSize: 22, color: "#c57eff" }}>{"⚡"}</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#c57eff"><path d="M13 2 L3 13 H10 L7 22 L21 11 H14 Z"/></svg>
             <div>
               <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Séances complètes</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
@@ -201,7 +198,7 @@ export default function StatsPage() {
 
           {/* Metric: time */}
           <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <span style={{ fontSize: 22, color: "#c57eff" }}>{"♥"}</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c57eff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
             <div>
               <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Temps total</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
@@ -214,7 +211,7 @@ export default function StatsPage() {
           </div>
 
           {/* Recovery chart */}
-          <div style={{ gridColumn: "1 / -1", background: "#131313", borderRadius: 16, padding: "24px 20px", border: "1px solid rgba(255,255,255,0.05)" }}>
+          <div style={{ gridColumn: "1 / -1", background: "#131313", borderRadius: 16, padding: "24px 20px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
               <h3 style={{ fontFamily: "var(--font-headline)", fontSize: 18, fontWeight: 700, margin: 0 }}>Indice de Récupération</h3>
               <div style={{ display: "flex", gap: 16 }}>
@@ -235,7 +232,7 @@ export default function StatsPage() {
                 <circle cx="80" cy="40" r="2.5" fill="#c57eff" />
                 <circle cx="100" cy="20" r="2.5" fill="#c57eff" />
               </svg>
-              <div style={{ position: "absolute", top: "12%", right: "8%", background: "#c57eff", color: "#0e0e0e", padding: "3px 8px", borderRadius: 6, fontSize: 10, fontWeight: 700 }}>88%</div>
+              <div style={{ position: "absolute", top: "12%", right: "8%", background: "#c57eff", color: "#0e0e0e", padding: "3px 8px", borderRadius: 10, fontSize: 10, fontWeight: 700 }}>88%</div>
             </div>
           </div>
         </div>
@@ -245,12 +242,12 @@ export default function StatsPage() {
           <h5 style={{ fontFamily: "var(--font-headline)", fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Insights</h5>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {[
-              { icon: "\ud83d\udca1", bg: "rgba(197,126,255,0.1)", color: "#c57eff", title: "Optimisation du Sommeil", body: "Votre phase de sommeil profond \u00e9tait 15% plus courte que d'habitude. Envisagez une s\u00e9ance de mobilit\u00e9 douce ce soir." },
-              { icon: "\u26a1", bg: "rgba(202,253,0,0.08)", color: "#cafd00", title: "Pic de Puissance", body: "Votre endurance musculaire progresse de mani\u00e8re lin\u00e9aire. Continuez sur cette lanc\u00e9e." },
+              { bg: "rgba(197,126,255,0.1)", color: "#c57eff", title: "Optimisation du Sommeil", body: "Votre phase de sommeil profond était 15% plus courte que d'habitude. Envisagez une séance de mobilité douce ce soir." },
+              { bg: "rgba(202,253,0,0.08)", color: "#cafd00", title: "Pic de Puissance", body: "Votre endurance musculaire progresse de manière linéaire. Continuez sur cette lancée." },
             ].map((ins) => (
-              <div key={ins.title} style={{ background: "rgba(255,255,255,0.03)", backdropFilter: "blur(12px)", borderRadius: 14, padding: "16px", border: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: 14, alignItems: "flex-start" }}>
-                <div style={{ padding: "8px", background: ins.bg, borderRadius: 10, flexShrink: 0 }}>
-                  <span style={{ fontSize: 18, color: ins.color }}>{ins.icon}</span>
+              <div key={ins.title} style={{ background: "rgba(255,255,255,0.03)", backdropFilter: "blur(12px)", borderRadius: 16, padding: "16px", display: "flex", gap: 14, alignItems: "flex-start" }}>
+                <div style={{ padding: "10px", background: ins.bg, borderRadius: 10, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: ins.color }} />
                 </div>
                 <div>
                   <p style={{ fontWeight: 700, fontSize: 14, margin: "0 0 4px" }}>{ins.title}</p>

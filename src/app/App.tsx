@@ -8,6 +8,8 @@ import AuthCallbackPage from "../ui/pages/AuthCallback";
 import HistoryPage from "../ui/pages/History";
 import OnboardingPage from "../ui/pages/Onboarding";
 import SessionDetailPage from "../ui/pages/SessionDetail";
+import PlannedSessionDetailPage from "../ui/pages/PlannedSessionDetail";
+import ProgrammePage from "../ui/pages/Programme";
 import StatsPage from "../ui/pages/Stats";
 import ImportPlanPage from "../ui/pages/ImportPlan";
 import ProfileEditPage from "../ui/pages/ProfileEdit";
@@ -110,6 +112,8 @@ export default function App() {
           <Route path="/history" element={<HistoryPage />} />
           <Route path="/stats" element={<StatsPage />} />
           <Route path="/session/:sessionId" element={<SessionDetailPage />} />
+          <Route path="/planned-session/:sessionId" element={<PlannedSessionDetailPage />} />
+          <Route path="/programme" element={<ProgrammePage />} />
           <Route path="/import-plan" element={<ImportPlanPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/profile" element={<ProfileEditPage />} />

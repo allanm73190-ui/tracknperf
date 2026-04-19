@@ -21,46 +21,25 @@ Track'n'Perf est une **PWA de pilotage d'entraînement pour athlètes hybrides**
 
 ---
 
-## Design System — "Hyperflux Dark / Kinetic Pulse"
+## Design System — Kinetic Pulse
 
-### Philosophie
-Anti-SaaS. Construit pour des athlètes, pas des administrateurs. Asymétrie intentionnelle, typographie éditoriale large, profondeur par superposition tonale.
+> **Source de vérité complète : `/docs/design-system/`**
+>
+> - `README.md` — Guide complet (couleurs, typo, voix, layout, motion, iconographie)
+> - `colors_and_type.css` — Tous les tokens CSS
+> - `SKILL.md` — Instructions pour les agents
+> - `ui_kits/mobile/` — Kit UI mobile avec composants React de référence
+> - `ui_kits/desktop/` — Kit UI desktop
+> - `preview/` — Previews de chaque élément du design system
+> - `assets/` — Logo, icônes, textures
 
-### Palette (Dark-First)
-- **Base** : `#0e0e0e` (background/surface)
-- **Surface L1** : `#131313` | **L2** : `#262626`
-- **Primary (Neon Lime)** : `#cafd00` (container) / `#f3ffca` (text)
-- **Secondary (Vibrant Purple)** : `#c57eff` / `#6a0baa` (container)
-- **Error** : `#ff7351`
-
-### Typographie
-- **Headlines / Données** : Space Grotesk (display-lg: 3.5rem)
-- **Body / Labels** : Manrope
-
-### Règles Critiques
-- ❌ JAMAIS de bordures 1px solid — utiliser shifts tonaux, espace négatif, ou lueurs
-- ❌ JAMAIS de drop shadows classiques — utiliser ambient shadows (accent teinté, blur 40-60px)
-- ❌ JAMAIS de tables pour données complexes — utiliser des cards ou listes verticales de badges
-- ✅ Glassmorphisme pour overlays : `rgba(44,44,44,0.6)` + `backdrop-filter: blur(20px)`
-- ✅ Gradient "Aero" pour CTAs : `linear-gradient(45deg, #beee00, #f3ffca)`
-- ✅ Cards : coins arrondis xl (1.5rem), pas de dividers, 24px padding vertical entre items
-- ✅ Lime = Activité | Purple = Récupération
-
-### Écrans UI de Référence
-Les maquettes Stitch sont dans `/docs/ui-reference/` (HTML + screenshots). Écrans disponibles :
-- `auth_connexion_inscription` / `auth_desktop` — Authentification (magic link)
-- `onboarding_profil` / `onboarding_desktop` — Configuration profil athlète
-- `today_dashboard` / `today_dashboard_mobile` / `today_dashboard_desktop` — Dashboard principal
-- `session_details` / `session_detail_desktop` — Détail d'une séance (métriques, log)
-- `journal_de_session` — Journal de séance / log d'exécution
-- `d_tails_recommandation` — Explications des recommandations adaptatives
-- `history` / `history_desktop` — Historique d'entraînement
-- `stats_performance` / `stats_desktop` — Statistiques et tableaux de bord
-- `profil_r_glages` — Profil et réglages utilisateur
-- `sync_details_drawer` — Détails de synchronisation
-- `acc_s_refus` — Écran d'accès refusé / erreur
-- `admin_hub_mobile` / `admin_hub_desktop` — Hub d'administration
-- `admin_engine_import` — Import moteur / configuration admin
+### Règles Non-Négociables (résumé — détails dans README.md)
+- Dark-first `#0e0e0e`. Lime `#cafd00` = activité. Purple `#c57eff` = récupération. Orange `#ff7351` = alertes uniquement.
+- Space Grotesk (headlines/données) + Manrope (body/labels)
+- ❌ Pas de bordures 1px, pas de drop shadows, pas de tables, pas d'emoji
+- ✅ Tonal layering, glassmorphisme, gradient Aero, coins 24px, ambient glows
+- Voix : français narratif + anglais ALL-CAPS pour labels tactiques (SYNCED, ELITE, etc.)
+- Press = `active:scale-95`. Hover = opacity lift. Pas de bounces.
 
 ---
 
@@ -92,100 +71,73 @@ Cette distinction est une **contrainte de conception obligatoire** sur toute l'a
 - Statistiques (charge, régularité, adhérence, répartition, tendances)
 - Export (CSV, JSON — données, historique, plan, logs)
 
-#### Bloc Intelligence Métier (Moteur Adaptatif)
+#### Bloc Intelligence Métier (Moteur Adaptatif) — ✅ TERMINÉ (Wave 3)
 Architecture en 3 couches :
 
-**Couche 1 — Rules Engine** : Règles déterministes, seuils, garde-fous, règles de progression/substitution/deload.
+**Couche 1 — Rules Engine** : Règles déterministes, seuils, garde-fous.
+**Couche 2 — Adaptive Layer** : Apprentissage du profil de réponse.
+**Couche 3 — Optimization Layer** : Meilleur ajustement sous contraintes.
 
-**Couche 2 — Adaptive Layer** : Apprentissage progressif du profil de réponse (tolérance volume/intensité, sensibilité conflits, profils de fatigue récurrents). Doit rester simple et contrôlé.
+Fonctions implémentées et testées :
+- `computeFatigueSnapshot` ✅
+- `computeReadinessSnapshot` ✅
+- `ExplanationV1_1` (types + builder) ✅
+- `computeRecommendationV1_1` ✅
+- `loadEngineContext` + feedback Supabase ✅
+- `computeAndPersistTodayRecommendation` ✅
+- Tests deload (4 scénarios) ✅
+- Tests invariants ExplanationV1_1 ✅
+- Tests intégration ✅
 
-**Couche 3 — Optimization Layer** : Choix du meilleur ajustement local sous contraintes (bénéfice attendu vs coût fatigue vs conflit vs priorité objectifs vs sécurité).
-
-**Fonctions du moteur** :
-- `normalize_inputs` — normalisation des entrées
-- `compute_load_state` — charge externe/interne
-- `compute_multidimensional_fatigue` — fatigue multi-axes
-- `compute_session_specific_readiness` — disponibilité spécifique
-- `compute_goal_alignment` — alignement objectifs
-- `compute_conflict_score` — conflits entre séances
-- `compute_pain_risk` — risque douleur/surcharge
-- `choose_decision_state` — décision (progresser/maintenir/réduire/substituer/différer/deload)
-- `choose_progression_axis` — axe de progression (volume/intensité/densité/complexité)
-- `update_next_session_parameters` — ajustement paramètres
-- `substitute_session` — substitution intelligente
-- `reoptimize_microcycle` — replanification
-- `build_explanation` — construction de l'explication (raison principale, secondaires, priorité protégée, compromis accepté, confiance)
-
-**Décisions possibles** : progresser, maintenir, réduire volume, réduire intensité, substituer, différer, deload local, deload global, replanifier le microcycle.
-
-**Progression multi-leviers** : volume, intensité, densité, complexité — jamais tout à la fois sans raison.
+**NE PAS MODIFIER le moteur sauf bug avéré.**
 
 #### Bloc Technique
-- Auth Supabase (magic link + email/password, JWT, sessions)
-- RLS stricte (chaque user ne voit QUE ses données, zéro accès horizontal)
-- Offline-first (IndexedDB, file d'attente persistante, retry, idempotence, détection doublons)
-- Sync (reprise réseau, état visible, cohérence post-sync, recalcul recommandations si nécessaire)
-- Sécurité (secrets via env vars, validation stricte, journalisation, tests de non-régression sécu)
+- Auth Supabase (magic link + email/password, JWT, sessions) ✅
+- RLS stricte ✅
+- Offline-first (à compléter — Wave 5)
+- Sync (à compléter — Wave 5)
+- Sécurité (CSP, env vars, validation) ✅
 
 ---
 
 ## Modèle de Données Principal
 
-Entités attendues : `user`, `profile`, `priority_goals`, `constraints`, `plan`, `plan_version`, `session_template`, `planned_session`, `executed_session`, `session_blocks`, `session_feedback`, `context`, `external_metrics`, `internal_metrics`, `fatigue_snapshot`, `readiness_snapshot`, `recommendation`, `recommendation_explanation`, `engine_config`, `algorithm_version`, `sync_queue`, `audit_events`
+Entités : `user`, `profile`, `priority_goals`, `constraints`, `plan`, `plan_version`, `session_template`, `planned_session`, `executed_session`, `session_blocks`, `session_feedback`, `context`, `external_metrics`, `internal_metrics`, `fatigue_snapshot`, `readiness_snapshot`, `recommendation`, `recommendation_explanation`, `engine_config`, `algorithm_version`, `sync_queue`, `audit_events`
 
 ---
 
 ## Standards de Code
 
 ### Conventions
-- TypeScript strict partout (frontend ET backend)
+- TypeScript strict partout
 - Composants React fonctionnels + hooks
-- Nommage : camelCase (variables/fonctions), PascalCase (composants/types), SCREAMING_SNAKE (constantes)
+- Nommage : camelCase (variables), PascalCase (composants/types), SCREAMING_SNAKE (constantes)
 - Fichiers : kebab-case
 - Un composant = un fichier
 - Imports absolus avec alias `@/`
 
+### Langue de l'Application
+- **Français** pour tout le contenu utilisateur
+- **Anglais ALL-CAPS** uniquement pour les labels tactiques (SYNCED, LIVE_FEED, ELITE, RECOVERY)
+- Vouvoiement ou impératif — jamais de tutoiement
+- Pas d'emoji, jamais
+
 ### Tests
-- **Unitaires** : fonctions métier, calculs moteur, validations, règles
-- **Intégration** : DB, auth, RLS, sync, persistance recommandations
-- **E2E** : inscription → connexion → plan → séance du jour → log → adaptation → explication → offline/resync → isolation des données utilisateur
+- Unitaires : fonctions métier, calculs moteur
+- Intégration : DB, auth, RLS
+- E2E : parcours utilisateur critiques
 
 ### Git
-- Branches : `feature/`, `fix/`, `refactor/`, `chore/`
 - Commits conventionnels : `feat:`, `fix:`, `refactor:`, `test:`, `docs:`, `chore:`
-- PR obligatoire avant merge sur `main`
-
----
-
-## Commandes Utiles
-
-```bash
-# Dev
-npm run dev          # Frontend dev server
-npm run server       # Backend dev server
-npm run test         # Tests unitaires
-npm run test:e2e     # Tests E2E
-npm run lint         # Lint
-npm run type-check   # TypeScript strict check
-
-# DB
-npx supabase db push    # Push migrations
-npx supabase db reset   # Reset local DB
-```
+- PR avant merge sur `main`
 
 ---
 
 ## Ce que l'Application N'Est PAS
 
-- ❌ Un simple carnet de notes d'entraînement
+- ❌ Un simple carnet de notes
 - ❌ Un dashboard de données brut
-- ❌ Une IA opaque qui change tout sans justification
+- ❌ Une IA opaque
 - ❌ Un système corporate/SaaS générique
 
-Elle DOIT être : lisible, robuste, configurable, explicable, maintenable, et visuellement premium (Kinetic Pulse).
-
----
-
-## Documentation Requise
-
-README, `.env.example`, discovery, ADR, doc sécurité, threat model, doc tests, roadmap, runbook, doc algorithme, doc modèle de domaine, doc configuration, doc explicabilité.
+Elle DOIT être : lisible, robuste, explicable, et visuellement premium (Kinetic Pulse).

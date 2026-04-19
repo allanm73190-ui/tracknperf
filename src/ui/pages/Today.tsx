@@ -182,18 +182,19 @@ export default function TodayPage() {
             <div className="rounded-[1.5rem] bg-surface-container-low p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-headline font-bold uppercase tracking-tight text-sm">Planifié</h3>
-                <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">
-                  {overview.planned.length} session{overview.planned.length > 1 ? "s" : ""}
-                </span>
+                <Link to="/programme" className="text-[10px] font-bold text-secondary uppercase tracking-widest">
+                  Programme →
+                </Link>
               </div>
               <div className="grid gap-2">
                 {overview.planned.map((p) => (
-                  <SessionStateCard
-                    key={p.id}
-                    state="planned"
-                    title={p.templateName ?? "Séance"}
-                    subtitle={p.scheduledFor}
-                  />
+                  <Link key={p.id} to={`/planned-session/${p.id}`}>
+                    <SessionStateCard
+                      state="planned"
+                      title={p.templateName ?? "Séance"}
+                      subtitle={p.scheduledFor}
+                    />
+                  </Link>
                 ))}
               </div>
             </div>
@@ -225,7 +226,10 @@ export default function TodayPage() {
           {/* No sessions at all */}
           {overview.planned.length === 0 && overview.executed.length === 0 && !recommendation && (
             <div className="rounded-[1.5rem] bg-surface-container-low p-8 text-center">
-              <div className="text-on-surface-variant text-sm">Journée libre — aucune session planifiée.</div>
+              <div className="text-on-surface-variant text-sm mb-4">Journée libre — aucune session planifiée.</div>
+              <Link to="/programme" className="text-[10px] font-bold text-secondary uppercase tracking-widest">
+                Voir le programme →
+              </Link>
             </div>
           )}
 
@@ -266,7 +270,6 @@ export default function TodayPage() {
             </div>
             <div style={{
               background: "#201f1f",
-              border: "1px solid rgba(255,255,255,0.1)",
               borderRadius: 999,
               padding: "6px 14px",
               display: "flex",
@@ -283,8 +286,7 @@ export default function TodayPage() {
           {(syncStatus?.pending ?? 0) > 0 && (
             <div style={{
               background: "rgba(185,41,2,0.15)",
-              border: "1px solid rgba(255,115,81,0.2)",
-              borderRadius: 12,
+              borderRadius: 16,
               padding: "14px 16px",
               display: "flex",
               alignItems: "center",
@@ -301,8 +303,9 @@ export default function TodayPage() {
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
-                  fontSize: 18,
-                }}>☁</div>
+                }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff7351" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+                </div>
                 <div>
                   <div style={{ fontWeight: 700, color: "#ff7351", letterSpacing: "-0.01em", fontSize: 14 }}>HORS LIGNE</div>
                   <div style={{ fontSize: 12, color: "#adaaaa", marginTop: 2 }}>Vérifiez votre connexion réseau</div>
@@ -333,11 +336,11 @@ export default function TodayPage() {
           {/* Summary grid */}
           {syncStatus && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "20px 20px" }}>
+              <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 16, padding: "20px 20px" }}>
                 <div style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 700, color: "#ffeea5", lineHeight: 1 }}>{syncStatus.pending}</div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#adaaaa", letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 6 }}>EN ATTENTE</div>
               </div>
-              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, padding: "20px 20px" }}>
+              <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: 16, padding: "20px 20px" }}>
                 <div style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 700, color: "#cafd00", lineHeight: 1 }}>{syncStatus.applied}</div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "#adaaaa", letterSpacing: "0.15em", textTransform: "uppercase", marginTop: 6 }}>APPLIQUÉS</div>
               </div>
@@ -384,7 +387,7 @@ export default function TodayPage() {
                             color: statusColor,
                             background: statusBg,
                             padding: "2px 8px",
-                            borderRadius: 4,
+                            borderRadius: 10,
                             letterSpacing: "0.05em",
                             flexShrink: 0,
                             marginLeft: 8,

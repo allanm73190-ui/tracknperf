@@ -309,13 +309,13 @@ export default function HistoryPage() {
             letterSpacing: "0.14em",
             textTransform: "uppercase" as const,
             color: "#c57eff",
-            fontFamily: "Space Grotesk, sans-serif",
+            fontFamily: "var(--font-headline)",
             marginBottom: 6,
           }}>
             Archives de performance
           </div>
           <h1 style={{
-            fontFamily: "Space Grotesk, sans-serif",
+            fontFamily: "var(--font-headline)",
             fontSize: "clamp(2.2rem, 8vw, 3.5rem)",
             fontWeight: 900,
             letterSpacing: "-0.04em",
@@ -341,7 +341,7 @@ export default function HistoryPage() {
                 fontSize: 12,
                 fontWeight: 900,
                 letterSpacing: "0.06em",
-                fontFamily: "Space Grotesk, sans-serif",
+                fontFamily: "var(--font-headline)",
                 whiteSpace: "nowrap" as const,
                 transition: "background 150ms ease, color 150ms ease",
                 background: period === value ? "#6a0baa" : "#1e1e1e",
@@ -361,7 +361,7 @@ export default function HistoryPage() {
                 fontSize: 28,
                 fontWeight: 900,
                 color: "#cafd00",
-                fontFamily: "Space Grotesk, sans-serif",
+                fontFamily: "var(--font-headline)",
                 letterSpacing: "-0.02em",
                 lineHeight: 1,
               }}>
@@ -376,7 +376,7 @@ export default function HistoryPage() {
                 fontSize: 28,
                 fontWeight: 900,
                 color: "#ff7351",
-                fontFamily: "Space Grotesk, sans-serif",
+                fontFamily: "var(--font-headline)",
                 letterSpacing: "-0.02em",
                 lineHeight: 1,
               }}>
@@ -411,7 +411,7 @@ export default function HistoryPage() {
           <div style={{ textAlign: "center" as const, padding: "64px 20px", color: "#444" }}>
             <div style={{
               fontSize: 36,
-              fontFamily: "Space Grotesk, sans-serif",
+              fontFamily: "var(--font-headline)",
               fontWeight: 900,
               letterSpacing: "-0.03em",
               marginBottom: 8,
