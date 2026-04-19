@@ -21,9 +21,9 @@ export function RecommendationExplanationCard({ explanation }: Props) {
     );
   }
 
-  const decision = DECISION_LABEL[explanation.decisionState] ?? explanation.decisionState;
-  const top3 = explanation.summary.reasonsTop3.slice(0, 3);
-  const completeness = Math.round((explanation.dataQuality.completenessScore ?? 0) * 100);
+  const decision = DECISION_LABEL[explanation.decisionState ?? ""] ?? (explanation.decisionState ?? "");
+  const top3 = (explanation.summary?.reasonsTop3 ?? []).slice(0, 3);
+  const completeness = Math.round((explanation.dataQuality?.completenessScore ?? 0) * 100);
 
   return (
     <div className="rounded-[1.5rem] bg-surface-container-low p-6 grid gap-8">
@@ -90,7 +90,7 @@ export function RecommendationExplanationCard({ explanation }: Props) {
             }}
           />
         </div>
-        {explanation.dataQuality.missingFields.length > 0 && (
+        {(explanation.dataQuality?.missingFields?.length ?? 0) > 0 && (
           <div className="text-[10px] text-on-surface-variant mt-1">
             Manquant : {explanation.dataQuality.missingFields.join(", ")}
           </div>

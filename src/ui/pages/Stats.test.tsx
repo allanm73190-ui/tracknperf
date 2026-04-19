@@ -7,6 +7,14 @@ vi.mock("../../application/usecases/getExecutedSessions", () => ({
   getExecutedSessionStats: vi.fn().mockResolvedValue({ executedCount: 5, totalDurationMinutes: 120 }),
 }));
 
+vi.mock("../../auth/AuthProvider", () => ({
+  useAuth: () => ({ user: null }),
+}));
+
+vi.mock("../../auth/useIsAdmin", () => ({
+  useIsAdmin: () => ({ isAdmin: false }),
+}));
+
 function renderStats() {
   return render(<MemoryRouter><StatsPage /></MemoryRouter>);
 }

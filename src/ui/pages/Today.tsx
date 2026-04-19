@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
+import { useIsAdmin } from "../../auth/useIsAdmin";
 import { Link } from "react-router-dom";
 import { AppShell } from "../kit/AppShell";
 import { Button } from "../kit/Button";
@@ -37,6 +38,7 @@ function getRecoReasons(reco: PersistedRecommendation): string[] {
 
 export default function TodayPage() {
   const { user, signOut, isConfigured } = useAuth();
+  const { isAdmin } = useIsAdmin(user?.id ?? null);
   const [overview, setOverview] = useState<TodayOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -66,7 +68,7 @@ export default function TodayPage() {
       if (!ignoreSignal?.ignore) setRecentOps(recent);
     } catch (err) {
       if (!ignoreSignal?.ignore) {
-        setMessage(err instanceof Error ? err.message : "Could not load today.");
+        setMessage(err instanceof Error ? err.message : "Erreur de chargement.");
       }
     }
   }
@@ -91,9 +93,9 @@ export default function TodayPage() {
       setSyncStatus(stats);
       const recent = await listRecentOps(50);
       setRecentOps(recent);
-      setMessage(`Sync done. Applied: ${res.applied}, failed: ${res.failed}.`);
+      setMessage(`Sync effectué. Appliquées : ${res.applied}, échouées : ${res.failed}.`);
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Sync failed.");
+      setMessage(err instanceof Error ? err.message : "Échec de la synchronisation.");
     } finally {
       setSyncBusy(false);
     }
@@ -107,24 +109,24 @@ export default function TodayPage() {
 
   return (
     <AppShell
-      title="Today"
+      title="Aujourd'hui"
       nav={[
-        { to: "/today", label: "Today" },
-        { to: "/history", label: "History" },
+        { to: "/today", label: "Aujourd'hui" },
+        { to: "/history", label: "Historique" },
         { to: "/stats", label: "Stats" },
-        { to: "/admin", label: "Admin" },
+        ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
       ]}
       rightSlot={
         <>
           {syncStatus ? (
             <Pill tone={syncStatus.pending > 0 ? "secondary" : "primary"}>
-              {syncStatus.pending > 0 ? `Queued ${syncStatus.pending}` : "Synced"}
+              {syncStatus.pending > 0 ? `En attente ${syncStatus.pending}` : "Synchronisé"}
             </Pill>
           ) : (
             <Pill tone="neutral">Sync</Pill>
           )}
           <Button variant="ghost" onClick={() => setSyncDrawerOpen(true)}>Sync</Button>
-          <Button variant="ghost" onClick={() => void signOut()} disabled={!isConfigured}>Sign out</Button>
+          <Button variant="ghost" onClick={() => void signOut()} disabled={!isConfigured}>Déconnexion</Button>
         </>
       }
     >
@@ -189,7 +191,7 @@ export default function TodayPage() {
                   <SessionStateCard
                     key={p.id}
                     state="planned"
-                    title={p.templateName ?? "Session"}
+                    title={p.templateName ?? "Séance"}
                     subtitle={p.scheduledFor}
                   />
                 ))}
@@ -258,7 +260,7 @@ export default function TodayPage() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
             <div>
               <h1 style={{ fontFamily: "var(--font-headline)", fontSize: 28, fontWeight: 700, letterSpacing: "-0.02em", margin: 0 }}>
-                Sync Details
+                Détails de sync
               </h1>
               <p style={{ color: "#adaaaa", fontSize: 13, fontWeight: 500, margin: "4px 0 0" }}>Statut de la synchronisation</p>
             </div>
@@ -272,7 +274,7 @@ export default function TodayPage() {
               gap: 6,
             }}>
               <span style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.12em", color: syncStatus?.pending === 0 ? "#cafd00" : "#adaaaa", textTransform: "uppercase" }}>
-                {syncStatus?.pending === 0 ? "SYNCED" : "LOCAL"}
+                {syncStatus?.pending === 0 ? "SYNCHÉ" : "LOCAL"}
               </span>
             </div>
           </div>
@@ -352,7 +354,7 @@ export default function TodayPage() {
                 {recentOps.slice(0, 10).map((op) => {
                   const isApplied = op.status === "applied";
                   const isError = !!op.lastError;
-                  const statusLabel = isApplied ? "SYNCED" : isError ? "ERROR" : "QUEUE";
+                  const statusLabel = isApplied ? "SYNCHÉ" : isError ? "ERREUR" : "FILE";
                   const statusColor = isApplied ? "#cafd00" : isError ? "#ff7351" : "#ffeea5";
                   const statusBg = isApplied ? "rgba(202,253,0,0.08)" : isError ? "rgba(255,115,81,0.08)" : "rgba(255,238,165,0.08)";
                   return (
@@ -426,7 +428,7 @@ export default function TodayPage() {
                 gap: 8,
               }}
             >
-              ↻ FORCE SYNCHRONIZATION
+              ↻ FORCER LA SYNCHRO
             </button>
             <p style={{ textAlign: "center", fontSize: 10, color: "#adaaaa", marginTop: 12, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500 }}>
               {syncStatus ? `${syncStatus.applied} ops appliquées · ${syncStatus.pending} en attente` : "Chargement…"}

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getSession } from "../../auth/authActions";
 
 export default function AuthCallbackPage() {
-  const [message, setMessage] = useState("Completing sign-in…");
+  const [message, setMessage] = useState("Connexion en cours…");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,7 +14,7 @@ export default function AuthCallbackPage() {
       try {
         session = await getSession();
       } catch (err) {
-        if (!ignore) setMessage(err instanceof Error ? err.message : "Supabase is not configured.");
+        if (!ignore) setMessage(err instanceof Error ? err.message : "Supabase non configuré.");
         return;
       }
       if (ignore) return;
@@ -30,7 +30,7 @@ export default function AuthCallbackPage() {
         navigate(returnTo, { replace: true });
         return;
       }
-      setMessage("No session found. Please try signing in again.");
+      setMessage("Session introuvable. Veuillez vous reconnecter.");
     }
 
     void run();
@@ -42,7 +42,7 @@ export default function AuthCallbackPage() {
   return (
     <main className="container">
       <h1>TrackNPerf</h1>
-      <h2>Auth callback</h2>
+      <h2>Authentification</h2>
       <p>{message}</p>
     </main>
   );

@@ -1,6 +1,6 @@
 import type {
   EngineInputs, LoadState, MultidimensionalFatigue, ReadinessState,
-  DecisionState, ProgressionAxis, PlannedSession, PainReport, ExecutedSessionRecord,
+  DecisionState, ProgressionAxis, PainReport, ExecutedSessionRecord,
 } from "../types/engine";
 import { FATIGUE_WEIGHTS, FATIGUE_DECAY_DAYS, DATA_QUALITY_MIN_SESSIONS, defaultEngineConfig } from "./config";
 

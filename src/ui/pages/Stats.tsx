@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { getExecutedSessionStats } from "../../application/usecases/getExecutedSessions";
 import { AppShell } from "../kit/AppShell";
+import { useAuth } from "../../auth/AuthProvider";
+import { useIsAdmin } from "../../auth/useIsAdmin";
 
 type Stats = {
   executedCount: number;
@@ -12,6 +14,8 @@ const BAR_HEIGHTS = [40, 65, 50, 90, 70, 30, 20];
 const BAR_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
 export default function StatsPage() {
+  const { user } = useAuth();
+  const { isAdmin } = useIsAdmin(user?.id ?? null);
   const [days, setDays] = useState<(typeof RANGE_OPTIONS)[number]>(14);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +54,7 @@ export default function StatsPage() {
         { to: "/today", label: "Today" },
         { to: "/history", label: "History" },
         { to: "/stats", label: "Stats" },
-        { to: "/admin", label: "Admin" },
+        ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
       ]}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: 24, paddingBottom: 40 }}>
@@ -183,7 +187,7 @@ export default function StatsPage() {
 
           {/* Metric: sessions */}
           <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <span style={{ fontSize: 22, color: "#c57eff" }}>\u26a1</span>
+            <span style={{ fontSize: 22, color: "#c57eff" }}>{"⚡"}</span>
             <div>
               <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Séances complètes</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
@@ -197,7 +201,7 @@ export default function StatsPage() {
 
           {/* Metric: time */}
           <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-            <span style={{ fontSize: 22, color: "#c57eff" }}>\u2665</span>
+            <span style={{ fontSize: 22, color: "#c57eff" }}>{"♥"}</span>
             <div>
               <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Temps total</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
