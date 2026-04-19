@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+  /* Hyperflux Dark — full color token set */
+  --color-background: #0e0e0e;
+  --color-surface: #0e0e0e;
+  --color-surface-dim: #0e0e0e;
+  --color-surface-container-lowest: #000000;
+  --color-surface-container-low: #131313;
+  --color-surface-container: #1a1919;
+  --color-surface-container-high: #201f1f;
+  --color-surface-container-highest: #262626;
+  --color-surface-bright: #2c2c2c;
+  --color-surface-variant: #262626;
+  --color-surface-tint: #f3ffca;
+  --color-inverse-surface: #fcf9f8;
+  --color-inverse-on-surface: #565555;
+
+  --color-on-background: #ffffff;
+  --color-on-surface: #ffffff;
+  --color-on-surface-variant: #adaaaa;
+  --color-outline: #767575;
+  --color-outline-variant: #484847;
+
+  --color-primary: #f3ffca;
+  --color-primary-container: #cafd00;
+  --color-primary-fixed: #cafd00;
+  --color-primary-fixed-dim: #beee00;
+  --color-primary-dim: #beee00;
+  --color-on-primary: #516700;
+  --color-on-primary-container: #4a5e00;
+  --color-on-primary-fixed: #3a4a00;
+  --color-on-primary-fixed-variant: #526900;
+  --color-inverse-primary: #516700;
+
+  --color-secondary: #c57eff;
+  --color-secondary-dim: #c57eff;
+  --color-secondary-container: #6a0baa;
+  --color-secondary-fixed: #e7c5ff;
+  --color-secondary-fixed-dim: #deb3ff;
+  --color-on-secondary: #340058;
+  --color-on-secondary-container: #e6c3ff;
+  --color-on-secondary-fixed: #510085;
+  --color-on-secondary-fixed-variant: #7520b5;
+
+  --color-tertiary: #ffeea5;
+  --color-tertiary-dim: #edd13a;
+  --color-tertiary-container: #fce047;
+  --color-tertiary-fixed: #fce047;
+  --color-tertiary-fixed-dim: #edd13a;
+  --color-on-tertiary: #665800;
+  --color-on-tertiary-container: #5d5000;
+  --color-on-tertiary-fixed: #483d00;
+  --color-on-tertiary-fixed-variant: #685900;
+
+  --color-error: #ff7351;
+  --color-error-dim: #d53d18;
+  --color-error-container: #b92902;
+  --color-on-error: #450900;
+  --color-on-error-container: #ffd2c8;
+
+  /* Typography */
+  --font-headline: "Space Grotesk", ui-sans-serif, system-ui, -apple-system;
+  --font-body: "Manrope", ui-sans-serif, system-ui, -apple-system;
+  --font-label: "Manrope", ui-sans-serif, system-ui, -apple-system;
+
+  /* Border radius */
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+}
+
+/* Base */
+:root {
+  color-scheme: dark;
+  /* Short-form aliases for kit.module.css (CSS Modules don't use Tailwind v4 --color-* prefix) */
+  --primary-container: #cafd00;
+  --primary: #f3ffca;
+  --secondary: #c57eff;
+  --surface-low: #131313;
+  --surface-highest: #262626;
+  --text: #ffffff;
+  --text-muted: #adaaaa;
+  --error: #ff7351;
+  --shadow-ambient-purple: 0 24px 80px rgba(197, 126, 255, 0.12);
+  --shadow-ambient-lime: 0 24px 80px rgba(202, 253, 0, 0.09);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(900px 500px at 85% 20%, rgba(197, 126, 255, 0.12), transparent 60%),
+    radial-gradient(700px 400px at 20% 75%, rgba(202, 253, 0, 0.10), transparent 65%),
+    #0e0e0e;
+  color: #ffffff;
+  font-family: var(--font-body);
+  letter-spacing: -0.01em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  opacity: 0.9;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(202, 253, 0, 0.25);
+  border-radius: 10px;
+}
