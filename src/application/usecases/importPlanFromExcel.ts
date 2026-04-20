@@ -231,7 +231,9 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
     if (!sheet) continue;
     const probe = XLSX.utils.sheet_to_json<Row>(sheet, { defval: null, raw: true });
     if (probe.length === 0) continue;
-    const normalizedKeys = Object.keys(probe[0]).map((k) => normalizeHeaderKey(k));
+    const firstRow = probe[0];
+    if (!firstRow) continue;
+    const normalizedKeys = Object.keys(firstRow).map((k) => normalizeHeaderKey(k));
     firstSheetHasDateColumn = normalizedKeys.some((k) => DATE_COLUMN_KEYS.includes(k));
     break;
   }
@@ -372,4 +374,3 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
 
   return planImportSchema.parse(importObj);
 }
-
