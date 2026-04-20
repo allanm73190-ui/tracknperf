@@ -11,3 +11,4 @@ playwright-report/
 # macOS
 .DS_Store
 **/.DS_Store
+.vercel
