@@ -85,7 +85,9 @@ async function loadHistory(sinceIso: string): Promise<{ planned: PlannedRow[]; e
       .order("scheduled_for", { ascending: false }),
     supabase
       .from("executed_sessions")
-      .select("id, started_at, planned_session_id, payload, executed_session_metrics(total_sets, tonnage_kg, avg_rpe, payload)")
+      .select(
+        "id, started_at, planned_session_id, payload, executed_session_metrics!executed_session_metrics_executed_session_id_fkey(total_sets, tonnage_kg, avg_rpe, payload)",
+      )
       .gte("started_at", sinceIso)
       .order("started_at", { ascending: false }),
   ]);

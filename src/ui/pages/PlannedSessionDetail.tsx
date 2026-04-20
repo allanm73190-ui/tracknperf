@@ -244,6 +244,25 @@ function fromTemplateExercises(templateExercises: PlannedSessionTemplateExercise
   }));
 }
 
+function makeManualExercise(position: number): ExerciseDraft {
+  return {
+    localId: crypto.randomUUID(),
+    sessionTemplateExerciseId: null,
+    position,
+    exerciseName: "",
+    seriesRaw: null,
+    repsRaw: null,
+    loadRaw: null,
+    tempoRaw: null,
+    restRaw: null,
+    rirRaw: null,
+    coachNotes: null,
+    painScore: "",
+    notes: "",
+    sets: makeInitialSets(3),
+  };
+}
+
 function resolveSessionMode(session: PlannedSessionDetail | null): SessionMode {
   if (!session) return "mixed";
   return inferSessionMode({
@@ -308,9 +327,10 @@ export default function PlannedSessionDetailPage() {
     [draftExercises, enduranceDraft, durationFromTimes, sessionPainScore],
   );
 
+  const isStrengthLikeMode = sessionMode === "strength" || sessionMode === "mixed";
   const showEndurancePanel = sessionMode === "endurance" || sessionMode === "mixed" || sessionMode === "recovery";
-  const showExercisePanel = sessionMode !== "rest" && draftExercises.length > 0;
-  const requiresStrengthDetails = sessionMode === "strength";
+  const showExercisePanel = isStrengthLikeMode || draftExercises.length > 0;
+  const requiresStrengthDetails = isStrengthLikeMode;
 
   useEffect(() => {
     let ignore = false;
@@ -333,8 +353,15 @@ export default function PlannedSessionDetailPage() {
           setSessionPainScore("");
           return;
         }
+        const nextMode = inferSessionMode({
+          plannedPayload: data.payload,
+          templatePayload: data.templatePayload,
+          templateName: data.templateName,
+        });
+        const importedExercises = fromTemplateExercises(data.templateExercises);
         setSession(data);
-        setDraftExercises(fromTemplateExercises(data.templateExercises));
+        const shouldSeedManualExercise = importedExercises.length === 0 && (nextMode === "strength" || nextMode === "mixed");
+        setDraftExercises(shouldSeedManualExercise ? [makeManualExercise(1)] : importedExercises);
         setEnduranceDraft(makeInitialEnduranceDraft(data));
         setSessionPainScore(toInputNumber(data.payload?.sessionPainScore ?? data.payload?.painScore));
       } catch (err) {
@@ -357,6 +384,10 @@ export default function PlannedSessionDetailPage() {
 
   function updateExerciseNotes(localId: string, notes: string) {
     setDraftExercises((prev) => prev.map((ex) => (ex.localId === localId ? { ...ex, notes } : ex)));
+  }
+
+  function updateExerciseName(localId: string, exerciseName: string) {
+    setDraftExercises((prev) => prev.map((ex) => (ex.localId === localId ? { ...ex, exerciseName } : ex)));
   }
 
   function updateExercisePain(localId: string, painScore: string) {
@@ -424,6 +455,21 @@ export default function PlannedSessionDetailPage() {
     );
   }
 
+  function addExercise() {
+    setDraftExercises((prev) => {
+      const next = [...prev, makeManualExercise(prev.length + 1)];
+      return next.map((ex, idx) => ({ ...ex, position: idx + 1 }));
+    });
+  }
+
+  function removeExercise(localId: string) {
+    setDraftExercises((prev) => {
+      const filtered = prev.filter((ex) => ex.localId !== localId);
+      const next = filtered.length > 0 ? filtered : [makeManualExercise(1)];
+      return next.map((ex, idx) => ({ ...ex, position: idx + 1 }));
+    });
+  }
+
   async function onSubmit() {
     if (!session || saving) return;
     setSaving(true);
@@ -439,10 +485,10 @@ export default function PlannedSessionDetailPage() {
         throw new Error("Une séance force requiert au moins un exercice détaillé.");
       }
 
-      const payloadExercises = draftExercises.map((ex) => ({
+      const payloadExercises = draftExercises.map((ex, idx) => ({
         sessionTemplateExerciseId: ex.sessionTemplateExerciseId,
-        position: ex.position,
-        exerciseName: ex.exerciseName,
+        position: idx + 1,
+        exerciseName: ex.exerciseName.trim() || `Exercice ${idx + 1}`,
         notes: ex.notes.trim() || null,
         payload: {
           painScore: toNullablePainScore(ex.painScore),
@@ -652,15 +698,22 @@ export default function PlannedSessionDetailPage() {
               {draftExercises.map((exercise) => (
                 <div key={exercise.localId} className="rounded-[1.5rem] bg-surface-container-low p-5 grid gap-4">
                   <div className="flex items-start justify-between gap-3">
-                    <div>
+                    <div className="flex-1">
                       <div className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">
                         Exercice {exercise.position}
                       </div>
-                      <h3 style={{ fontFamily: "var(--font-headline)" }} className="text-xl font-black tracking-tight">
-                        {exercise.exerciseName}
-                      </h3>
+                      <label className="grid gap-1 max-w-[520px]">
+                        <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Nom de l'exercice</span>
+                        <input
+                          value={exercise.exerciseName}
+                          onChange={(e) => updateExerciseName(exercise.localId, e.currentTarget.value)}
+                          className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
+                          style={{ border: 0 }}
+                          placeholder={`Exercice ${exercise.position}`}
+                        />
+                      </label>
                       <div className="text-xs text-on-surface-variant mt-2 grid gap-1">
-                        <div>Séries prévues: {exercise.seriesRaw ?? "—"}</div>
+                        <div>Séries prévues: {exercise.seriesRaw ?? String(exercise.sets.length)}</div>
                         <div>Reps cibles: {exercise.repsRaw ?? "—"}</div>
                         <div>Charge cible: {exercise.loadRaw ?? "—"}</div>
                         <div>Tempo: {exercise.tempoRaw ?? "—"} · Repos: {exercise.restRaw ?? "—"} · RIR: {exercise.rirRaw ?? "—"}</div>
@@ -669,6 +722,13 @@ export default function PlannedSessionDetailPage() {
                         <p className="text-sm text-on-surface-variant mt-3 leading-relaxed">{exercise.coachNotes}</p>
                       )}
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => removeExercise(exercise.localId)}
+                      className="text-[10px] uppercase tracking-widest text-on-surface-variant px-2 py-1 rounded-full bg-surface-container-highest active:scale-95"
+                    >
+                      Retirer
+                    </button>
                   </div>
 
                   <div className="grid gap-2">
@@ -740,6 +800,13 @@ export default function PlannedSessionDetailPage() {
                   </div>
                 </div>
               ))}
+              <button
+                type="button"
+                onClick={addExercise}
+                className="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-on-surface-variant active:scale-95 justify-self-start"
+              >
+                Ajouter un exercice
+              </button>
             </div>
           )}
 

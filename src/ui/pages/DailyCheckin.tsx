@@ -20,6 +20,11 @@ function toInputNumber(v: number | null | undefined): string {
   return String(v);
 }
 
+function toInputScore(v: number | null | undefined): string {
+  if (typeof v === "number" && Number.isFinite(v) && v >= 1 && v <= 10) return String(Math.round(v));
+  return "5";
+}
+
 function parseNullableNumber(v: string): number | null {
   const s = v.trim();
   if (!s) return null;
@@ -38,27 +43,39 @@ export default function DailyCheckinPage() {
   const { isAdmin } = useIsAdmin(user?.id ?? null);
 
   const [checkinDate, setCheckinDate] = useState(() => toIsoDate(new Date()));
-  const [painScore, setPainScore] = useState("");
-  const [fatigueScore, setFatigueScore] = useState("");
-  const [readinessScore, setReadinessScore] = useState("");
+  const [painScore, setPainScore] = useState("5");
+  const [fatigueScore, setFatigueScore] = useState("5");
+  const [readinessScore, setReadinessScore] = useState("5");
   const [sleepHours, setSleepHours] = useState("");
-  const [sleepQualityScore, setSleepQualityScore] = useState("");
-  const [sorenessScore, setSorenessScore] = useState("");
-  const [stressScore, setStressScore] = useState("");
-  const [moodScore, setMoodScore] = useState("");
+  const [sleepQualityScore, setSleepQualityScore] = useState("5");
+  const [sorenessScore, setSorenessScore] = useState("5");
+  const [stressScore, setStressScore] = useState("5");
+  const [moodScore, setMoodScore] = useState("5");
   const [availableTimeTodayMin, setAvailableTimeTodayMin] = useState("");
   const [degradedModeDays, setDegradedModeDays] = useState("");
   const [hrvBelowBaselineDays, setHrvBelowBaselineDays] = useState("");
   const [rhrDeltaBpm, setRhrDeltaBpm] = useState("");
-  const [painRedFlag, setPainRedFlag] = useState(false);
-  const [illnessFlag, setIllnessFlag] = useState(false);
-  const [neurologicalSymptomsFlag, setNeurologicalSymptomsFlag] = useState(false);
-  const [limpFlag, setLimpFlag] = useState(false);
   const [notes, setNotes] = useState("");
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  function resetFormToDefaults() {
+    setPainScore("5");
+    setFatigueScore("5");
+    setReadinessScore("5");
+    setSleepHours("");
+    setSleepQualityScore("5");
+    setSorenessScore("5");
+    setStressScore("5");
+    setMoodScore("5");
+    setAvailableTimeTodayMin("");
+    setDegradedModeDays("");
+    setHrvBelowBaselineDays("");
+    setRhrDeltaBpm("");
+    setNotes("");
+  }
 
   useEffect(() => {
     let ignore = false;
@@ -67,23 +84,23 @@ export default function DailyCheckinPage() {
       setMessage(null);
       try {
         const row = await getDailyCheckinByDate(checkinDate);
-        if (!row || ignore) return;
-        setPainScore(toInputNumber(row.painScore));
-        setFatigueScore(toInputNumber(row.fatigueScore));
-        setReadinessScore(toInputNumber(row.readinessScore));
+        if (ignore) return;
+        if (!row) {
+          resetFormToDefaults();
+          return;
+        }
+        setPainScore(toInputScore(row.painScore));
+        setFatigueScore(toInputScore(row.fatigueScore));
+        setReadinessScore(toInputScore(row.readinessScore));
         setSleepHours(toInputNumber(row.sleepHours));
-        setSleepQualityScore(toInputNumber(row.sleepQualityScore));
-        setSorenessScore(toInputNumber(row.sorenessScore));
-        setStressScore(toInputNumber(row.stressScore));
-        setMoodScore(toInputNumber(row.moodScore));
+        setSleepQualityScore(toInputScore(row.sleepQualityScore));
+        setSorenessScore(toInputScore(row.sorenessScore));
+        setStressScore(toInputScore(row.stressScore));
+        setMoodScore(toInputScore(row.moodScore));
         setAvailableTimeTodayMin(toInputNumber(row.availableTimeTodayMin));
         setDegradedModeDays(toInputNumber(row.degradedModeDays));
         setHrvBelowBaselineDays(toInputNumber(row.hrvBelowBaselineDays));
         setRhrDeltaBpm(toInputNumber(row.rhrDeltaBpm));
-        setPainRedFlag(row.painRedFlag);
-        setIllnessFlag(row.illnessFlag);
-        setNeurologicalSymptomsFlag(row.neurologicalSymptomsFlag);
-        setLimpFlag(row.limpFlag);
         setNotes(row.notes ?? "");
       } catch (err) {
         if (!ignore) {
@@ -108,7 +125,6 @@ export default function DailyCheckinPage() {
       const row = await upsertDailyCheckin({
         checkinDate,
         painScore: parseNullableNumber(painScore),
-        painRedFlag,
         fatigueScore: parseNullableNumber(fatigueScore),
         readinessScore: parseNullableNumber(readinessScore),
         sleepHours: parseNullableNumber(sleepHours),
@@ -120,9 +136,6 @@ export default function DailyCheckinPage() {
         degradedModeDays: parseNullableInteger(degradedModeDays),
         hrvBelowBaselineDays: parseNullableInteger(hrvBelowBaselineDays),
         rhrDeltaBpm: parseNullableNumber(rhrDeltaBpm),
-        illnessFlag,
-        neurologicalSymptomsFlag,
-        limpFlag,
         notes: notes.trim() || null,
       });
 
@@ -178,25 +191,18 @@ export default function DailyCheckinPage() {
         ) : (
           <div className="grid gap-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Field label="Douleur (0-10)" value={painScore} onChange={setPainScore} />
-              <Field label="Fatigue (0-10)" value={fatigueScore} onChange={setFatigueScore} />
-              <Field label="Readiness (0-10)" value={readinessScore} onChange={setReadinessScore} />
+              <ScoreSlider label="Douleur (1-10)" value={painScore} onChange={setPainScore} />
+              <ScoreSlider label="Fatigue (1-10)" value={fatigueScore} onChange={setFatigueScore} />
+              <ScoreSlider label="Readiness (1-10)" value={readinessScore} onChange={setReadinessScore} />
               <Field label="Sommeil (h)" value={sleepHours} onChange={setSleepHours} />
-              <Field label="Qualité sommeil (0-10)" value={sleepQualityScore} onChange={setSleepQualityScore} />
-              <Field label="Courbatures (0-10)" value={sorenessScore} onChange={setSorenessScore} />
-              <Field label="Stress (0-10)" value={stressScore} onChange={setStressScore} />
-              <Field label="Humeur (0-10)" value={moodScore} onChange={setMoodScore} />
+              <ScoreSlider label="Qualité sommeil (1-10)" value={sleepQualityScore} onChange={setSleepQualityScore} />
+              <ScoreSlider label="Courbatures (1-10)" value={sorenessScore} onChange={setSorenessScore} />
+              <ScoreSlider label="Stress (1-10)" value={stressScore} onChange={setStressScore} />
+              <ScoreSlider label="Humeur (1-10)" value={moodScore} onChange={setMoodScore} />
               <Field label="Temps dispo (min)" value={availableTimeTodayMin} onChange={setAvailableTimeTodayMin} />
               <Field label="Mode dégradé (jours)" value={degradedModeDays} onChange={setDegradedModeDays} />
               <Field label="HRV sous baseline (jours)" value={hrvBelowBaselineDays} onChange={setHrvBelowBaselineDays} />
               <Field label="Delta RHR (bpm)" value={rhrDeltaBpm} onChange={setRhrDeltaBpm} />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-              <Toggle label="Douleur rouge" checked={painRedFlag} onChange={setPainRedFlag} />
-              <Toggle label="Maladie" checked={illnessFlag} onChange={setIllnessFlag} />
-              <Toggle label="Symptômes neurologiques" checked={neurologicalSymptomsFlag} onChange={setNeurologicalSymptomsFlag} />
-              <Toggle label="Boiterie" checked={limpFlag} onChange={setLimpFlag} />
             </div>
 
             <label className="grid gap-2">
@@ -237,15 +243,24 @@ function Field(props: { label: string; value: string; onChange: (next: string) =
   );
 }
 
-function Toggle(props: { label: string; checked: boolean; onChange: (next: boolean) => void }) {
+function ScoreSlider(props: { label: string; value: string; onChange: (next: string) => void }) {
+  const parsed = Number(props.value);
+  const safeValue = Number.isFinite(parsed) && parsed >= 1 && parsed <= 10 ? Math.round(parsed) : 5;
   return (
-    <label className="rounded-xl bg-surface-container-high px-3 py-2 flex items-center justify-between gap-3">
+    <label className="grid gap-2 rounded-xl bg-surface-container-high px-3 py-2">
       <span className="text-xs uppercase tracking-widest text-on-surface-variant font-semibold">{props.label}</span>
-      <input
-        type="checkbox"
-        checked={props.checked}
-        onChange={(e) => props.onChange(e.currentTarget.checked)}
-      />
+      <div className="flex items-center gap-3">
+        <input
+          type="range"
+          min={1}
+          max={10}
+          step={1}
+          value={safeValue}
+          onChange={(e) => props.onChange(e.currentTarget.value)}
+          className="w-full accent-lime-300"
+        />
+        <span className="min-w-[2ch] text-sm font-bold text-on-surface">{safeValue}</span>
+      </div>
     </label>
   );
 }

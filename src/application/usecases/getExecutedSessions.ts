@@ -57,7 +57,9 @@ export async function getExecutedSessionStats(sinceIso: string): Promise<Execute
   if (!supabase) throw new Error("Supabase is not configured.");
   const { data, error } = await supabase
     .from("executed_sessions")
-    .select("payload, started_at, executed_session_metrics(total_sets, tonnage_kg, avg_rpe, payload)")
+    .select(
+      "payload, started_at, executed_session_metrics!executed_session_metrics_executed_session_id_fkey(total_sets, tonnage_kg, avg_rpe, payload)",
+    )
     .gte("started_at", sinceIso);
   if (error) throw new Error(error.message);
   let executedCount = 0;

@@ -181,7 +181,26 @@ async function loadLatestDailyCheckin(userId: string): Promise<Record<string, un
     .eq("user_id", userId)
     .order("checkin_date", { ascending: false })
     .limit(1);
-  if (error || !Array.isArray(data) || data.length === 0) return null;
+  if (error) {
+    const lower = error.message.toLowerCase();
+    const missingDailyCheckins =
+      lower.includes("daily_checkins") &&
+      (lower.includes("could not find") || lower.includes("does not exist") || lower.includes("schema cache"));
+    if (!missingDailyCheckins) return null;
+
+    const { data: internalRows, error: internalErr } = await supabase
+      .from("internal_metrics")
+      .select("metrics")
+      .eq("user_id", userId)
+      .contains("metrics", { source: "daily_checkin_fallback_v1" })
+      .order("captured_at", { ascending: false })
+      .limit(1);
+    if (internalErr || !Array.isArray(internalRows) || internalRows.length === 0) return null;
+    const metrics = internalRows[0]?.metrics;
+    if (!metrics || typeof metrics !== "object") return null;
+    return metrics as Record<string, unknown>;
+  }
+  if (!Array.isArray(data) || data.length === 0) return null;
   const row = data[0];
   if (!row || typeof row !== "object") return null;
   return row as Record<string, unknown>;

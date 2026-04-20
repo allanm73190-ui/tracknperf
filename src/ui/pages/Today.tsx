@@ -59,8 +59,19 @@ export default function TodayPage() {
       const next = await getTodayOverview();
       if (ignoreSignal?.ignore) return;
       setOverview(next);
-      const reco = await computeAndPersistTodayRecommendation(next);
-      if (!ignoreSignal?.ignore) setRecommendation(reco);
+      try {
+        const reco = await computeAndPersistTodayRecommendation(next);
+        if (!ignoreSignal?.ignore) setRecommendation(reco);
+      } catch (err) {
+        if (!ignoreSignal?.ignore) {
+          setRecommendation(null);
+          setMessage(
+            err instanceof Error
+              ? `Recommandation indisponible pour le moment. (${err.message})`
+              : "Recommandation indisponible pour le moment.",
+          );
+        }
+      }
       const stats = await getQueueStats();
       if (!ignoreSignal?.ignore) setSyncStatus(stats);
       const recent = await listRecentOps(50);
@@ -170,6 +181,18 @@ export default function TodayPage() {
               subtitle={getRecoHeadline(recommendation)}
               reasons={getRecoReasons(recommendation)}
               recommendationId={recommendation.recommendationId}
+              onStart={openDetailedLogging}
+            />
+          ) : plannedCandidate ? (
+            <SessionStateCard
+              state="recommended"
+              title={plannedCandidate.templateName ?? "Séance planifiée"}
+              subtitle="Recommandation calculée localement à partir de la séance du jour."
+              reasons={[
+                "Une séance planifiée est disponible aujourd'hui.",
+                "Le moteur de recommandation est momentanément indisponible.",
+                "Vous pouvez démarrer la séance détaillée sans bloquer le suivi.",
+              ]}
               onStart={openDetailedLogging}
             />
           ) : (

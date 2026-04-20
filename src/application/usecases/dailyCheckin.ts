@@ -48,6 +48,8 @@ export type UpsertDailyCheckinInput = {
   payload?: Record<string, unknown>;
 };
 
+const DAILY_CHECKIN_FALLBACK_SOURCE = "daily_checkin_fallback_v1";
+
 function toIsoDate(d: Date): string {
   const yyyy = String(d.getFullYear()).padStart(4, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -122,6 +124,97 @@ function isLikelyNetworkError(err: unknown): boolean {
   return m.includes("failed to fetch") || m.includes("network") || m.includes("fetch");
 }
 
+function isMissingTableError(err: unknown, tableName: string): boolean {
+  if (!err || typeof err !== "object") return false;
+  const message = "message" in err && typeof (err as { message?: unknown }).message === "string"
+    ? (err as { message: string }).message
+    : "";
+  const m = message.toLowerCase();
+  const table = tableName.toLowerCase();
+  return (
+    m.includes(table) &&
+    (m.includes("could not find") || m.includes("does not exist") || m.includes("schema cache"))
+  );
+}
+
+function mapFallbackMetricsToRow(
+  id: string,
+  metrics: Record<string, unknown>,
+  checkinDateFallback: string,
+): Record<string, unknown> {
+  const payload =
+    metrics.payload && typeof metrics.payload === "object"
+      ? (metrics.payload as Record<string, unknown>)
+      : {};
+  return {
+    id,
+    checkin_date: toNullableString(metrics.checkin_date) ?? checkinDateFallback,
+    pain_score: toNullableNumber(metrics.pain_score ?? metrics.painScore),
+    pain_red_flag: toBoolean(metrics.pain_red_flag ?? metrics.painRedFlag, false),
+    fatigue_score: toNullableNumber(metrics.fatigue_score ?? metrics.fatigueScore),
+    readiness_score: toNullableNumber(metrics.readiness_score ?? metrics.readinessScore),
+    sleep_hours: toNullableNumber(metrics.sleep_hours ?? metrics.sleepHours),
+    sleep_quality_score: toNullableNumber(metrics.sleep_quality_score ?? metrics.sleepQualityScore),
+    soreness_score: toNullableNumber(metrics.soreness_score ?? metrics.sorenessScore),
+    stress_score: toNullableNumber(metrics.stress_score ?? metrics.stressScore),
+    mood_score: toNullableNumber(metrics.mood_score ?? metrics.moodScore),
+    available_time_today_min: toNullableInteger(metrics.available_time_today_min ?? metrics.availableTimeTodayMin),
+    degraded_mode_days: toNullableInteger(metrics.degraded_mode_days ?? metrics.degradedModeDays),
+    hrv_below_baseline_days: toNullableInteger(metrics.hrv_below_baseline_days ?? metrics.hrvBelowBaselineDays),
+    rhr_delta_bpm: toNullableNumber(metrics.rhr_delta_bpm ?? metrics.rhrDeltaBpm),
+    illness_flag: toBoolean(metrics.illness_flag ?? metrics.illnessFlag, false),
+    neurological_symptoms_flag: toBoolean(metrics.neurological_symptoms_flag ?? metrics.neurologicalSymptomsFlag, false),
+    limp_flag: toBoolean(metrics.limp_flag ?? metrics.limpFlag, false),
+    notes: toNullableString(metrics.notes),
+    payload,
+  };
+}
+
+function buildFallbackMetricsFromRowPayload(
+  rowPayload: Record<string, unknown>,
+  checkinDate: string,
+): Record<string, unknown> {
+  return {
+    source: DAILY_CHECKIN_FALLBACK_SOURCE,
+    checkin_date: checkinDate,
+    pain_score: toNullableNumber(rowPayload.pain_score),
+    pain_red_flag: toBoolean(rowPayload.pain_red_flag, false),
+    fatigue_score: toNullableNumber(rowPayload.fatigue_score),
+    readiness_score: toNullableNumber(rowPayload.readiness_score),
+    sleep_hours: toNullableNumber(rowPayload.sleep_hours),
+    sleep_quality_score: toNullableNumber(rowPayload.sleep_quality_score),
+    soreness_score: toNullableNumber(rowPayload.soreness_score),
+    stress_score: toNullableNumber(rowPayload.stress_score),
+    mood_score: toNullableNumber(rowPayload.mood_score),
+    available_time_today_min: toNullableInteger(rowPayload.available_time_today_min),
+    degraded_mode_days: toNullableInteger(rowPayload.degraded_mode_days),
+    hrv_below_baseline_days: toNullableInteger(rowPayload.hrv_below_baseline_days),
+    rhr_delta_bpm: toNullableNumber(rowPayload.rhr_delta_bpm),
+    illness_flag: toBoolean(rowPayload.illness_flag, false),
+    neurological_symptoms_flag: toBoolean(rowPayload.neurological_symptoms_flag, false),
+    limp_flag: toBoolean(rowPayload.limp_flag, false),
+    notes: toNullableString(rowPayload.notes),
+    payload: rowPayload.payload && typeof rowPayload.payload === "object" ? rowPayload.payload : {},
+  };
+}
+
+async function loadFallbackCheckinByDate(checkinDate: string): Promise<DailyCheckin | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("internal_metrics")
+    .select("id, metrics")
+    .contains("metrics", { source: DAILY_CHECKIN_FALLBACK_SOURCE, checkin_date: checkinDate })
+    .order("captured_at", { ascending: false })
+    .limit(1);
+  if (error || !Array.isArray(data) || data.length === 0) return null;
+  const row = data[0];
+  if (!row || typeof row !== "object") return null;
+  const metrics = row.metrics && typeof row.metrics === "object" ? (row.metrics as Record<string, unknown>) : null;
+  if (!metrics) return null;
+  const mapped = mapFallbackMetricsToRow(String(row.id ?? crypto.randomUUID()), metrics, checkinDate);
+  return mapCheckinRow(mapped, false);
+}
+
 function mapCheckinRow(row: Record<string, unknown>, pendingSync: boolean): DailyCheckin {
   return {
     id: String(row.id ?? crypto.randomUUID()),
@@ -177,7 +270,12 @@ async function loadCheckinByDate(checkinDate: string): Promise<DailyCheckin | nu
     .eq("checkin_date", checkinDate)
     .maybeSingle();
 
-  if (error) throw new Error(`Impossible de charger le check-in. (${error.message})`);
+  if (error) {
+    if (isMissingTableError(error, "daily_checkins")) {
+      return loadFallbackCheckinByDate(checkinDate);
+    }
+    throw new Error(`Impossible de charger le check-in. (${error.message})`);
+  }
   if (!data || typeof data !== "object") return null;
   return mapCheckinRow(data as Record<string, unknown>, false);
 }
@@ -193,15 +291,15 @@ export async function upsertDailyCheckin(input: UpsertDailyCheckinInput): Promis
   const rowPayload: Record<string, unknown> = {
     id: crypto.randomUUID(),
     checkin_date: checkinDate,
-    pain_score: ensureRange("Pain", toNullableNumber(input.painScore), 0, 10),
+    pain_score: ensureRange("Pain", toNullableNumber(input.painScore), 1, 10),
     pain_red_flag: input.painRedFlag === true,
-    fatigue_score: ensureRange("Fatigue", toNullableNumber(input.fatigueScore), 0, 10),
-    readiness_score: ensureRange("Readiness", toNullableNumber(input.readinessScore), 0, 10),
+    fatigue_score: ensureRange("Fatigue", toNullableNumber(input.fatigueScore), 1, 10),
+    readiness_score: ensureRange("Readiness", toNullableNumber(input.readinessScore), 1, 10),
     sleep_hours: ensureRange("Sommeil", toNullableNumber(input.sleepHours), 0, 24),
-    sleep_quality_score: ensureRange("Qualité sommeil", toNullableNumber(input.sleepQualityScore), 0, 10),
-    soreness_score: ensureRange("Courbatures", toNullableNumber(input.sorenessScore), 0, 10),
-    stress_score: ensureRange("Stress", toNullableNumber(input.stressScore), 0, 10),
-    mood_score: ensureRange("Humeur", toNullableNumber(input.moodScore), 0, 10),
+    sleep_quality_score: ensureRange("Qualité sommeil", toNullableNumber(input.sleepQualityScore), 1, 10),
+    soreness_score: ensureRange("Courbatures", toNullableNumber(input.sorenessScore), 1, 10),
+    stress_score: ensureRange("Stress", toNullableNumber(input.stressScore), 1, 10),
+    mood_score: ensureRange("Humeur", toNullableNumber(input.moodScore), 1, 10),
     available_time_today_min: ensureMin(
       "Temps disponible",
       toNullableInteger(input.availableTimeTodayMin),
@@ -254,6 +352,27 @@ export async function upsertDailyCheckin(input: UpsertDailyCheckinInput): Promis
 
   if (!error && data && typeof data === "object") {
     return mapCheckinRow(data as Record<string, unknown>, false);
+  }
+
+  if (isMissingTableError(error, "daily_checkins")) {
+    const fallbackMetrics = buildFallbackMetricsFromRowPayload(rowPayload, checkinDate);
+    const { data: fallbackData, error: fallbackErr } = await supabase
+      .from("internal_metrics")
+      .insert({
+        captured_at: `${checkinDate}T12:00:00.000Z`,
+        metrics: fallbackMetrics,
+      })
+      .select("id, metrics")
+      .single();
+    if (!fallbackErr && fallbackData?.metrics && typeof fallbackData.metrics === "object") {
+      const mapped = mapFallbackMetricsToRow(
+        String(fallbackData.id ?? crypto.randomUUID()),
+        fallbackData.metrics as Record<string, unknown>,
+        checkinDate,
+      );
+      return mapCheckinRow(mapped, false);
+    }
+    throw new Error(`Impossible d'enregistrer le check-in. (${fallbackErr?.message ?? "Table daily_checkins absente."})`);
   }
 
   const offlineFallback = (typeof navigator !== "undefined" && navigator.onLine === false) || isLikelyNetworkError(error);

@@ -28,6 +28,156 @@ export type PlannedSessionDetail = {
   templateExercises: PlannedSessionTemplateExercise[];
 };
 
+function asRecord(v: unknown): Record<string, unknown> | null {
+  return v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null;
+}
+
+function asString(v: unknown): string | null {
+  if (v === null || v === undefined) return null;
+  if (typeof v === "number") {
+    if (!Number.isFinite(v)) return null;
+    return String(v);
+  }
+  if (typeof v === "boolean") return v ? "true" : "false";
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  return s.length > 0 ? s : null;
+}
+
+function normalizeLookupKey(input: string): string {
+  return input
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
+function normalizePayloadExercise(raw: Record<string, unknown>, idx: number): PlannedSessionTemplateExercise | null {
+  const normalizedRaw: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    const normalized = normalizeLookupKey(key);
+    if (!normalized) continue;
+    if (!(normalized in normalizedRaw)) normalizedRaw[normalized] = value;
+  }
+
+  const exerciseName =
+    asString(normalizedRaw.exercise) ??
+    asString(normalizedRaw.exercice) ??
+    asString(normalizedRaw.name) ??
+    asString(normalizedRaw.title);
+  if (!exerciseName) return null;
+
+  const payload: Record<string, unknown> = {};
+  const reserved = new Set([
+    "exercise",
+    "exercice",
+    "name",
+    "title",
+    "series",
+    "sets",
+    "reps",
+    "repetitions",
+    "load",
+    "load_kg",
+    "charge",
+    "tempo",
+    "rest",
+    "rest_seconds",
+    "repos",
+    "recuperation",
+    "rir",
+    "coachnotes",
+    "coach_notes",
+    "notes",
+  ]);
+  for (const [k, v] of Object.entries(raw)) {
+    if (reserved.has(normalizeLookupKey(k))) continue;
+    payload[k] = v;
+  }
+
+  return {
+    id: `payload-item-${idx + 1}`,
+    sessionTemplateExerciseId: null,
+    position: idx + 1,
+    exerciseName,
+    seriesRaw:
+      asString(normalizedRaw.series) ??
+      asString(normalizedRaw.sets) ??
+      asString(normalizedRaw.serie) ??
+      asString(normalizedRaw.nb_series),
+    repsRaw:
+      asString(normalizedRaw.reps) ??
+      asString(normalizedRaw.repetitions) ??
+      asString(normalizedRaw.repetition) ??
+      asString(normalizedRaw.nb_reps),
+    loadRaw:
+      asString(normalizedRaw.load) ??
+      asString(normalizedRaw.load_kg) ??
+      asString(normalizedRaw.charge) ??
+      asString(normalizedRaw.poids),
+    tempoRaw: asString(normalizedRaw.tempo),
+    restRaw:
+      asString(normalizedRaw.rest) ??
+      asString(normalizedRaw.rest_seconds) ??
+      asString(normalizedRaw.repos) ??
+      asString(normalizedRaw.recuperation),
+    rirRaw: asString(normalizedRaw.rir),
+    coachNotes:
+      asString(normalizedRaw.coachnotes) ??
+      asString(normalizedRaw.coach_notes) ??
+      asString(normalizedRaw.notes),
+    payload,
+  };
+}
+
+function extractTemplateExercisesFromPayload(payloadInput: Record<string, unknown> | null | undefined): PlannedSessionTemplateExercise[] {
+  if (!payloadInput) return [];
+
+  const fromArrayKey = (key: "items" | "exercises"): PlannedSessionTemplateExercise[] => {
+    const rawList = payloadInput[key];
+    if (!Array.isArray(rawList)) return [];
+    const out: PlannedSessionTemplateExercise[] = [];
+    for (let idx = 0; idx < rawList.length; idx += 1) {
+      const rec = asRecord(rawList[idx]);
+      if (!rec) continue;
+      const mapped = normalizePayloadExercise(rec, out.length);
+      if (mapped) out.push(mapped);
+    }
+    return out.map((row, i) => ({ ...row, position: i + 1 }));
+  };
+
+  const fromItems = fromArrayKey("items");
+  if (fromItems.length > 0) return fromItems;
+  const fromExercises = fromArrayKey("exercises");
+  if (fromExercises.length > 0) return fromExercises;
+
+  const single = normalizePayloadExercise(payloadInput, 0);
+  if (single) return [single];
+
+  const indexed = new Map<number, Record<string, unknown>>();
+  for (const [key, value] of Object.entries(payloadInput)) {
+    const m = normalizeLookupKey(key).match(/^(.+)_([0-9]+)$/);
+    if (!m) continue;
+    const field = m[1]?.toLowerCase();
+    const idx = Number(m[2]);
+    if (!Number.isFinite(idx) || idx < 1) continue;
+    if (!field) continue;
+    const current = indexed.get(idx) ?? {};
+    current[field] = value;
+    indexed.set(idx, current);
+  }
+  if (indexed.size > 0) {
+    const ordered = Array.from(indexed.entries())
+      .sort((a, b) => a[0] - b[0])
+      .map(([, rec], idx) => normalizePayloadExercise(rec, idx))
+      .filter((x): x is PlannedSessionTemplateExercise => x !== null);
+    if (ordered.length > 0) return ordered.map((row, i) => ({ ...row, position: i + 1 }));
+  }
+
+  return [];
+}
+
 export async function getPlannedSessionById(id: string): Promise<PlannedSessionDetail | null> {
   if (!supabase) throw new Error("Supabase is not configured.");
   const { data, error } = await supabase
@@ -125,6 +275,19 @@ export async function getPlannedSessionById(id: string): Promise<PlannedSessionD
       coachNotes: row.coach_notes !== null && row.coach_notes !== undefined ? String(row.coach_notes) : null,
       payload: row.payload && typeof row.payload === "object" ? (row.payload as Record<string, unknown>) : {},
     }));
+  }
+
+  if (templateExercises.length === 0) {
+    const templatePayloadExercises = extractTemplateExercisesFromPayload(
+      tpl?.template && typeof tpl.template === "object" ? (tpl.template as Record<string, unknown>) : null,
+    );
+    if (templatePayloadExercises.length > 0) {
+      templateExercises = templatePayloadExercises;
+    } else {
+      templateExercises = extractTemplateExercisesFromPayload(
+        data.payload && typeof data.payload === "object" ? (data.payload as Record<string, unknown>) : null,
+      );
+    }
   }
 
   return {
