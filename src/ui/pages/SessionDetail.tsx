@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getExecutedSessionById, type ExecutedSessionDetail } from "../../application/usecases/getExecutedSessionById";
 import { supabase } from "../../infra/supabase/client";
@@ -8,16 +8,23 @@ import { Pill } from "../kit/Pill";
 import { RecommendationExplanationCard } from "../components/RecommendationExplanationCard";
 
 async function loadExplanationForSession(session: ExecutedSessionDetail): Promise<ExplanationV1_1 | null> {
-  if (!supabase || !session.plannedSessionId) return null;
-  const { data, error } = await supabase
-    .from("recommendations")
-    .select("id")
-    .eq("plan_id", session.planId)
-    .contains("input", { planned_session_id: session.plannedSessionId })
-    .order("created_at", { ascending: false })
-    .limit(1);
-  if (error || !data || data.length === 0 || !data[0]) return null;
-  const recoId = String(data[0].id);
+  if (!supabase) return null;
+  let recoId: string | null = session.recommendationId;
+
+  // Fallback for historical rows where recommendation_id was not yet written on executed_sessions.
+  if (!recoId && session.plannedSessionId && session.planId) {
+    const { data, error } = await supabase
+      .from("recommendations")
+      .select("id")
+      .eq("plan_id", session.planId)
+      .contains("input", { planned_session_id: session.plannedSessionId })
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (error || !data || data.length === 0 || !data[0]) return null;
+    recoId = String(data[0].id);
+  }
+  if (!recoId) return null;
+
   const { data: expRows, error: expErr } = await supabase
     .from("recommendation_explanations")
     .select("content")
@@ -27,6 +34,20 @@ async function loadExplanationForSession(session: ExecutedSessionDetail): Promis
     .maybeSingle();
   if (expErr || !expRows) return null;
   return expRows.content as ExplanationV1_1;
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function round2(v: number): number {
+  return Math.round(v * 100) / 100;
 }
 
 export default function SessionDetailPage() {
@@ -42,7 +63,7 @@ export default function SessionDetailPage() {
     let ignore = false;
     async function run() {
       if (!sessionId) {
-        setMessage("Missing session id.");
+        setMessage("Identifiant de séance manquant.");
         setLoading(false);
         return;
       }
@@ -53,25 +74,48 @@ export default function SessionDetailPage() {
         if (ignore) return;
         if (!data) {
           setRow(null);
-          setMessage("Session not found (or you don't have access).");
+          setMessage("Séance introuvable.");
           return;
         }
         setRow(data);
         const exp = await loadExplanationForSession(data);
         if (!ignore) setExplanation(exp);
       } catch (err) {
-        if (!ignore) setMessage(err instanceof Error ? err.message : "Could not load session.");
+        if (!ignore) setMessage(err instanceof Error ? err.message : "Impossible de charger la séance.");
       } finally {
         if (!ignore) setLoading(false);
       }
     }
     void run();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [sessionId]);
+
+  const fallbackMetrics = useMemo(() => {
+    if (!row) return null;
+    const payload = row.payload;
+    const totalSets = typeof payload.totalSets === "number" ? payload.totalSets : null;
+    const totalReps = typeof payload.totalReps === "number" ? payload.totalReps : null;
+    const tonnageKg = typeof payload.tonnageKg === "number" ? payload.tonnageKg : null;
+    const avgRpe = typeof payload.rpe === "number" ? payload.rpe : null;
+    const durationMinutes = typeof payload.durationMinutes === "number" ? payload.durationMinutes : null;
+    return { totalSets, totalReps, tonnageKg, avgRpe, durationMinutes };
+  }, [row]);
+
+  const durationMinutes = useMemo(() => {
+    if (!row) return null;
+    const fallback = fallbackMetrics?.durationMinutes;
+    if (typeof fallback === "number") return fallback;
+    if (!row.endedAt) return null;
+    const ms = new Date(row.endedAt).getTime() - new Date(row.startedAt).getTime();
+    if (!Number.isFinite(ms) || ms < 0) return null;
+    return Math.round(ms / 60000);
+  }, [row, fallbackMetrics?.durationMinutes]);
 
   return (
     <AppShell
-      title="Session"
+      title="Séance réalisée"
       rightSlot={
         <button
           onClick={() => navigate(-1)}
@@ -93,7 +137,6 @@ export default function SessionDetailPage() {
         </button>
       }
     >
-      {/* Background ambient glow */}
       <div className="fixed inset-0 pointer-events-none -z-10 overflow-hidden">
         <div className="absolute top-[10%] right-[10%] w-[35vw] h-[35vw] bg-secondary/5 blur-[100px] rounded-full" />
       </div>
@@ -101,6 +144,7 @@ export default function SessionDetailPage() {
       {loading && (
         <div className="grid gap-4">
           <div className="rounded-[1.5rem] bg-surface-container-low h-32 animate-pulse" />
+          <div className="rounded-[1.5rem] bg-surface-container-low h-48 animate-pulse" />
           <div className="rounded-[1.5rem] bg-surface-container-low h-48 animate-pulse" />
         </div>
       )}
@@ -112,64 +156,120 @@ export default function SessionDetailPage() {
       )}
 
       {!loading && row && (
-        <div className="grid gap-4">
-          {/* Session header */}
+        <div className="grid gap-4 pb-8">
           <div className="rounded-[1.5rem] bg-surface-container-low p-6">
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <h1 className="font-headline font-bold text-2xl tracking-tighter">Séance réalisée</h1>
+            <div className="flex items-start justify-between gap-3 mb-3">
+              <div>
+                <h1 className="font-headline font-black text-3xl tracking-tighter leading-none mb-2">Exécution complète</h1>
+                <div className="text-sm text-on-surface-variant capitalize">{formatDateTime(row.startedAt)}</div>
+              </div>
               <Pill tone="primary">
                 {row.startedAt.slice(11, 16)} → {row.endedAt ? row.endedAt.slice(11, 16) : "—"}
               </Pill>
             </div>
-            <div className="text-[10px] text-on-surface-variant uppercase tracking-widest font-mono">
+            <div className="text-[10px] uppercase tracking-widest text-on-surface-variant font-mono break-all">
               {row.id}
             </div>
+          </div>
 
-            {/* Payload summary */}
-            {Object.keys(row.payload).length > 0 && (
-              <div className="mt-4 grid gap-2">
-                {typeof row.payload.rpe === "number" && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">RPE</span>
-                    <span
-                      className="font-headline font-bold text-lg tabular-nums"
-                      style={{
-                        color: (row.payload.rpe as number) >= 8 ? "#ff7351"
-                          : (row.payload.rpe as number) >= 6 ? "#c57eff"
-                          : "#cafd00",
-                      }}
-                    >
-                      {row.payload.rpe as number}/10
-                    </span>
-                  </div>
-                )}
-                {typeof row.payload.mood === "string" && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Ressenti</span>
-                    <span className="text-sm font-bold text-on-surface capitalize">{row.payload.mood as string}</span>
-                  </div>
-                )}
-                {typeof row.payload.painScore === "number" && (row.payload.painScore as number) > 0 && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] text-on-surface-variant uppercase tracking-widest">Douleur</span>
-                    <span className="text-sm font-bold text-error">
-                      {row.payload.painScore as number}/10
-                      {typeof row.payload.painLocation === "string" && row.payload.painLocation && (
-                        <span className="font-normal text-on-surface-variant"> — {row.payload.painLocation as string}</span>
-                      )}
-                    </span>
-                  </div>
-                )}
-                {typeof row.payload.notes === "string" && row.payload.notes && (
-                  <div className="pt-2 text-sm text-on-surface-variant leading-relaxed">
-                    {row.payload.notes as string}
-                  </div>
-                )}
+          <div className="rounded-[1.5rem] bg-surface-container-low p-6 grid gap-4">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Métriques consolidées</div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+              <div className="rounded-[1rem] bg-surface-container-highest p-3">
+                <div className="text-[10px] uppercase tracking-widest text-on-surface-variant">Sets</div>
+                <div className="font-headline font-black text-2xl">
+                  {row.metrics?.totalSets ?? fallbackMetrics?.totalSets ?? "—"}
+                </div>
               </div>
+              <div className="rounded-[1rem] bg-surface-container-highest p-3">
+                <div className="text-[10px] uppercase tracking-widest text-on-surface-variant">Reps</div>
+                <div className="font-headline font-black text-2xl">
+                  {row.metrics?.totalReps ?? fallbackMetrics?.totalReps ?? "—"}
+                </div>
+              </div>
+              <div className="rounded-[1rem] bg-surface-container-highest p-3">
+                <div className="text-[10px] uppercase tracking-widest text-on-surface-variant">Tonnage</div>
+                <div className="font-headline font-black text-2xl">
+                  {round2(row.metrics?.tonnageKg ?? fallbackMetrics?.tonnageKg ?? 0)}
+                </div>
+                <div className="text-[10px] text-on-surface-variant">kg</div>
+              </div>
+              <div className="rounded-[1rem] bg-surface-container-highest p-3">
+                <div className="text-[10px] uppercase tracking-widest text-on-surface-variant">RPE moyen</div>
+                <div className="font-headline font-black text-2xl">
+                  {row.metrics?.avgRpe ?? fallbackMetrics?.avgRpe ?? "—"}
+                </div>
+              </div>
+              <div className="rounded-[1rem] bg-surface-container-highest p-3">
+                <div className="text-[10px] uppercase tracking-widest text-on-surface-variant">Durée</div>
+                <div className="font-headline font-black text-2xl">{durationMinutes ?? "—"}</div>
+                <div className="text-[10px] text-on-surface-variant">min</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Détail des exercices</span>
+              <Pill tone="secondary">{row.exercises.length} EXERCICE{row.exercises.length > 1 ? "S" : ""}</Pill>
+            </div>
+
+            {row.exercises.length === 0 ? (
+              <div className="rounded-[1rem] bg-surface-container-highest p-4 text-sm text-on-surface-variant">
+                Aucun détail d'exercice n'a été enregistré pour cette séance.
+              </div>
+            ) : (
+              row.exercises.map((exercise) => (
+                <div key={exercise.id} className="rounded-[1.5rem] bg-surface-container-low p-5 grid gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">
+                        Exercice {exercise.position}
+                      </div>
+                      <h3 className="font-headline font-black text-xl tracking-tight leading-none">{exercise.exerciseName}</h3>
+                    </div>
+                    <Pill tone="neutral">{exercise.sets.length} SET{exercise.sets.length > 1 ? "S" : ""}</Pill>
+                  </div>
+
+                  <div className="grid gap-2">
+                    {exercise.sets.map((set) => (
+                      <div key={set.id} className="rounded-[0.9rem] bg-surface-container-highest px-3 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                            Set {set.setIndex}
+                          </span>
+                          <span className="text-sm text-on-surface">{set.reps ?? "—"} reps</span>
+                          <span className="text-sm text-on-surface">{set.loadKg ?? "—"} kg</span>
+                          <span className="text-sm text-on-surface">RPE {set.rpe ?? "—"}</span>
+                          <span className="text-sm text-on-surface">RIR {set.rir ?? "—"}</span>
+                          <span className="text-sm text-on-surface">Repos {set.restSeconds ?? "—"} s</span>
+                          <span
+                            className="text-[10px] font-bold uppercase tracking-widest"
+                            style={{ color: set.completed ? "#cafd00" : "#ff7351" }}
+                          >
+                            {set.completed ? "VALIDÉ" : "NON FAIT"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {exercise.notes && (
+                    <div className="rounded-[0.9rem] bg-surface-container-highest px-3 py-3 text-sm text-on-surface-variant">
+                      {exercise.notes}
+                    </div>
+                  )}
+                </div>
+              ))
             )}
           </div>
 
-          {/* Recommendation explanation */}
+          {typeof row.payload.notes === "string" && row.payload.notes && (
+            <div className="rounded-[1rem] bg-surface-container-highest p-4 text-sm text-on-surface-variant leading-relaxed">
+              {row.payload.notes}
+            </div>
+          )}
+
           <div className="grid gap-2">
             <div className="flex items-center justify-between px-1">
               <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
@@ -180,7 +280,6 @@ export default function SessionDetailPage() {
             <RecommendationExplanationCard explanation={explanation} />
           </div>
 
-          {/* Navigation */}
           <div className="flex gap-3">
             <Link to="/history">
               <button className="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest text-on-surface-variant bg-surface-container-highest active:scale-95 transition-all">

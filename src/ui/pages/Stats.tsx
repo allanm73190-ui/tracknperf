@@ -7,6 +7,9 @@ import { useIsAdmin } from "../../auth/useIsAdmin";
 type Stats = {
   executedCount: number;
   totalDurationMinutes: number;
+  totalSets: number;
+  totalTonnageKg: number;
+  avgSessionRpe: number | null;
 };
 
 const RANGE_OPTIONS = [7, 14, 30, 90] as const;
@@ -19,7 +22,13 @@ export default function StatsPage() {
   const [days, setDays] = useState<(typeof RANGE_OPTIONS)[number]>(14);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<Stats>({ executedCount: 0, totalDurationMinutes: 0 });
+  const [stats, setStats] = useState<Stats>({
+    executedCount: 0,
+    totalDurationMinutes: 0,
+    totalSets: 0,
+    totalTonnageKg: 0,
+    avgSessionRpe: null,
+  });
 
   const sinceIso = useMemo(() => {
     const d = new Date();
@@ -87,7 +96,9 @@ export default function StatsPage() {
             </span>
           </div>
           <p style={{ color: "#adaaaa", fontSize: 13, marginTop: 8, maxWidth: 320 }}>
-            {loading ? "Chargement\u2026" : `${stats.totalDurationMinutes} minutes enregistr\u00e9es sur les ${days} derniers jours.`}
+            {loading
+              ? "Chargement\u2026"
+              : `${stats.totalDurationMinutes} minutes, ${Math.round(stats.totalTonnageKg)} kg et ${stats.totalSets} sets sur les ${days} derniers jours.`}
           </p>
         </section>
 
@@ -207,6 +218,33 @@ export default function StatsPage() {
               <div style={{ width: "100%", height: 3, background: "rgba(255,255,255,0.06)", borderRadius: 999, marginTop: 12, overflow: "hidden" }}>
                 <div style={{ width: `${Math.min(100, (hours / 20) * 100)}%`, height: "100%", background: "#c57eff", borderRadius: 999 }} />
               </div>
+            </div>
+          </div>
+
+          {/* Recovery chart */}
+          <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#cafd00" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16"/><path d="M6 16l3-8 3 4 2-3 4 7"/></svg>
+            <div>
+              <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Volume total</p>
+              <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
+                {loading ? "\u2014" : Math.round(stats.totalTonnageKg)}
+              </p>
+              <p style={{ color: "#cafd00", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 8 }}>
+                KG DÉPLACÉS
+              </p>
+            </div>
+          </div>
+
+          <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffeea5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M5 12h14"/></svg>
+            <div>
+              <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Sets complétés</p>
+              <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
+                {loading ? "\u2014" : stats.totalSets}
+              </p>
+              <p style={{ color: "#ffeea5", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 8 }}>
+                RPE MOYEN {loading ? "\u2014" : stats.avgSessionRpe ?? "\u2014"}
+              </p>
             </div>
           </div>
 

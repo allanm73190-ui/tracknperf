@@ -61,16 +61,15 @@ export async function listPendingOps(limit = 25): Promise<SyncOp[]> {
   const db = await getDb();
   const now = Date.now();
   const tx = db.transaction("sync_ops", "readonly");
-  const idx = tx.store.index("by_next_attempt_at");
-  const ops: SyncOp[] = [];
-  let cursor = await idx.openCursor();
-  while (cursor && ops.length < limit) {
-    const row = cursor.value;
-    if (row.status === "pending" && row.nextAttemptAt <= now) ops.push(row);
-    cursor = await cursor.continue();
-  }
+  const all = await tx.store.getAll();
   await tx.done;
-  return ops;
+  return all
+    .filter((row) => row.status === "pending" && row.nextAttemptAt <= now)
+    .sort((a, b) => {
+      if (a.nextAttemptAt !== b.nextAttemptAt) return a.nextAttemptAt - b.nextAttemptAt;
+      return a.createdAt - b.createdAt;
+    })
+    .slice(0, Math.max(1, Math.min(500, limit)));
 }
 
 export async function markOpApplied(opId: string): Promise<void> {
@@ -120,4 +119,3 @@ export async function listRecentOps(limit = 50): Promise<SyncOp[]> {
     .sort((a, b) => b.updatedAt - a.updatedAt)
     .slice(0, Math.max(1, Math.min(200, limit)));
 }
-

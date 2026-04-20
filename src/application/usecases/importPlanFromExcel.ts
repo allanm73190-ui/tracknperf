@@ -17,6 +17,8 @@ type ProgrammeRow = {
 
 function normalizeHeaderKey(key: string): string {
   return key
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "_")
@@ -223,27 +225,10 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
   const workbook = XLSX.read(toArrayBuffer(buf), { type: "array", cellDates: true });
   if (!workbook.SheetNames.length) throw new Error("Excel file has no sheets.");
 
-  // Detect if the first non-empty sheet contains a date column → Format A takes priority.
-  const DATE_COLUMN_KEYS = ["scheduled_for", "scheduledfor", "date", "day", "jour", "scheduled"];
-  let firstSheetHasDateColumn = false;
-  for (const name of workbook.SheetNames) {
-    const sheet = workbook.Sheets[name];
-    if (!sheet) continue;
-    const probe = XLSX.utils.sheet_to_json<Row>(sheet, { defval: null, raw: true });
-    if (probe.length === 0) continue;
-    const firstRow = probe[0];
-    if (!firstRow) continue;
-    const normalizedKeys = Object.keys(firstRow).map((k) => normalizeHeaderKey(k));
-    firstSheetHasDateColumn = normalizedKeys.some((k) => DATE_COLUMN_KEYS.includes(k));
-    break;
-  }
-
-  // Only check for legacy format when the first sheet does not have a date column.
-  const legacyDetected = !firstSheetHasDateColumn && detectLegacyProgrammeTemplate(workbook);
-  if (legacyDetected) {
-    const legacy = parseProgrammeTemplateWorkbook(workbook);
-    if (legacy) return legacy;
-  }
+  // Legacy template is the primary import format. Fallback to dated planning format if no legacy sheets are recognized.
+  const legacy = parseProgrammeTemplateWorkbook(workbook);
+  if (legacy) return legacy;
+  const legacyDetected = detectLegacyProgrammeTemplate(workbook);
 
   // Template-compat strategy: read first non-empty sheet as a table
   // and try to find columns for date + template/session.
@@ -271,7 +256,6 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
   const plannedSessions: PlanImport["plannedSessions"] = [];
   const templateNames = new Set<string>();
   let totalRows = 0;
-  let skippedRows = 0;
   const invalidDates: string[] = [];
 
   for (const row of normalizedRows) {
@@ -292,7 +276,6 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
           invalidDates.push(raw);
         }
       }
-      skippedRows++;
       continue;
     }
 
@@ -342,9 +325,6 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
   }
 
   if (plannedSessions.length === 0) {
-    const legacy = parseProgrammeTemplateWorkbook(workbook);
-    if (legacy) return legacy;
-
     if (legacyDetected) {
       throw new Error(
         `Legacy programme template detected (sheets: ${workbook.SheetNames.join(

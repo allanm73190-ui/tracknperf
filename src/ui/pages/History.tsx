@@ -18,12 +18,31 @@ type ExecutedRow = {
   startedAt: string;
   plannedSessionId: string | null;
   rpe: number | null;
+  totalSets: number | null;
+  tonnageKg: number | null;
 };
 
 type MergedEntry =
-  | { kind: "executed"; id: string; date: string; templateName: string | null; rpe: number | null }
+  | {
+      kind: "executed";
+      id: string;
+      date: string;
+      templateName: string | null;
+      rpe: number | null;
+      totalSets: number | null;
+      tonnageKg: number | null;
+    }
   | { kind: "missed"; id: string; date: string; templateName: string | null }
   | { kind: "planned"; id: string; date: string; templateName: string | null };
+
+function toNullableNumber(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return v;
+  if (typeof v === "string") {
+    const n = Number(v.trim());
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
 
 // ── Data loading ─────────────────────────────────────────────────────────────
 
@@ -38,7 +57,7 @@ async function loadHistory(sinceIso: string): Promise<{ planned: PlannedRow[]; e
       .order("scheduled_for", { ascending: false }),
     supabase
       .from("executed_sessions")
-      .select("id, started_at, planned_session_id, payload")
+      .select("id, started_at, planned_session_id, payload, executed_session_metrics(total_sets, tonnage_kg, avg_rpe)")
       .gte("started_at", sinceIso)
       .order("started_at", { ascending: false }),
   ]);
@@ -57,12 +76,23 @@ async function loadHistory(sinceIso: string): Promise<{ planned: PlannedRow[]; e
 
   const executed: ExecutedRow[] = (exRes.data ?? []).map((r) => {
     const payload = r.payload && typeof r.payload === "object" ? (r.payload as Record<string, unknown>) : {};
-    const rpe = typeof payload.rpe === "number" ? payload.rpe : null;
+    const rawMetrics = r.executed_session_metrics;
+    const metrics =
+      rawMetrics && typeof rawMetrics === "object" && Array.isArray(rawMetrics)
+        ? ((rawMetrics[0] ?? null) as Record<string, unknown> | null)
+        : rawMetrics && typeof rawMetrics === "object"
+          ? (rawMetrics as Record<string, unknown>)
+          : null;
+    const rpe = toNullableNumber(metrics?.avg_rpe) ?? toNullableNumber(payload.rpe);
+    const totalSets = toNullableNumber(metrics?.total_sets) ?? toNullableNumber(payload.totalSets);
+    const tonnageKg = toNullableNumber(metrics?.tonnage_kg) ?? toNullableNumber(payload.tonnageKg);
     return {
       id: String(r.id),
       startedAt: String(r.started_at),
       plannedSessionId: r.planned_session_id ? String(r.planned_session_id) : null,
       rpe,
+      totalSets,
+      tonnageKg,
     };
   });
 
@@ -92,7 +122,15 @@ function mergeEntries(
   for (const ps of planned) {
     const ex = executedByPlannedId.get(ps.id);
     if (ex) {
-      entries.push({ kind: "executed", id: ex.id, date: ps.scheduledFor, templateName: ps.templateName, rpe: ex.rpe });
+      entries.push({
+        kind: "executed",
+        id: ex.id,
+        date: ps.scheduledFor,
+        templateName: ps.templateName,
+        rpe: ex.rpe,
+        totalSets: ex.totalSets,
+        tonnageKg: ex.tonnageKg,
+      });
     } else if (ps.scheduledFor < todayIso) {
       entries.push({ kind: "missed", id: ps.id, date: ps.scheduledFor, templateName: ps.templateName });
     } else {
@@ -101,7 +139,15 @@ function mergeEntries(
   }
 
   for (const ex of orphanExecuted) {
-    entries.push({ kind: "executed", id: ex.id, date: ex.startedAt.slice(0, 10), templateName: null, rpe: ex.rpe });
+    entries.push({
+      kind: "executed",
+      id: ex.id,
+      date: ex.startedAt.slice(0, 10),
+      templateName: null,
+      rpe: ex.rpe,
+      totalSets: ex.totalSets,
+      tonnageKg: ex.tonnageKg,
+    });
   }
 
   entries.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0));
@@ -233,6 +279,32 @@ function SessionCard({ entry }: { entry: MergedEntry }) {
             letterSpacing: "0.04em",
           }}>
             RPE {entry.rpe}
+          </span>
+        )}
+        {entry.kind === "executed" && entry.totalSets !== null && (
+          <span style={{
+            fontSize: 11,
+            fontWeight: 900,
+            padding: "4px 10px",
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.05)",
+            color: "#cafd00",
+            letterSpacing: "0.04em",
+          }}>
+            {entry.totalSets} SETS
+          </span>
+        )}
+        {entry.kind === "executed" && entry.tonnageKg !== null && (
+          <span style={{
+            fontSize: 11,
+            fontWeight: 900,
+            padding: "4px 10px",
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.05)",
+            color: "#c57eff",
+            letterSpacing: "0.04em",
+          }}>
+            {Math.round(entry.tonnageKg)} KG
           </span>
         )}
         <StatusPill kind={entry.kind} />

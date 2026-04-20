@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { useIsAdmin } from "../../auth/useIsAdmin";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "../kit/AppShell";
 import { Button } from "../kit/Button";
 import { Drawer } from "../kit/Drawer";
 import { Pill } from "../kit/Pill";
 import { SessionStateCard } from "../components/SessionStateCard";
-import { FeedbackForm } from "../components/FeedbackForm";
 import { getTodayOverview, type TodayOverview } from "../../application/usecases/getTodayOverview";
 import {
   computeAndPersistTodayRecommendation,
@@ -37,6 +36,7 @@ function getRecoReasons(reco: PersistedRecommendation): string[] {
 }
 
 export default function TodayPage() {
+  const navigate = useNavigate();
   const { user, signOut, isConfigured } = useAuth();
   const { isAdmin } = useIsAdmin(user?.id ?? null);
   const [overview, setOverview] = useState<TodayOverview | null>(null);
@@ -46,7 +46,6 @@ export default function TodayPage() {
   const [syncStatus, setSyncStatus] = useState<{ pending: number; applied: number } | null>(null);
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
-  const [logDrawerOpen, setLogDrawerOpen] = useState(false);
   const [recentOps, setRecentOps] = useState<SyncOp[]>([]);
 
   const plannedCandidate = useMemo(() => overview?.planned?.[0] ?? null, [overview?.planned]);
@@ -101,10 +100,12 @@ export default function TodayPage() {
     }
   }
 
-  function onFeedbackSuccess(sessionId: string) {
-    setLogDrawerOpen(false);
-    setMessage(`Séance enregistrée. (${sessionId})`);
-    void refreshData();
+  function openDetailedLogging() {
+    if (!plannedCandidate?.id) {
+      setMessage("Aucune séance planifiée à ouvrir aujourd'hui.");
+      return;
+    }
+    void navigate(`/planned-session/${plannedCandidate.id}`);
   }
 
   return (
@@ -169,7 +170,7 @@ export default function TodayPage() {
               subtitle={getRecoHeadline(recommendation)}
               reasons={getRecoReasons(recommendation)}
               recommendationId={recommendation.recommendationId}
-              onStart={() => setLogDrawerOpen(true)}
+              onStart={openDetailedLogging}
             />
           ) : (
             <div className="rounded-[1.5rem] bg-surface-container-low p-8">
@@ -236,25 +237,15 @@ export default function TodayPage() {
           {/* Quick log FAB */}
           <div className="flex justify-end">
             <button
-              onClick={() => setLogDrawerOpen(true)}
+              onClick={openDetailedLogging}
               className="inline-flex items-center gap-2 px-5 py-3 rounded-full font-bold text-sm uppercase tracking-widest text-[#3a4a00] active:scale-95 transition-all"
               style={{ background: "linear-gradient(45deg, #beee00 0%, #f3ffca 100%)" }}
             >
-              + Journal
+              Ouvrir la séance détaillée
             </button>
           </div>
         </div>
       ) : null}
-
-      {/* Feedback / log session drawer */}
-      <Drawer open={logDrawerOpen} title="Journal de séance" onClose={() => setLogDrawerOpen(false)}>
-        <FeedbackForm
-          plannedSessionId={plannedCandidate?.id ?? null}
-          planId={plannedCandidate?.planId ?? null}
-          onSuccess={onFeedbackSuccess}
-          onCancel={() => setLogDrawerOpen(false)}
-        />
-      </Drawer>
 
       {/* Sync drawer */}
       <Drawer open={syncDrawerOpen} title="" onClose={() => setSyncDrawerOpen(false)}>

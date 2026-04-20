@@ -5,6 +5,10 @@ const DECISION_LABEL: Record<string, string> = {
   progress: "Progression recommandée",
   maintain: "Maintien recommandé",
   reduce: "Réduction recommandée",
+  replace: "Remplacement recommandé",
+  move: "Déplacement recommandé",
+  delete: "Suppression recommandée",
+  deload: "Deload recommandé",
   rest: "Repos recommandé",
 };
 

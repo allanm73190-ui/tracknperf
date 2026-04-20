@@ -214,4 +214,114 @@ describe("computeRecommendationV1_1", () => {
     expect(((res.fatigue as unknown) as { dataQualityScore?: number })?.dataQualityScore ?? 0).toBeLessThan(0.3);
     expect(res.readiness.limitingFactor).toBe("data");
   });
+
+  it("applies safety gate: pain red flag forces rest", () => {
+    const res = computeRecommendationV1_1({
+      todayIso: "2026-04-13",
+      plannedSession: {
+        id: "ps_safety",
+        scheduledFor: "2026-04-13",
+        planId: "p1",
+        planVersionId: "pv1",
+        sessionTemplateId: "tpl_safety",
+        templateName: "Jambes lourdes",
+        payload: { sessionType: "strength", primaryGoal: "strength" },
+      },
+      recentExecutedSessionsCount: 4,
+      last7dExecutedCount: 4,
+      algorithmVersion: "v1.1.0",
+      dailySignals: {
+        painScore: 7,
+        painRedFlag: true,
+        fatigueSelfScore: 6,
+        readinessSelfScore: 5,
+      },
+    });
+
+    expect(res.recommendation.decision).toBe("rest");
+    expect(res.recommendation.patch.action).toBe("rest");
+    expect(res.recommendation.risk_level).toBe("red");
+    expect(res.recommendation.reasonCodes).toContain("PAIN_RED_FLAG");
+  });
+
+  it("applies interference gate: forbidden same-day stack moves non-key session", () => {
+    const res = computeRecommendationV1_1({
+      todayIso: "2026-04-13",
+      plannedSession: {
+        id: "ps_interference",
+        scheduledFor: "2026-04-13",
+        planId: "p1",
+        planVersionId: "pv1",
+        sessionTemplateId: "tpl_interference",
+        templateName: "Force bas du corps",
+        payload: { sessionType: "strength", primaryGoal: "strength" },
+      },
+      recentExecutedSessionsCount: 4,
+      last7dExecutedCount: 4,
+      algorithmVersion: "v1.1.0",
+      dailySignals: {
+        painScore: 1,
+        fatigueSelfScore: 4,
+        readinessSelfScore: 7,
+        availableTimeTodayMin: 60,
+      },
+      interferenceSignals: {
+        sameDayForbiddenComboDetected: true,
+        lastIntenseRunHoursAgo: 8,
+        lowerBodyHighStressCount7d: 3,
+      },
+      criticalData: {
+        hasBlockGoal: true,
+        hasSessionType: true,
+        hasPainState: true,
+        hasRecentLoad: true,
+        hasCalendarAvailability: true,
+      },
+    });
+
+    expect(res.recommendation.decision).toBe("move");
+    expect(res.recommendation.patch.action).toBe("move");
+    expect(res.recommendation.human_validation_required).toBe(true);
+    expect(res.recommendation.reasonCodes).toContain("LOWER_BODY_CONFLICT");
+  });
+
+  it("respects lock gate: locked session blocks structural changes", () => {
+    const res = computeRecommendationV1_1({
+      todayIso: "2026-04-13",
+      plannedSession: {
+        id: "ps_locked",
+        scheduledFor: "2026-04-13",
+        planId: "p1",
+        planVersionId: "pv1",
+        sessionTemplateId: "tpl_locked",
+        templateName: "Force",
+        lockStatus: "locked",
+        payload: { sessionType: "strength", primaryGoal: "strength" },
+      },
+      recentExecutedSessionsCount: 5,
+      last7dExecutedCount: 5,
+      algorithmVersion: "v1.1.0",
+      dailySignals: {
+        painScore: 2,
+        fatigueSelfScore: 4,
+        readinessSelfScore: 6,
+      },
+      interferenceSignals: {
+        sameDayForbiddenComboDetected: true,
+        lastIntenseRunHoursAgo: 6,
+      },
+      criticalData: {
+        hasBlockGoal: true,
+        hasSessionType: true,
+        hasPainState: true,
+        hasRecentLoad: true,
+        hasCalendarAvailability: true,
+      },
+    });
+
+    expect(res.recommendation.decision).toBe("keep");
+    expect(res.recommendation.patch.action).toBe("execute_planned");
+    expect(res.recommendation.forbidden_action_blocked).toContain("LOCKED_SESSION_CHANGE_BLOCKED");
+    expect(res.recommendation.reasonCodes).toContain("LOCKED_SESSION");
+  });
 });
