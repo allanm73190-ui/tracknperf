@@ -223,8 +223,21 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
   const workbook = XLSX.read(toArrayBuffer(buf), { type: "array", cellDates: true });
   if (!workbook.SheetNames.length) throw new Error("Excel file has no sheets.");
 
-  // First: detect the legacy programme_template.xlsx format (no dates, sheet-per-template).
-  const legacyDetected = detectLegacyProgrammeTemplate(workbook);
+  // Detect if the first non-empty sheet contains a date column → Format A takes priority.
+  const DATE_COLUMN_KEYS = ["scheduled_for", "scheduledfor", "date", "day", "jour", "scheduled"];
+  let firstSheetHasDateColumn = false;
+  for (const name of workbook.SheetNames) {
+    const sheet = workbook.Sheets[name];
+    if (!sheet) continue;
+    const probe = XLSX.utils.sheet_to_json<Row>(sheet, { defval: null, raw: true });
+    if (probe.length === 0) continue;
+    const normalizedKeys = Object.keys(probe[0]).map((k) => normalizeHeaderKey(k));
+    firstSheetHasDateColumn = normalizedKeys.some((k) => DATE_COLUMN_KEYS.includes(k));
+    break;
+  }
+
+  // Only check for legacy format when the first sheet does not have a date column.
+  const legacyDetected = !firstSheetHasDateColumn && detectLegacyProgrammeTemplate(workbook);
   if (legacyDetected) {
     const legacy = parseProgrammeTemplateWorkbook(workbook);
     if (legacy) return legacy;
@@ -255,8 +268,12 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
 
   const plannedSessions: PlanImport["plannedSessions"] = [];
   const templateNames = new Set<string>();
+  let totalRows = 0;
+  let skippedRows = 0;
+  const invalidDates: string[] = [];
 
   for (const row of normalizedRows) {
+    totalRows++;
     const dateValue = pickFirstNonEmpty(row, [
       "scheduled_for",
       "scheduledfor",
@@ -266,7 +283,16 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
       "scheduled",
     ]);
     const scheduledFor = toIsoDate(dateValue);
-    if (!scheduledFor) continue;
+    if (!scheduledFor) {
+      if (dateValue !== null && dateValue !== undefined) {
+        const raw = String(dateValue);
+        if (raw.trim().length > 0 && invalidDates.length < 5) {
+          invalidDates.push(raw);
+        }
+      }
+      skippedRows++;
+      continue;
+    }
 
     const templateValue = pickFirstNonEmpty(row, [
       "template_name",
@@ -324,8 +350,15 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
         )}), but no templates could be parsed.`,
       );
     }
+    const detectedColumns = normalizedRows[0] ? Object.keys(normalizedRows[0]) : [];
+    const rowsInfo = `${totalRows} row${totalRows !== 1 ? "s" : ""} found, all skipped (no valid date).`;
+    const colsInfo = `Detected columns: [${detectedColumns.join(", ")}]. Expected one of: date, scheduled_for, jour, day, scheduled.`;
+    const invalidInfo =
+      invalidDates.length > 0
+        ? ` Invalid date values found: [${invalidDates.join(", ")}]. Accepted formats: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY.`
+        : "";
     throw new Error(
-      "Excel template not recognized: expected rows with a date column (e.g. 'date' or 'scheduled_for'), or the legacy programme template format.",
+      `Excel template not recognized: no valid date column found. ${rowsInfo} ${colsInfo}${invalidInfo}`,
     );
   }
 

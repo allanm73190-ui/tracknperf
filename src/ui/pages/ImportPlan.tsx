@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from "xlsx";
 import { importPlanFromCsvText } from "../../application/usecases/importPlanFromCsv";
 import { importPlanFromExcelArrayBuffer } from "../../application/usecases/importPlanFromExcel";
 import { importPlanFromJsonText } from "../../application/usecases/importPlanFromJson";
@@ -25,6 +26,19 @@ export default function ImportPlanPage() {
   const [sessions, setSessions] = useState<ParsedSession[]>([]);
   const [busy, setBusy] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+
+  function downloadTemplate() {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ["date", "template_name", "notes"],
+      ["2026-05-12", "Force A", "Semaine 1"],
+      ["2026-05-13", "Cardio Z2", "Zone 2 — 45min"],
+      ["2026-05-15", "Force B", "Semaine 1"],
+    ]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Programme");
+    wb.Props = { Title: "Mon Plan d'Entraînement" };
+    XLSX.writeFile(wb, "template-import-plan.xlsx");
+  }
 
   async function handleFile(file: File) {
     setParseError(null);
@@ -168,6 +182,23 @@ export default function ImportPlanPage() {
               <p style={{ color: "#888", fontSize: 13, margin: 0 }}>
                 ou cliquez pour sélectionner — CSV, Excel (.xlsx), JSON
               </p>
+            </div>
+            <div style={{ textAlign: "center" }}>
+              <button
+                onClick={downloadTemplate}
+                style={{
+                  background: "transparent",
+                  color: "#888",
+                  fontSize: 13,
+                  textDecoration: "underline",
+                  border: "none",
+                  cursor: "pointer",
+                  marginTop: 12,
+                  padding: 8,
+                }}
+              >
+                Télécharger le modèle (.xlsx)
+              </button>
             </div>
             <input
               ref={fileRef}

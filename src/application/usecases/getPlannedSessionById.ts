@@ -22,7 +22,7 @@ export async function getPlannedSessionById(id: string): Promise<PlannedSessionD
       plan_version_id,
       session_template_id,
       payload,
-      session_templates:session_template_id ( name, description )
+      session_templates:session_template_id ( name )
     `)
     .eq("id", id)
     .maybeSingle();
@@ -30,7 +30,7 @@ export async function getPlannedSessionById(id: string): Promise<PlannedSessionD
   if (error) throw new Error(error.message);
   if (!data) return null;
 
-  const tpl = data.session_templates as { name?: unknown; description?: unknown } | null;
+  const tpl = data.session_templates as { name?: unknown } | null;
 
   return {
     id: String(data.id),
@@ -39,7 +39,7 @@ export async function getPlannedSessionById(id: string): Promise<PlannedSessionD
     planVersionId: data.plan_version_id ? String(data.plan_version_id) : null,
     sessionTemplateId: data.session_template_id ? String(data.session_template_id) : null,
     templateName: tpl && typeof tpl.name === "string" && tpl.name.trim() ? tpl.name : null,
-    templateDescription: tpl && typeof tpl.description === "string" && tpl.description.trim() ? tpl.description : null,
+    templateDescription: null,
     payload: data.payload && typeof data.payload === "object" ? (data.payload as Record<string, unknown>) : {},
   };
 }
