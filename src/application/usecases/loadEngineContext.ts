@@ -15,6 +15,7 @@ export type EngineContext = {
   recentFeedback: SessionFeedback[];
   latestInternalMetrics: Record<string, unknown> | null;
   latestExternalMetrics: Record<string, unknown> | null;
+  latestDailyCheckin: Record<string, unknown> | null;
 };
 
 export async function loadEngineContext(args: {
@@ -38,12 +39,13 @@ export async function loadEngineContext(args: {
   }
 
   if (!planVersionId) {
-    const [latestFatigue, latestReadiness, recentFeedback, latestInternalMetrics, latestExternalMetrics] = await Promise.all([
+    const [latestFatigue, latestReadiness, recentFeedback, latestInternalMetrics, latestExternalMetrics, latestDailyCheckin] = await Promise.all([
       getLatestFatigueSnapshot(args.userId).catch(() => null),
       getLatestReadinessSnapshot(args.userId).catch(() => null),
       loadRecentFeedback(args.userId),
       loadLatestMetrics("internal_metrics", args.userId),
       loadLatestMetrics("external_metrics", args.userId),
+      loadLatestDailyCheckin(args.userId),
     ]);
     return {
       planVersionId: null,
@@ -56,6 +58,7 @@ export async function loadEngineContext(args: {
       recentFeedback,
       latestInternalMetrics,
       latestExternalMetrics,
+      latestDailyCheckin,
     };
   }
 
@@ -91,12 +94,13 @@ export async function loadEngineContext(args: {
     if (av?.version) algorithmVersion = String(av.version);
   }
 
-  const [latestFatigue, latestReadiness, recentFeedback, latestInternalMetrics, latestExternalMetrics] = await Promise.all([
+  const [latestFatigue, latestReadiness, recentFeedback, latestInternalMetrics, latestExternalMetrics, latestDailyCheckin] = await Promise.all([
     getLatestFatigueSnapshot(args.userId).catch(() => null),
     getLatestReadinessSnapshot(args.userId).catch(() => null),
     loadRecentFeedback(args.userId),
     loadLatestMetrics("internal_metrics", args.userId),
     loadLatestMetrics("external_metrics", args.userId),
+    loadLatestDailyCheckin(args.userId),
   ]);
 
   return {
@@ -110,6 +114,7 @@ export async function loadEngineContext(args: {
     recentFeedback,
     latestInternalMetrics,
     latestExternalMetrics,
+    latestDailyCheckin,
   };
 }
 
@@ -146,4 +151,38 @@ async function loadLatestMetrics(
   const row = data[0];
   if (!row?.metrics || typeof row.metrics !== "object") return null;
   return row.metrics as Record<string, unknown>;
+}
+
+async function loadLatestDailyCheckin(userId: string): Promise<Record<string, unknown> | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from("daily_checkins")
+    .select(`
+      checkin_date,
+      pain_score,
+      pain_red_flag,
+      fatigue_score,
+      readiness_score,
+      sleep_hours,
+      sleep_quality_score,
+      soreness_score,
+      stress_score,
+      mood_score,
+      available_time_today_min,
+      degraded_mode_days,
+      hrv_below_baseline_days,
+      rhr_delta_bpm,
+      illness_flag,
+      neurological_symptoms_flag,
+      limp_flag,
+      notes,
+      payload
+    `)
+    .eq("user_id", userId)
+    .order("checkin_date", { ascending: false })
+    .limit(1);
+  if (error || !Array.isArray(data) || data.length === 0) return null;
+  const row = data[0];
+  if (!row || typeof row !== "object") return null;
+  return row as Record<string, unknown>;
 }

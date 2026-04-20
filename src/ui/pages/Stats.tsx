@@ -9,12 +9,40 @@ type Stats = {
   totalDurationMinutes: number;
   totalSets: number;
   totalTonnageKg: number;
+  totalRunDistanceKm: number;
+  totalRunLoad: number;
+  totalTrainingLoad: number;
+  sessionModeBreakdown: {
+    strength: number;
+    endurance: number;
+    mixed: number;
+    recovery: number;
+    rest: number;
+    unknown: number;
+  };
   avgSessionRpe: number | null;
 };
 
 const RANGE_OPTIONS = [7, 14, 30, 90] as const;
 const BAR_HEIGHTS = [40, 65, 50, 90, 70, 30, 20];
 const BAR_LABELS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+const MODE_ORDER: Array<keyof Stats["sessionModeBreakdown"]> = [
+  "strength",
+  "endurance",
+  "mixed",
+  "recovery",
+  "rest",
+  "unknown",
+];
+
+function modeLabel(mode: keyof Stats["sessionModeBreakdown"]): string {
+  if (mode === "strength") return "FORCE";
+  if (mode === "endurance") return "ENDURANCE";
+  if (mode === "mixed") return "HYBRIDE";
+  if (mode === "recovery") return "RÉCUP";
+  if (mode === "rest") return "REPOS";
+  return "INCONNU";
+}
 
 export default function StatsPage() {
   const { user } = useAuth();
@@ -27,6 +55,17 @@ export default function StatsPage() {
     totalDurationMinutes: 0,
     totalSets: 0,
     totalTonnageKg: 0,
+    totalRunDistanceKm: 0,
+    totalRunLoad: 0,
+    totalTrainingLoad: 0,
+    sessionModeBreakdown: {
+      strength: 0,
+      endurance: 0,
+      mixed: 0,
+      recovery: 0,
+      rest: 0,
+      unknown: 0,
+    },
     avgSessionRpe: null,
   });
 
@@ -55,6 +94,7 @@ export default function StatsPage() {
   }, [sinceIso]);
 
   const hours = Math.round(stats.totalDurationMinutes / 60);
+  const activeModes = MODE_ORDER.filter((mode) => stats.sessionModeBreakdown[mode] > 0);
 
   return (
     <AppShell
@@ -98,7 +138,7 @@ export default function StatsPage() {
           <p style={{ color: "#adaaaa", fontSize: 13, marginTop: 8, maxWidth: 320 }}>
             {loading
               ? "Chargement\u2026"
-              : `${stats.totalDurationMinutes} minutes, ${Math.round(stats.totalTonnageKg)} kg et ${stats.totalSets} sets sur les ${days} derniers jours.`}
+              : `${stats.totalDurationMinutes} min, ${Math.round(stats.totalTonnageKg)} kg, ${Math.round(stats.totalRunDistanceKm * 10) / 10} km et charge totale ${Math.round(stats.totalTrainingLoad)} sur ${days} jours.`}
           </p>
         </section>
 
@@ -126,6 +166,28 @@ export default function StatsPage() {
             </button>
           ))}
         </div>
+
+        {!loading && activeModes.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {activeModes.map((mode) => (
+              <span
+                key={mode}
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  letterSpacing: "0.08em",
+                  borderRadius: 999,
+                  padding: "5px 10px",
+                  background: "rgba(255,255,255,0.06)",
+                  color: "#adaaaa",
+                  textTransform: "uppercase",
+                }}
+              >
+                {modeLabel(mode)} {stats.sessionModeBreakdown[mode]}
+              </span>
+            ))}
+          </div>
+        )}
 
         {error && (
           <div style={{
@@ -238,12 +300,28 @@ export default function StatsPage() {
           <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffeea5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M5 12h14"/></svg>
             <div>
-              <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Sets complétés</p>
+              <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Charge totale</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 36, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
-                {loading ? "\u2014" : stats.totalSets}
+                {loading ? "\u2014" : Math.round(stats.totalTrainingLoad)}
               </p>
               <p style={{ color: "#ffeea5", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", marginTop: 8 }}>
                 RPE MOYEN {loading ? "\u2014" : stats.avgSessionRpe ?? "\u2014"}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ gridColumn: "1 / -1", background: "#1a1a1a", borderRadius: 16, padding: "20px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+            <div>
+              <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Endurance</p>
+              <p style={{ fontFamily: "var(--font-headline)", fontSize: 30, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
+                {loading ? "\u2014" : Math.round(stats.totalRunDistanceKm * 10) / 10}
+                <span style={{ fontSize: 16, fontWeight: 700, marginLeft: 6 }}>km</span>
+              </p>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <p style={{ color: "#adaaaa", fontSize: 12, margin: 0 }}>Charge course</p>
+              <p style={{ fontFamily: "var(--font-headline)", fontSize: 30, fontWeight: 900, letterSpacing: "-0.04em", margin: "4px 0 0", lineHeight: 1 }}>
+                {loading ? "\u2014" : Math.round(stats.totalRunLoad)}
               </p>
             </div>
           </div>

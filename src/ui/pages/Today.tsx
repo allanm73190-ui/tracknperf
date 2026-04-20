@@ -178,6 +178,23 @@ export default function TodayPage() {
             </div>
           )}
 
+          <div className="rounded-[1.5rem] bg-surface-container-low p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h3 className="font-headline font-bold uppercase tracking-tight text-sm">Daily check-in</h3>
+                <p className="text-xs text-on-surface-variant mt-1">
+                  Mettez à jour douleur, fatigue, sommeil et signaux de sécurité.
+                </p>
+              </div>
+              <Link
+                to="/daily-checkin"
+                className="text-[11px] font-bold uppercase tracking-widest text-secondary"
+              >
+                Ouvrir →
+              </Link>
+            </div>
+          </div>
+
           {/* Planned sessions */}
           {overview.planned.length > 0 && (
             <div className="rounded-[1.5rem] bg-surface-container-low p-6">

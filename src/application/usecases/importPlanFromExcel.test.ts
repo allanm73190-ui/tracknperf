@@ -5,6 +5,76 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 describe("importPlanFromExcelArrayBuffer", () => {
+  it("parses a V2 workbook (plan/templates/items/planned_sessions)", () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        {
+          plan_name: "Plan Hybride V2",
+          plan_description: "Bloc 1",
+          version: 2,
+          payload_json: JSON.stringify({ athlete_level: "intermediate" }),
+        },
+      ]),
+      "plan",
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        { template_name: "Force A", session_type: "strength", priority: "high" },
+        { template_name: "Trail Z2", session_type: "endurance", priority: "normal" },
+      ]),
+      "templates",
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        { template_name: "Force A", position: 1, exercise_name: "Back Squat", series: "4", reps: "6", load: "75%" },
+        { template_name: "Force A", position: 2, exercise_name: "Bench Press", series: "4", reps: "6", load: "70%" },
+        { template_name: "Trail Z2", position: 1, exercise_name: "Zone 2 Run", reps: "45min" },
+      ]),
+      "items",
+    );
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        { scheduled_for: "2026-05-12", template_name: "Force A", block_primary_goal: "force" },
+        { scheduled_for: "2026-05-13", template_name: "Trail Z2", block_primary_goal: "endurance" },
+      ]),
+      "planned_sessions",
+    );
+
+    const ab = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
+    const res = importPlanFromExcelArrayBuffer(ab);
+
+    expect(res.plan.name).toBe("Plan Hybride V2");
+    expect(res.plan.description).toBe("Bloc 1");
+    expect(res.planVersion.version).toBe(2);
+    expect(res.planVersion.payload).toMatchObject({ source: "excel_v2", athlete_level: "intermediate" });
+    expect(res.sessionTemplates.map((t) => t.name).sort()).toEqual(["Force A", "Trail Z2"]);
+    const forceA = res.sessionTemplates.find((t) => t.name === "Force A");
+    expect(Array.isArray(forceA?.template.items)).toBe(true);
+    expect((forceA?.template.items as unknown[]).length).toBe(2);
+    expect(res.plannedSessions).toHaveLength(2);
+    expect(res.plannedSessions[0]?.scheduledFor).toBe("2026-05-12");
+  });
+
+  it("returns explicit V2 errors when required columns are missing", () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        { template_name: "Force A", series: "4", reps: "6" },
+      ]),
+      "items",
+    );
+    const ab = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
+
+    expect(() => importPlanFromExcelArrayBuffer(ab)).toThrow(/excel v2 invalide/i);
+    expect(() => importPlanFromExcelArrayBuffer(ab)).toThrow(/exercise_name/i);
+  });
+
   it("parses a worksheet with date + template columns (happy path)", () => {
     const ws = XLSX.utils.json_to_sheet([
       { date: "2026-04-17", template_name: "Session A", note: "ok" },
@@ -62,4 +132,3 @@ describe("importPlanFromExcelArrayBuffer", () => {
     expect(force?.template).toBeTruthy();
   });
 });
-

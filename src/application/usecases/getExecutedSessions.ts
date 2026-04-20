@@ -13,6 +13,17 @@ export type ExecutedSessionStats = {
   totalDurationMinutes: number;
   totalSets: number;
   totalTonnageKg: number;
+  totalRunDistanceKm: number;
+  totalRunLoad: number;
+  totalTrainingLoad: number;
+  sessionModeBreakdown: {
+    strength: number;
+    endurance: number;
+    mixed: number;
+    recovery: number;
+    rest: number;
+    unknown: number;
+  };
   avgSessionRpe: number | null;
 };
 
@@ -46,13 +57,24 @@ export async function getExecutedSessionStats(sinceIso: string): Promise<Execute
   if (!supabase) throw new Error("Supabase is not configured.");
   const { data, error } = await supabase
     .from("executed_sessions")
-    .select("payload, started_at, executed_session_metrics(total_sets, tonnage_kg, avg_rpe)")
+    .select("payload, started_at, executed_session_metrics(total_sets, tonnage_kg, avg_rpe, payload)")
     .gte("started_at", sinceIso);
   if (error) throw new Error(error.message);
   let executedCount = 0;
   let totalDurationMinutes = 0;
   let totalSets = 0;
   let totalTonnageKg = 0;
+  let totalRunDistanceKm = 0;
+  let totalRunLoad = 0;
+  let totalTrainingLoad = 0;
+  const sessionModeBreakdown: ExecutedSessionStats["sessionModeBreakdown"] = {
+    strength: 0,
+    endurance: 0,
+    mixed: 0,
+    recovery: 0,
+    rest: 0,
+    unknown: 0,
+  };
   let rpeSum = 0;
   let rpeCount = 0;
   for (const r of data ?? []) {
@@ -73,6 +95,48 @@ export async function getExecutedSessionStats(sinceIso: string): Promise<Execute
     const tonnage = toNullableNumber(metrics?.tonnage_kg) ?? toNullableNumber(payload.tonnageKg);
     if (typeof tonnage === "number") totalTonnageKg += tonnage;
 
+    const metricsPayload =
+      metrics?.payload && typeof metrics.payload === "object"
+        ? (metrics.payload as Record<string, unknown>)
+        : {};
+
+    const runDistanceKm =
+      toNullableNumber(metricsPayload.run_distance_km) ??
+      toNullableNumber(payload.runDistanceKm) ??
+      toNullableNumber(payload.distanceKm);
+    if (typeof runDistanceKm === "number") totalRunDistanceKm += runDistanceKm;
+
+    const runLoad =
+      toNullableNumber(metricsPayload.run_load) ??
+      toNullableNumber(payload.runLoad);
+    if (typeof runLoad === "number") totalRunLoad += runLoad;
+
+    const trainingLoad =
+      toNullableNumber(metricsPayload.training_load) ??
+      toNullableNumber(payload.trainingLoad);
+    if (typeof trainingLoad === "number") totalTrainingLoad += trainingLoad;
+
+    const sessionModeRaw =
+      typeof metricsPayload.session_mode === "string"
+        ? metricsPayload.session_mode
+        : typeof payload.sessionMode === "string"
+          ? payload.sessionMode
+          : typeof payload.session_mode === "string"
+            ? payload.session_mode
+            : null;
+
+    if (typeof sessionModeRaw === "string") {
+      const mode = sessionModeRaw.trim().toLowerCase();
+      if (mode === "strength") sessionModeBreakdown.strength += 1;
+      else if (mode === "endurance") sessionModeBreakdown.endurance += 1;
+      else if (mode === "mixed") sessionModeBreakdown.mixed += 1;
+      else if (mode === "recovery") sessionModeBreakdown.recovery += 1;
+      else if (mode === "rest") sessionModeBreakdown.rest += 1;
+      else sessionModeBreakdown.unknown += 1;
+    } else {
+      sessionModeBreakdown.unknown += 1;
+    }
+
     const rpe = toNullableNumber(metrics?.avg_rpe) ?? toNullableNumber(payload.rpe);
     if (typeof rpe === "number") {
       rpeSum += rpe;
@@ -84,6 +148,10 @@ export async function getExecutedSessionStats(sinceIso: string): Promise<Execute
     totalDurationMinutes,
     totalSets,
     totalTonnageKg: Math.round(totalTonnageKg * 100) / 100,
+    totalRunDistanceKm: Math.round(totalRunDistanceKm * 100) / 100,
+    totalRunLoad: Math.round(totalRunLoad * 100) / 100,
+    totalTrainingLoad: Math.round(totalTrainingLoad * 100) / 100,
+    sessionModeBreakdown,
     avgSessionRpe: rpeCount > 0 ? Math.round((rpeSum / rpeCount) * 100) / 100 : null,
   };
 }

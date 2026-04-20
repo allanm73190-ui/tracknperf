@@ -28,16 +28,51 @@ export default function ImportPlanPage() {
   const [importError, setImportError] = useState<string | null>(null);
 
   function downloadTemplate() {
-    const ws = XLSX.utils.aoa_to_sheet([
-      ["date", "template_name", "notes"],
-      ["2026-05-12", "Force A", "Semaine 1"],
-      ["2026-05-13", "Cardio Z2", "Zone 2 — 45min"],
-      ["2026-05-15", "Force B", "Semaine 1"],
-    ]);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Programme");
-    wb.Props = { Title: "Mon Plan d'Entraînement" };
-    XLSX.writeFile(wb, "template-import-plan.xlsx");
+    wb.Props = { Title: "Template Import V2" };
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        {
+          plan_name: "Bloc Hybride S1",
+          plan_description: "Exemple V2 importable",
+          version: 1,
+          payload_json: "{\"athlete_level\":\"intermediate\"}",
+        },
+      ]),
+      "plan",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        { template_name: "Force A", session_type: "strength", priority: "high", lock_status: "adaptable" },
+        { template_name: "Trail Z2", session_type: "endurance", priority: "normal", lock_status: "adaptable" },
+      ]),
+      "templates",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        { template_name: "Force A", position: 1, exercise_name: "Back Squat", series: "4", reps: "6", load: "75%" },
+        { template_name: "Force A", position: 2, exercise_name: "Bench Press", series: "4", reps: "6", load: "70%" },
+        { template_name: "Trail Z2", position: 1, exercise_name: "Zone 2 Run", reps: "45min", notes: "RPE 4-5" },
+      ]),
+      "items",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.json_to_sheet([
+        { scheduled_for: "2026-05-12", template_name: "Force A", block_primary_goal: "strength", payload_json: "{\"day\":\"lundi\"}" },
+        { scheduled_for: "2026-05-13", template_name: "Trail Z2", block_primary_goal: "endurance", payload_json: "{\"day\":\"mardi\"}" },
+      ]),
+      "planned_sessions",
+    );
+
+    XLSX.writeFile(wb, "template-import-plan-v2.xlsx");
   }
 
   async function handleFile(file: File) {

@@ -133,6 +133,8 @@ export async function persistImportedPlanWithEngineContext(
   }
 
   const sessionTemplateIdsByName: Record<string, string> = {};
+  const templateExercisesByTemplateId: Record<string, TemplateExerciseRow[]> = {};
+  const templateExerciseIdByTemplateAndPosition = new Map<string, string>();
   if (parsed.sessionTemplates.length > 0) {
     const { data: templateRows, error: templateError } = await supabase
       .from("session_templates")
@@ -172,6 +174,7 @@ export async function persistImportedPlanWithEngineContext(
       const sessionTemplateId = sessionTemplateIdsByName[t.name];
       if (!sessionTemplateId) continue;
       const items = extractTemplateExercises(t.template);
+      templateExercisesByTemplateId[sessionTemplateId] = items;
       for (let idx = 0; idx < items.length; idx += 1) {
         const item = items[idx]!;
         exerciseRows.push({
@@ -191,9 +194,10 @@ export async function persistImportedPlanWithEngineContext(
     }
 
     if (exerciseRows.length > 0) {
-      const { error: exErr } = await supabase
+      const { data: insertedExercises, error: exErr } = await supabase
         .from("session_template_exercises")
-        .insert(exerciseRows);
+        .insert(exerciseRows)
+        .select("id, session_template_id, position");
       if (exErr) {
         const details = isPostgrestErrorMessage(exErr);
         throw new Error(
@@ -201,6 +205,11 @@ export async function persistImportedPlanWithEngineContext(
             ? `Could not create session template exercises. (${details})`
             : "Could not create session template exercises.",
         );
+      }
+      for (const row of insertedExercises ?? []) {
+        if (!row?.id || !row?.session_template_id || !row?.position) continue;
+        const key = `${String(row.session_template_id)}:${Number(row.position)}`;
+        templateExerciseIdByTemplateAndPosition.set(key, String(row.id));
       }
     }
   }
@@ -229,14 +238,84 @@ export async function persistImportedPlanWithEngineContext(
           };
         }),
       )
-      .select("id");
+      .select("id, session_template_id");
 
     if (plannedError || !plannedRows) {
       const details = isPostgrestErrorMessage(plannedError);
       throw new Error(details ? `Could not create planned sessions. (${details})` : "Could not create planned sessions.");
     }
 
-    for (const r of plannedRows) if (r?.id) plannedSessionIds.push(String(r.id));
+    const snapshotRows: Array<{
+      planned_session_id: string;
+      session_template_exercise_id: string | null;
+      position: number;
+      exercise_name: string;
+      series_raw: string | null;
+      reps_raw: string | null;
+      load_raw: string | null;
+      tempo_raw: string | null;
+      rest_raw: string | null;
+      rir_raw: string | null;
+      coach_notes: string | null;
+      payload: Record<string, unknown>;
+    }> = [];
+
+    for (const r of plannedRows) {
+      if (!r?.id) continue;
+      const plannedSessionId = String(r.id);
+      plannedSessionIds.push(plannedSessionId);
+
+      const sessionTemplateId =
+        r.session_template_id !== null && r.session_template_id !== undefined
+          ? String(r.session_template_id)
+          : null;
+      if (!sessionTemplateId) continue;
+
+      const templateItems = templateExercisesByTemplateId[sessionTemplateId] ?? [];
+      for (let idx = 0; idx < templateItems.length; idx += 1) {
+        const item = templateItems[idx]!;
+        const position = idx + 1;
+        const exerciseKey = `${sessionTemplateId}:${position}`;
+        snapshotRows.push({
+          planned_session_id: plannedSessionId,
+          session_template_exercise_id: templateExerciseIdByTemplateAndPosition.get(exerciseKey) ?? null,
+          position,
+          exercise_name: item.exerciseName,
+          series_raw: item.seriesRaw,
+          reps_raw: item.repsRaw,
+          load_raw: item.loadRaw,
+          tempo_raw: item.tempoRaw,
+          rest_raw: item.restRaw,
+          rir_raw: item.rirRaw,
+          coach_notes: item.coachNotes,
+          payload: item.payload,
+        });
+      }
+    }
+
+    if (snapshotRows.length > 0) {
+      const { error: snapshotErr } = await supabase
+        .from("planned_session_items_snapshot")
+        .insert(snapshotRows);
+      if (snapshotErr) {
+        const msg = snapshotErr.message.toLowerCase();
+        const missingSnapshotTable = msg.includes("planned_session_items_snapshot");
+        if (missingSnapshotTable) {
+          return {
+            planId: String(planRow.id),
+            planVersionId: String(pvRow.id),
+            sessionTemplateIdsByName,
+            plannedSessionIds,
+          };
+        }
+        const details = isPostgrestErrorMessage(snapshotErr);
+        throw new Error(
+          details
+            ? `Could not create planned session item snapshots. (${details})`
+            : "Could not create planned session item snapshots.",
+        );
+      }
+    }
   }
 
   return {

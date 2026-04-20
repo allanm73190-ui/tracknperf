@@ -17,9 +17,13 @@ type ExecutedRow = {
   id: string;
   startedAt: string;
   plannedSessionId: string | null;
+  sessionMode: "strength" | "endurance" | "mixed" | "recovery" | "rest" | "unknown";
   rpe: number | null;
   totalSets: number | null;
   tonnageKg: number | null;
+  runDistanceKm: number | null;
+  runLoad: number | null;
+  trainingLoad: number | null;
 };
 
 type MergedEntry =
@@ -28,9 +32,13 @@ type MergedEntry =
       id: string;
       date: string;
       templateName: string | null;
+      sessionMode: "strength" | "endurance" | "mixed" | "recovery" | "rest" | "unknown";
       rpe: number | null;
       totalSets: number | null;
       tonnageKg: number | null;
+      runDistanceKm: number | null;
+      runLoad: number | null;
+      trainingLoad: number | null;
     }
   | { kind: "missed"; id: string; date: string; templateName: string | null }
   | { kind: "planned"; id: string; date: string; templateName: string | null };
@@ -42,6 +50,26 @@ function toNullableNumber(v: unknown): number | null {
     if (Number.isFinite(n)) return n;
   }
   return null;
+}
+
+function parseSessionMode(v: unknown): ExecutedRow["sessionMode"] {
+  if (typeof v !== "string") return "unknown";
+  const s = v.trim().toLowerCase();
+  if (s === "strength") return "strength";
+  if (s === "endurance") return "endurance";
+  if (s === "mixed") return "mixed";
+  if (s === "recovery") return "recovery";
+  if (s === "rest") return "rest";
+  return "unknown";
+}
+
+function sessionModeLabel(mode: ExecutedRow["sessionMode"]): string {
+  if (mode === "strength") return "FORCE";
+  if (mode === "endurance") return "ENDURANCE";
+  if (mode === "mixed") return "HYBRIDE";
+  if (mode === "recovery") return "RÉCUP";
+  if (mode === "rest") return "REPOS";
+  return "MODE ?";
 }
 
 // ── Data loading ─────────────────────────────────────────────────────────────
@@ -57,7 +85,7 @@ async function loadHistory(sinceIso: string): Promise<{ planned: PlannedRow[]; e
       .order("scheduled_for", { ascending: false }),
     supabase
       .from("executed_sessions")
-      .select("id, started_at, planned_session_id, payload, executed_session_metrics(total_sets, tonnage_kg, avg_rpe)")
+      .select("id, started_at, planned_session_id, payload, executed_session_metrics(total_sets, tonnage_kg, avg_rpe, payload)")
       .gte("started_at", sinceIso)
       .order("started_at", { ascending: false }),
   ]);
@@ -86,13 +114,33 @@ async function loadHistory(sinceIso: string): Promise<{ planned: PlannedRow[]; e
     const rpe = toNullableNumber(metrics?.avg_rpe) ?? toNullableNumber(payload.rpe);
     const totalSets = toNullableNumber(metrics?.total_sets) ?? toNullableNumber(payload.totalSets);
     const tonnageKg = toNullableNumber(metrics?.tonnage_kg) ?? toNullableNumber(payload.tonnageKg);
+    const metricsPayload =
+      metrics?.payload && typeof metrics.payload === "object"
+        ? (metrics.payload as Record<string, unknown>)
+        : {};
+    const runDistanceKm =
+      toNullableNumber(metricsPayload.run_distance_km) ??
+      toNullableNumber(payload.runDistanceKm);
+    const runLoad =
+      toNullableNumber(metricsPayload.run_load) ??
+      toNullableNumber(payload.runLoad);
+    const trainingLoad =
+      toNullableNumber(metricsPayload.training_load) ??
+      toNullableNumber(payload.trainingLoad);
+    const sessionMode = parseSessionMode(
+      metricsPayload.session_mode ?? payload.sessionMode ?? payload.session_mode,
+    );
     return {
       id: String(r.id),
       startedAt: String(r.started_at),
       plannedSessionId: r.planned_session_id ? String(r.planned_session_id) : null,
+      sessionMode,
       rpe,
       totalSets,
       tonnageKg,
+      runDistanceKm,
+      runLoad,
+      trainingLoad,
     };
   });
 
@@ -127,9 +175,13 @@ function mergeEntries(
         id: ex.id,
         date: ps.scheduledFor,
         templateName: ps.templateName,
+        sessionMode: ex.sessionMode,
         rpe: ex.rpe,
         totalSets: ex.totalSets,
         tonnageKg: ex.tonnageKg,
+        runDistanceKm: ex.runDistanceKm,
+        runLoad: ex.runLoad,
+        trainingLoad: ex.trainingLoad,
       });
     } else if (ps.scheduledFor < todayIso) {
       entries.push({ kind: "missed", id: ps.id, date: ps.scheduledFor, templateName: ps.templateName });
@@ -144,9 +196,13 @@ function mergeEntries(
       id: ex.id,
       date: ex.startedAt.slice(0, 10),
       templateName: null,
+      sessionMode: ex.sessionMode,
       rpe: ex.rpe,
       totalSets: ex.totalSets,
       tonnageKg: ex.tonnageKg,
+      runDistanceKm: ex.runDistanceKm,
+      runLoad: ex.runLoad,
+      trainingLoad: ex.trainingLoad,
     });
   }
 
@@ -281,6 +337,19 @@ function SessionCard({ entry }: { entry: MergedEntry }) {
             RPE {entry.rpe}
           </span>
         )}
+        {entry.kind === "executed" && (
+          <span style={{
+            fontSize: 11,
+            fontWeight: 900,
+            padding: "4px 10px",
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.05)",
+            color: "#ffeea5",
+            letterSpacing: "0.04em",
+          }}>
+            {sessionModeLabel(entry.sessionMode)}
+          </span>
+        )}
         {entry.kind === "executed" && entry.totalSets !== null && (
           <span style={{
             fontSize: 11,
@@ -305,6 +374,45 @@ function SessionCard({ entry }: { entry: MergedEntry }) {
             letterSpacing: "0.04em",
           }}>
             {Math.round(entry.tonnageKg)} KG
+          </span>
+        )}
+        {entry.kind === "executed" && entry.runDistanceKm !== null && (
+          <span style={{
+            fontSize: 11,
+            fontWeight: 900,
+            padding: "4px 10px",
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.05)",
+            color: "#cafd00",
+            letterSpacing: "0.04em",
+          }}>
+            {Math.round(entry.runDistanceKm * 10) / 10} KM
+          </span>
+        )}
+        {entry.kind === "executed" && entry.runLoad !== null && (
+          <span style={{
+            fontSize: 11,
+            fontWeight: 900,
+            padding: "4px 10px",
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.05)",
+            color: "#c57eff",
+            letterSpacing: "0.04em",
+          }}>
+            LOAD {Math.round(entry.runLoad)}
+          </span>
+        )}
+        {entry.kind === "executed" && entry.trainingLoad !== null && (
+          <span style={{
+            fontSize: 11,
+            fontWeight: 900,
+            padding: "4px 10px",
+            borderRadius: 999,
+            background: "rgba(255,255,255,0.05)",
+            color: "#ffeea5",
+            letterSpacing: "0.04em",
+          }}>
+            TOTAL {Math.round(entry.trainingLoad)}
           </span>
         )}
         <StatusPill kind={entry.kind} />

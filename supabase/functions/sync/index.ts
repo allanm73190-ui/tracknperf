@@ -316,12 +316,19 @@ function addDaysIso(isoDate: string, days: number): string {
 function extractDailySignalsFromMetrics(
   latestInternalMetrics: Record<string, unknown> | null,
   latestExternalMetrics: Record<string, unknown> | null,
+  latestDailyCheckin: Record<string, unknown> | null,
   fatigueScore: number | null,
   readinessScore: number | null,
 ): EngineSignalState {
+  const checkinPayload =
+    latestDailyCheckin && typeof latestDailyCheckin.payload === "object" && latestDailyCheckin.payload
+      ? (latestDailyCheckin.payload as Record<string, unknown>)
+      : {};
   const merged = {
     ...(latestExternalMetrics ?? {}),
     ...(latestInternalMetrics ?? {}),
+    ...checkinPayload,
+    ...(latestDailyCheckin ?? {}),
   } as Record<string, unknown>;
 
   const fatigueSelfScore =
@@ -346,6 +353,7 @@ function extractDailySignalsFromMetrics(
     sleepHoursLastNight:
       asNumberish(merged.sleep_last_night_h) ??
       asNumberish(merged.sleep_hours_last_night) ??
+      asNumberish(merged.sleep_hours) ??
       asNumberish(merged.sleepHoursLastNight),
     sleepHours2dAvg:
       asNumberish(merged.sleep_2d_avg_h) ??
@@ -1145,6 +1153,7 @@ Deno.serve(async (req) => {
               latestReadinessRes,
               latestInternalRes,
               latestExternalRes,
+              latestDailyCheckinRes,
             ] = await Promise.all([
               authClient
                 .from("executed_sessions")
@@ -1183,6 +1192,33 @@ Deno.serve(async (req) => {
                 .order("captured_at", { ascending: false })
                 .limit(1)
                 .maybeSingle(),
+              authClient
+                .from("daily_checkins")
+                .select(`
+                  checkin_date,
+                  pain_score,
+                  pain_red_flag,
+                  fatigue_score,
+                  readiness_score,
+                  sleep_hours,
+                  sleep_quality_score,
+                  soreness_score,
+                  stress_score,
+                  mood_score,
+                  available_time_today_min,
+                  degraded_mode_days,
+                  hrv_below_baseline_days,
+                  rhr_delta_bpm,
+                  illness_flag,
+                  neurological_symptoms_flag,
+                  limp_flag,
+                  notes,
+                  payload
+                `)
+                .eq("user_id", userId)
+                .order("checkin_date", { ascending: false })
+                .limit(1)
+                .maybeSingle(),
             ]);
 
             const recentExecutedRows =
@@ -1209,10 +1245,15 @@ Deno.serve(async (req) => {
             const latestExternalMetrics = latestExternalRes.data?.metrics && typeof latestExternalRes.data.metrics === "object"
               ? (latestExternalRes.data.metrics as Record<string, unknown>)
               : null;
+            const latestDailyCheckin =
+              latestDailyCheckinRes.data && typeof latestDailyCheckinRes.data === "object"
+                ? (latestDailyCheckinRes.data as Record<string, unknown>)
+                : null;
 
             const dailySignals = extractDailySignalsFromMetrics(
               latestInternalMetrics,
               latestExternalMetrics,
+              latestDailyCheckin,
               latestFatigueScore,
               latestReadinessScore,
             );
@@ -1277,6 +1318,36 @@ Deno.serve(async (req) => {
                 recommendation_id: recommendationId,
                 content: explanation,
               });
+
+              await authClient.from("engine_decisions").upsert(
+                {
+                  recommendation_id: recommendationId,
+                  user_id: userId,
+                  plan_id: planId,
+                  plan_version_id: planVersionId,
+                  planned_session_id: plannedId,
+                  executed_session_id: String(inserted.id),
+                  decision: asText(output.decision) ?? "keep",
+                  decision_state: asText(output.decisionState),
+                  confidence_score: asNumberish(output.confidence_score),
+                  risk_level: asText(output.risk_level),
+                  reason_codes: Array.isArray(output.reasonCodes) ? output.reasonCodes : [],
+                  rules_triggered: Array.isArray(output.rules_triggered) ? output.rules_triggered : [],
+                  human_validation_required: (asBoolean(output.human_validation_required) ?? false) === true,
+                  fallback_mode: (asBoolean(output.fallback_mode) ?? false) === true,
+                  forbidden_action_blocked: Array.isArray(output.forbidden_action_blocked)
+                    ? output.forbidden_action_blocked
+                    : [],
+                  algorithm_version: asText(output.algorithmVersion),
+                  config_version: asText(output.configVersion),
+                  payload: {
+                    patch: asRecord(output.patch) ?? {},
+                    session_adjustments: asRecord(output.session_adjustments) ?? {},
+                    reasons: Array.isArray(output.reasons) ? output.reasons : [],
+                  },
+                },
+                { onConflict: "user_id,recommendation_id" },
+              );
 
               await authClient
                 .from("executed_sessions")
@@ -1489,6 +1560,55 @@ Deno.serve(async (req) => {
           continue;
         }
         await markApplied(authClient, op.idempotencyKey);
+        results.push({ opId: op.opId, status: "applied" });
+        continue;
+      }
+
+      if (op.entity === "daily_checkins") {
+        const checkinDate = asString(op.payload.checkin_date);
+        if (!checkinDate) {
+          results.push({ opId: op.opId, status: "rejected", error: "Missing checkin_date." });
+          continue;
+        }
+
+        const { data, error } = await authClient
+          .from("daily_checkins")
+          .upsert(
+            {
+              id: asString(op.payload.id) ?? crypto.randomUUID(),
+              checkin_date: checkinDate,
+              pain_score: asNumber(op.payload.pain_score),
+              pain_red_flag: asBoolean(op.payload.pain_red_flag) ?? false,
+              fatigue_score: asNumber(op.payload.fatigue_score),
+              readiness_score: asNumber(op.payload.readiness_score),
+              sleep_hours: asNumber(op.payload.sleep_hours),
+              sleep_quality_score: asNumber(op.payload.sleep_quality_score),
+              soreness_score: asNumber(op.payload.soreness_score),
+              stress_score: asNumber(op.payload.stress_score),
+              mood_score: asNumber(op.payload.mood_score),
+              available_time_today_min: asInteger(op.payload.available_time_today_min),
+              degraded_mode_days: asInteger(op.payload.degraded_mode_days),
+              hrv_below_baseline_days: asInteger(op.payload.hrv_below_baseline_days),
+              rhr_delta_bpm: asNumber(op.payload.rhr_delta_bpm),
+              illness_flag: asBoolean(op.payload.illness_flag) ?? false,
+              neurological_symptoms_flag: asBoolean(op.payload.neurological_symptoms_flag) ?? false,
+              limp_flag: asBoolean(op.payload.limp_flag) ?? false,
+              notes: asString(op.payload.notes),
+              payload: asRecord(op.payload.payload) ?? {},
+            },
+            { onConflict: "user_id,checkin_date" },
+          )
+          .select("id, checkin_date")
+          .single();
+        if (error || !data?.id) {
+          results.push({ opId: op.opId, status: "error", error: error?.message ?? "Insert failed." });
+          continue;
+        }
+
+        await markAppliedWithResult(authClient, op.idempotencyKey, {
+          daily_checkin_id: String(data.id),
+          checkin_date: String(data.checkin_date),
+        });
         results.push({ opId: op.opId, status: "applied" });
         continue;
       }

@@ -15,6 +15,11 @@ type ProgrammeRow = {
   coachNotes: string | null;
 };
 
+type TableRow = {
+  rowNumber: number;
+  values: Row;
+};
+
 function normalizeHeaderKey(key: string): string {
   return key
     .normalize("NFD")
@@ -25,9 +30,11 @@ function normalizeHeaderKey(key: string): string {
     .replace(/[^a-z0-9_]/g, "");
 }
 
+function normalizeSheetKey(name: string): string {
+  return normalizeHeaderKey(name).replace(/_+/g, "_");
+}
+
 function toIsoDateFromExcelSerial(serial: number): string | null {
-  // Excel "serial date" days since 1899-12-30 (with Excel's 1900 leap year bug baked in).
-  // xlsx follows this convention for most files.
   const d = XLSX.SSF.parse_date_code(serial);
   if (!d || typeof d.y !== "number" || typeof d.m !== "number" || typeof d.d !== "number") return null;
   const yyyy = String(d.y).padStart(4, "0");
@@ -47,10 +54,8 @@ function toIsoDate(value: unknown): string | null {
   const s = value.trim();
   if (!s) return null;
 
-  // YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
 
-  // DD/MM/YYYY or D/M/YYYY
   const m1 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m1) {
     const dd = String(Number(m1[1])).padStart(2, "0");
@@ -59,7 +64,6 @@ function toIsoDate(value: unknown): string | null {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // DD-MM-YYYY
   const m2 = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
   if (m2) {
     const dd = String(Number(m2[1])).padStart(2, "0");
@@ -68,7 +72,6 @@ function toIsoDate(value: unknown): string | null {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // Attempt Date.parse fallback (best-effort)
   const t = Date.parse(s);
   if (!Number.isNaN(t)) return new Date(t).toISOString().slice(0, 10);
   return null;
@@ -109,11 +112,88 @@ function normalizeMaybeString(v: unknown): string | null {
   return String(v);
 }
 
+function toInteger(v: unknown): number | null {
+  if (typeof v === "number" && Number.isFinite(v)) return Math.trunc(v);
+  if (typeof v === "string") {
+    const n = Number(v.trim().replace(",", "."));
+    if (Number.isFinite(n)) return Math.trunc(n);
+  }
+  return null;
+}
+
+function readSheetTable(sheet: XLSX.WorkSheet): { headers: string[]; rows: TableRow[] } {
+  const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: null, raw: true });
+  if (!Array.isArray(matrix) || matrix.length === 0) return { headers: [], rows: [] };
+
+  const rawHeaders = Array.isArray(matrix[0]) ? matrix[0] : [];
+  const headers = rawHeaders.map((cell) => (typeof cell === "string" ? normalizeHeaderKey(cell) : ""));
+
+  const rows: TableRow[] = [];
+  for (let i = 1; i < matrix.length; i += 1) {
+    const rawRow = matrix[i];
+    const raw: unknown[] = Array.isArray(rawRow) ? rawRow : [];
+    const values: Row = {};
+    let hasContent = false;
+
+    for (let j = 0; j < headers.length; j += 1) {
+      const h = headers[j];
+      if (!h) continue;
+      const value = raw[j] ?? null;
+      values[h] = value;
+      if (typeof value === "string") {
+        if (value.trim().length > 0) hasContent = true;
+      } else if (value !== null && value !== undefined) {
+        hasContent = true;
+      }
+    }
+
+    if (hasContent) {
+      rows.push({ rowNumber: i + 1, values });
+    }
+  }
+
+  return { headers, rows };
+}
+
+function findSheetByAliases(
+  workbook: XLSX.WorkBook,
+  aliases: string[],
+): { sheetName: string; sheet: XLSX.WorkSheet } | null {
+  const normalizedAliases = new Set(aliases.map((a) => normalizeSheetKey(a)));
+  for (const sheetName of workbook.SheetNames) {
+    const key = normalizeSheetKey(sheetName);
+    if (!normalizedAliases.has(key)) continue;
+    const sheet = workbook.Sheets[sheetName];
+    if (sheet) return { sheetName, sheet };
+  }
+  return null;
+}
+
+function parseJsonObjectCell(value: unknown, context: string, errors: string[]): Record<string, unknown> {
+  if (value === null || value === undefined) return {};
+  if (typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  if (typeof value !== "string") {
+    errors.push(`${context}: payload_json doit être un objet JSON.`);
+    return {};
+  }
+  const s = value.trim();
+  if (!s) return {};
+  try {
+    const parsed = JSON.parse(s) as unknown;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      errors.push(`${context}: payload_json doit être un objet JSON.`);
+      return {};
+    }
+    return parsed as Record<string, unknown>;
+  } catch {
+    errors.push(`${context}: payload_json invalide.`);
+    return {};
+  }
+}
+
 function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | null {
-  // Legacy template (`tracknperf_deploy/programme_template.xlsx`) has sheets like:
-  // '🏋️ Force', '🎯 Hypertrophie', '🔧 Spécifique', '🏔️ Trail', '😌 Repos'
-  // Each sheet is a simple table with header row:
-  // Exercice | Séries | Reps | Charge | Tempo | Repos | RIR | Notes coach
   const templateSheets = workbook.SheetNames.filter((n) => !n.toLowerCase().includes("instruction"));
   const sessionTemplates: PlanImport["sessionTemplates"] = [];
 
@@ -123,8 +203,6 @@ function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | n
     const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: null, raw: false });
     if (rows.length < 2) continue;
 
-    // Legacy sheets have a title row, then the header row.
-    // Find the header row by scanning for a cell that normalizes to "exercice".
     let headerRowIndex = -1;
     for (let i = 0; i < Math.min(rows.length, 20); i++) {
       const r = rows[i];
@@ -150,7 +228,6 @@ function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | n
       if (!exercise) continue;
       items.push({
         exercise,
-        // Legacy template uses fixed column order A-H.
         series: normalizeMaybeString(r[1]),
         reps: normalizeMaybeString(r[2]),
         load: normalizeMaybeString(r[3]),
@@ -183,6 +260,296 @@ function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | n
     planVersion: { version: 1, payload: { source: "legacy_programme_template" } },
     sessionTemplates,
     plannedSessions: [],
+  });
+}
+
+function parseV2Workbook(workbook: XLSX.WorkBook): PlanImport | null {
+  const planSheet = findSheetByAliases(workbook, ["plan", "meta", "metadata"]);
+  const templatesSheet = findSheetByAliases(workbook, ["templates", "session_templates"]);
+  const itemsSheet = findSheetByAliases(workbook, ["items", "template_items", "session_template_items", "exercises", "exercices"]);
+  const plannedSheet = findSheetByAliases(workbook, ["planned_sessions", "planning", "planned", "sessions"]);
+
+  const hasV2Clues = !!planSheet || !!templatesSheet || !!itemsSheet || !!plannedSheet;
+  if (!hasV2Clues) return null;
+
+  const errors: string[] = [];
+  const templateMap = new Map<string, { name: string; template: Record<string, unknown> }>();
+
+  let planName = guessPlanName(workbook);
+  let planDescription: string | null = null;
+  let planVersion = 1;
+  let planPayload: Record<string, unknown> = {};
+
+  if (planSheet) {
+    const { rows } = readSheetTable(planSheet.sheet);
+    const first = rows[0]?.values ?? {};
+
+    const planNameRaw = pickFirstNonEmpty(first, ["plan_name", "name", "title"]);
+    if (typeof planNameRaw === "string" && planNameRaw.trim()) {
+      planName = planNameRaw.trim();
+    }
+
+    const descriptionRaw = pickFirstNonEmpty(first, ["plan_description", "description"]);
+    if (typeof descriptionRaw === "string" && descriptionRaw.trim()) {
+      planDescription = descriptionRaw.trim();
+    }
+
+    const versionRaw = pickFirstNonEmpty(first, ["version", "plan_version"]);
+    const v = toInteger(versionRaw);
+    if (v !== null && v >= 1) {
+      planVersion = v;
+    } else if (versionRaw !== null && versionRaw !== undefined) {
+      errors.push(`Feuille ${planSheet.sheetName}: version invalide (${String(versionRaw)}).`);
+    }
+
+    const payloadFromCell = parseJsonObjectCell(first.payload_json, `Feuille ${planSheet.sheetName} ligne 2`, errors);
+    const reserved = new Set(["plan_name", "name", "title", "plan_description", "description", "version", "plan_version", "payload_json"]);
+    const extra: Record<string, unknown> = {};
+    for (const [k, v2] of Object.entries(first)) {
+      if (reserved.has(k)) continue;
+      if (v2 === null || v2 === undefined || (typeof v2 === "string" && !v2.trim())) continue;
+      extra[k] = v2;
+    }
+    planPayload = { ...payloadFromCell, ...extra };
+  }
+
+  if (templatesSheet) {
+    const { headers, rows } = readSheetTable(templatesSheet.sheet);
+    if (!headers.includes("template_name") && !headers.includes("name")) {
+      errors.push(`Feuille ${templatesSheet.sheetName}: colonne requise manquante (template_name).`);
+    }
+
+    for (const row of rows) {
+      const rawName = pickFirstNonEmpty(row.values, ["template_name", "name"]);
+      const templateName = typeof rawName === "string" ? rawName.trim() : null;
+      if (!templateName) {
+        errors.push(`Feuille ${templatesSheet.sheetName} ligne ${row.rowNumber}: template_name manquant.`);
+        continue;
+      }
+      const key = templateName.toLowerCase();
+      if (templateMap.has(key)) {
+        errors.push(`Feuille ${templatesSheet.sheetName} ligne ${row.rowNumber}: template dupliqué (${templateName}).`);
+        continue;
+      }
+
+      const payloadFromCell = parseJsonObjectCell(
+        row.values.payload_json,
+        `Feuille ${templatesSheet.sheetName} ligne ${row.rowNumber}`,
+        errors,
+      );
+
+      const templateObj: Record<string, unknown> = {
+        source: "excel_v2",
+        sheetName: templatesSheet.sheetName,
+        description: normalizeMaybeString(row.values.description),
+        sessionType: normalizeMaybeString(pickFirstNonEmpty(row.values, ["session_type", "type"])),
+        priority: normalizeMaybeString(row.values.priority),
+        lockStatus: normalizeMaybeString(pickFirstNonEmpty(row.values, ["lock_status", "lock"])),
+        blockPrimaryGoal: normalizeMaybeString(pickFirstNonEmpty(row.values, ["block_primary_goal", "primary_goal"])),
+        items: [],
+        ...payloadFromCell,
+      };
+
+      templateMap.set(key, { name: templateName, template: templateObj });
+    }
+  }
+
+  if (itemsSheet) {
+    const { headers, rows } = readSheetTable(itemsSheet.sheet);
+    const hasTemplateCol = headers.includes("template_name") || headers.includes("template");
+    const hasExerciseCol =
+      headers.includes("exercise_name") || headers.includes("exercise") || headers.includes("exercice") || headers.includes("name");
+    if (!hasTemplateCol) errors.push(`Feuille ${itemsSheet.sheetName}: colonne requise manquante (template_name).`);
+    if (!hasExerciseCol) errors.push(`Feuille ${itemsSheet.sheetName}: colonne requise manquante (exercise_name).`);
+
+    const counters = new Map<string, number>();
+
+    for (const row of rows) {
+      const templateNameRaw = pickFirstNonEmpty(row.values, ["template_name", "template"]);
+      const templateName = typeof templateNameRaw === "string" ? templateNameRaw.trim() : null;
+      if (!templateName) {
+        errors.push(`Feuille ${itemsSheet.sheetName} ligne ${row.rowNumber}: template_name manquant.`);
+        continue;
+      }
+
+      const exerciseNameRaw = pickFirstNonEmpty(row.values, ["exercise_name", "exercise", "exercice", "name", "title"]);
+      const exerciseName = typeof exerciseNameRaw === "string" ? exerciseNameRaw.trim() : null;
+      if (!exerciseName) {
+        errors.push(`Feuille ${itemsSheet.sheetName} ligne ${row.rowNumber}: exercise_name manquant.`);
+        continue;
+      }
+
+      const key = templateName.toLowerCase();
+      if (!templateMap.has(key)) {
+        templateMap.set(key, {
+          name: templateName,
+          template: { source: "excel_v2", sheetName: itemsSheet.sheetName, items: [] },
+        });
+      }
+
+      const tpl = templateMap.get(key)!;
+      const itemList = Array.isArray(tpl.template.items) ? (tpl.template.items as Array<Record<string, unknown>>) : [];
+
+      const explicitPosition = toInteger(row.values.position);
+      const nextPos = (counters.get(key) ?? 0) + 1;
+      counters.set(key, nextPos);
+      const itemPayloadFromCell = parseJsonObjectCell(
+        row.values.payload_json,
+        `Feuille ${itemsSheet.sheetName} ligne ${row.rowNumber}`,
+        errors,
+      );
+
+      const reserved = new Set([
+        "template_name",
+        "template",
+        "position",
+        "exercise_name",
+        "exercise",
+        "exercice",
+        "name",
+        "title",
+        "series",
+        "sets",
+        "reps",
+        "repetitions",
+        "load",
+        "load_kg",
+        "charge",
+        "tempo",
+        "rest",
+        "rest_seconds",
+        "repos",
+        "recuperation",
+        "rir",
+        "coach_notes",
+        "notes_coach",
+        "notes",
+        "payload_json",
+      ]);
+      const extra: Record<string, unknown> = {};
+      for (const [k, v3] of Object.entries(row.values)) {
+        if (reserved.has(k)) continue;
+        if (v3 === null || v3 === undefined || (typeof v3 === "string" && !v3.trim())) continue;
+        extra[k] = v3;
+      }
+
+      itemList.push({
+        position: explicitPosition !== null && explicitPosition >= 1 ? explicitPosition : nextPos,
+        exercise: exerciseName,
+        series: normalizeMaybeString(pickFirstNonEmpty(row.values, ["series", "sets"])),
+        reps: normalizeMaybeString(pickFirstNonEmpty(row.values, ["reps", "repetitions"])),
+        load: normalizeMaybeString(pickFirstNonEmpty(row.values, ["load", "load_kg", "charge"])),
+        tempo: normalizeMaybeString(row.values.tempo),
+        rest: normalizeMaybeString(pickFirstNonEmpty(row.values, ["rest", "rest_seconds", "repos", "recuperation"])),
+        rir: normalizeMaybeString(row.values.rir),
+        coachNotes: normalizeMaybeString(pickFirstNonEmpty(row.values, ["coach_notes", "notes_coach", "notes"])),
+        ...itemPayloadFromCell,
+        ...extra,
+      });
+
+      tpl.template.items = itemList
+        .slice()
+        .sort((a, b) => (toInteger(a.position) ?? 0) - (toInteger(b.position) ?? 0))
+        .map(({ position: _ignored, ...rest }) => rest);
+    }
+  }
+
+  const plannedSessions: PlanImport["plannedSessions"] = [];
+  if (plannedSheet) {
+    const { headers, rows } = readSheetTable(plannedSheet.sheet);
+    const hasDateCol =
+      headers.includes("scheduled_for") ||
+      headers.includes("date") ||
+      headers.includes("jour") ||
+      headers.includes("day") ||
+      headers.includes("scheduled");
+    if (!hasDateCol) {
+      errors.push(`Feuille ${plannedSheet.sheetName}: colonne requise manquante (scheduled_for/date).`);
+    }
+
+    for (const row of rows) {
+      const dateValue = pickFirstNonEmpty(row.values, ["scheduled_for", "date", "jour", "day", "scheduled"]);
+      const scheduledFor = toIsoDate(dateValue);
+      if (!scheduledFor) {
+        errors.push(
+          `Feuille ${plannedSheet.sheetName} ligne ${row.rowNumber}: date invalide (${String(dateValue ?? "vide")}). Formats acceptés: YYYY-MM-DD, DD/MM/YYYY, DD-MM-YYYY.`,
+        );
+        continue;
+      }
+
+      const templateRaw = pickFirstNonEmpty(row.values, ["template_name", "template", "session_template", "session", "seance", "workout", "name"]);
+      const templateName = typeof templateRaw === "string" && templateRaw.trim() ? templateRaw.trim() : null;
+      if (templateName) {
+        const key = templateName.toLowerCase();
+        if (!templateMap.has(key)) {
+          templateMap.set(key, {
+            name: templateName,
+            template: { source: "excel_v2", sheetName: plannedSheet.sheetName, items: [] },
+          });
+        }
+      }
+
+      const payloadFromCell = parseJsonObjectCell(
+        row.values.payload_json,
+        `Feuille ${plannedSheet.sheetName} ligne ${row.rowNumber}`,
+        errors,
+      );
+
+      const payload: Record<string, unknown> = {};
+      for (const [k, v4] of Object.entries(row.values)) {
+        if (
+          k === "scheduled_for" ||
+          k === "date" ||
+          k === "jour" ||
+          k === "day" ||
+          k === "scheduled" ||
+          k === "template_name" ||
+          k === "template" ||
+          k === "session_template" ||
+          k === "session" ||
+          k === "seance" ||
+          k === "workout" ||
+          k === "name" ||
+          k === "payload_json"
+        ) {
+          continue;
+        }
+        if (v4 === null || v4 === undefined || (typeof v4 === "string" && !v4.trim())) continue;
+        payload[k] = v4;
+      }
+
+      plannedSessions.push({
+        scheduledFor,
+        templateName,
+        payload: { ...payloadFromCell, ...payload },
+      });
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Excel V2 invalide:\n- ${errors.slice(0, 20).join("\n- ")}`);
+  }
+
+  const sessionTemplates = Array.from(templateMap.values()).map((entry) => ({
+    name: entry.name,
+    template: entry.template,
+  }));
+
+  if (sessionTemplates.length === 0 && plannedSessions.length === 0) {
+    throw new Error("Excel V2 invalide: aucune donnée exploitable (templates/items/planned_sessions). ");
+  }
+
+  return planImportSchema.parse({
+    plan: { name: planName, description: planDescription },
+    planVersion: {
+      version: planVersion,
+      payload: {
+        source: "excel_v2",
+        ...planPayload,
+      },
+    },
+    sessionTemplates,
+    plannedSessions,
   });
 }
 
@@ -221,17 +588,7 @@ function detectLegacyProgrammeTemplate(workbook: XLSX.WorkBook): boolean {
   return matchingSheets >= 2;
 }
 
-export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): PlanImport {
-  const workbook = XLSX.read(toArrayBuffer(buf), { type: "array", cellDates: true });
-  if (!workbook.SheetNames.length) throw new Error("Excel file has no sheets.");
-
-  // Legacy template is the primary import format. Fallback to dated planning format if no legacy sheets are recognized.
-  const legacy = parseProgrammeTemplateWorkbook(workbook);
-  if (legacy) return legacy;
-  const legacyDetected = detectLegacyProgrammeTemplate(workbook);
-
-  // Template-compat strategy: read first non-empty sheet as a table
-  // and try to find columns for date + template/session.
+function parseSimpleDateTemplateWorkbook(workbook: XLSX.WorkBook, legacyDetected: boolean): PlanImport {
   let rows: Row[] = [];
   for (const name of workbook.SheetNames) {
     const sheet = workbook.Sheets[name];
@@ -244,7 +601,6 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
   }
   if (rows.length === 0) throw new Error("Excel file has no rows.");
 
-  // Normalize keys so we can handle template headers that vary slightly.
   const normalizedRows: Row[] = rows.map((r) => {
     const out: Row = {};
     for (const [k, v] of Object.entries(r)) {
@@ -293,7 +649,6 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
       typeof templateValue === "string" && templateValue.trim().length > 0 ? templateValue.trim() : null;
     if (templateName) templateNames.add(templateName);
 
-    // Everything else becomes payload, except known columns.
     const payload: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(row)) {
       if (
@@ -345,12 +700,27 @@ export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): P
   }
 
   const planName = guessPlanName(workbook);
-  const importObj: PlanImport = {
+  return planImportSchema.parse({
     plan: { name: planName, description: null },
     planVersion: { version: 1, payload: {} },
     sessionTemplates: Array.from(templateNames).map((name) => ({ name, template: {} })),
     plannedSessions,
-  };
+  });
+}
 
-  return planImportSchema.parse(importObj);
+export function importPlanFromExcelArrayBuffer(buf: ArrayBuffer | Uint8Array): PlanImport {
+  const workbook = XLSX.read(toArrayBuffer(buf), { type: "array", cellDates: true });
+  if (!workbook.SheetNames.length) throw new Error("Excel file has no sheets.");
+
+  // Legacy template remains priority.
+  const legacy = parseProgrammeTemplateWorkbook(workbook);
+  if (legacy) return legacy;
+  const legacyDetected = detectLegacyProgrammeTemplate(workbook);
+
+  // If a V2 workbook structure is detected, parse it explicitly.
+  const v2 = parseV2Workbook(workbook);
+  if (v2) return v2;
+
+  // Final fallback: simple date + template flat sheet.
+  return parseSimpleDateTemplateWorkbook(workbook, legacyDetected);
 }

@@ -12,6 +12,7 @@ import PlannedSessionDetailPage from "../ui/pages/PlannedSessionDetail";
 import ProgrammePage from "../ui/pages/Programme";
 import StatsPage from "../ui/pages/Stats";
 import ImportPlanPage from "../ui/pages/ImportPlan";
+import DailyCheckinPage from "../ui/pages/DailyCheckin";
 import ProfileEditPage from "../ui/pages/ProfileEdit";
 import SettingsUnitsPage from "../ui/pages/SettingsUnits";
 import SettingsPage from "../ui/pages/Settings";
@@ -113,6 +114,7 @@ export default function App() {
           <Route path="/stats" element={<StatsPage />} />
           <Route path="/session/:sessionId" element={<SessionDetailPage />} />
           <Route path="/planned-session/:sessionId" element={<PlannedSessionDetailPage />} />
+          <Route path="/daily-checkin" element={<DailyCheckinPage />} />
           <Route path="/programme" element={<ProgrammePage />} />
           <Route path="/import-plan" element={<ImportPlanPage />} />
           <Route path="/settings" element={<SettingsPage />} />
@@ -125,4 +127,3 @@ export default function App() {
     </Routes>
   );
 }
-

@@ -92,6 +92,50 @@ async function persistEngineSnapshotsBestEffort(args: {
   }
 }
 
+async function persistEngineDecisionBestEffort(args: {
+  recommendationId: string;
+  userId: string;
+  planned: TodayOverview["planned"][number];
+  ctxPlanVersionId: string | null;
+  engineRes: EngineResultV1_1;
+}): Promise<void> {
+  if (!supabase) return;
+  try {
+    const reco = args.engineRes.recommendation;
+    await supabase
+      .from("engine_decisions")
+      .upsert(
+        {
+          recommendation_id: args.recommendationId,
+          user_id: args.userId,
+          plan_id: args.planned.planId,
+          plan_version_id: args.ctxPlanVersionId,
+          planned_session_id: args.planned.id,
+          executed_session_id: null,
+          decision: reco.decision,
+          decision_state: reco.decisionState,
+          confidence_score: reco.confidence_score,
+          risk_level: reco.risk_level,
+          reason_codes: Array.isArray(reco.reasonCodes) ? reco.reasonCodes : [],
+          rules_triggered: Array.isArray(reco.rules_triggered) ? reco.rules_triggered : [],
+          human_validation_required: reco.human_validation_required === true,
+          fallback_mode: reco.fallback_mode === true,
+          forbidden_action_blocked: Array.isArray(reco.forbidden_action_blocked) ? reco.forbidden_action_blocked : [],
+          algorithm_version: reco.algorithmVersion,
+          config_version: reco.configVersion,
+          payload: {
+            patch: reco.patch,
+            session_adjustments: reco.session_adjustments,
+            reasons: reco.reasons,
+          },
+        },
+        { onConflict: "user_id,recommendation_id" },
+      );
+  } catch {
+    // Non bloquant: la recommandation principale est déjà persistée.
+  }
+}
+
 function toNumber(v: unknown): number | null {
   if (typeof v === "number" && Number.isFinite(v)) return v;
   if (typeof v === "string") {
@@ -160,10 +204,17 @@ function isLongRun(payload: Record<string, unknown>, sessionType: SessionTypeV1_
 function extractDailySignals(
   latestInternalMetrics: Record<string, unknown> | null,
   latestExternalMetrics: Record<string, unknown> | null,
+  latestDailyCheckin: Record<string, unknown> | null,
 ): Partial<DailySignalsV1_1> {
+  const checkinPayload =
+    latestDailyCheckin && typeof latestDailyCheckin.payload === "object" && latestDailyCheckin.payload
+      ? (latestDailyCheckin.payload as Record<string, unknown>)
+      : {};
   const merged = {
     ...(latestExternalMetrics ?? {}),
     ...(latestInternalMetrics ?? {}),
+    ...checkinPayload,
+    ...(latestDailyCheckin ?? {}),
   } as Record<string, unknown>;
 
   const pain = toNumber(merged.pain_score) ?? toNumber(merged.pain) ?? toNumber(merged.douleur);
@@ -172,6 +223,7 @@ function extractDailySignals(
   const sleepLastNight =
     toNumber(merged.sleep_last_night_h) ??
     toNumber(merged.sleep_hours_last_night) ??
+    toNumber(merged.sleep_hours) ??
     toNumber(merged.sleepHoursLastNight);
   const sleep2dAvg =
     toNumber(merged.sleep_2d_avg_h) ??
@@ -361,7 +413,11 @@ export async function computeAndPersistTodayRecommendation(
   const ctx = await loadEngineContext({ userId, planId: planned.planId, planVersionId: planned.planVersionId });
 
   const recentExec = await loadRecentExecutionSignals(userId, now);
-  const dailySignals = extractDailySignals(ctx.latestInternalMetrics, ctx.latestExternalMetrics);
+  const dailySignals = extractDailySignals(
+    ctx.latestInternalMetrics,
+    ctx.latestExternalMetrics,
+    ctx.latestDailyCheckin,
+  );
   if (dailySignals.fatigueSelfScore === null && ctx.latestFatigue) {
     dailySignals.fatigueSelfScore = Math.round(ctx.latestFatigue.score * 10);
   }
@@ -450,6 +506,14 @@ export async function computeAndPersistTodayRecommendation(
     ctxPlanVersionId: ctx.planVersionId,
     engineRes,
     dailySignals,
+  });
+
+  await persistEngineDecisionBestEffort({
+    recommendationId,
+    userId,
+    planned,
+    ctxPlanVersionId: ctx.planVersionId,
+    engineRes,
   });
 
   return {
