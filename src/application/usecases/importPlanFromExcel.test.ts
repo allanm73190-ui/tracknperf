@@ -123,12 +123,119 @@ describe("importPlanFromExcelArrayBuffer", () => {
 
     const res = importPlanFromExcelArrayBuffer(u8);
     expect(res.sessionTemplates.length).toBeGreaterThanOrEqual(4);
-    expect(res.plannedSessions).toHaveLength(0);
+    if (res.plannedSessions.length > 0) {
+      expect(res.plannedSessions[0]?.scheduledFor).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
 
     const names = res.sessionTemplates.map((t) => t.name);
     expect(names.join(" ")).toMatch(/Force|Hypertrophie|Spécifique|Trail|Repos/i);
 
     const force = res.sessionTemplates.find((t) => /force/i.test(t.name));
     expect(force?.template).toBeTruthy();
+  });
+
+  it("parses planned sessions from legacy 'Instructions - Vue densemble' schedule", () => {
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ["LUNDI — FORCE", null, null, null, null, null, null, null],
+        ["Exercice", "Séries", "Reps", "Charge", "Tempo", "Repos", "RIR", "Notes coach"],
+        ["Back Squat", "4", "6", "75%", "2-0-1", "120", "1", "OK"],
+      ]),
+      "Force",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ["JEUDI — HYPERTROPHIE", null, null, null, null, null, null, null],
+        ["Exercice", "Séries", "Reps", "Charge", "Tempo", "Repos", "RIR", "Notes coach"],
+        ["Incline DB Press", "4", "10", null, "2-1-1", "90", "2", null],
+      ]),
+      "Hypertrophie",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ["DIMANCHE — SPECIFIQUE", null, null, null, null, null, null, null],
+        ["Exercice", "Séries", "Reps", "Charge", "Tempo", "Repos", "RIR", "Notes coach"],
+        ["Step-up", "3", "8/j", null, "3-0-1", "90", "2", null],
+      ]),
+      "Specifique",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ["MARDI — TRAIL FACILE", null, null, null, null, null, null, null],
+        ["Exercice", "Séries", "Reps", "Charge", "Tempo", "Repos", "RIR", "Notes coach"],
+        ["Durée", null, "60 min", null, null, null, null, "Z2"],
+      ]),
+      "Trail - Mardi",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ["MERCREDI — QUALITÉ TRAIL", null, null, null, null, null, null, null],
+        ["Exercice", "Séries", "Reps", "Charge", "Tempo", "Repos", "RIR", "Notes coach"],
+        ["Côtes longues", "5", "6 min", null, null, "descente", null, null],
+      ]),
+      "Trail - Mercredi",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ["SAMEDI — SORTIE LONGUE", null, null, null, null, null, null, null],
+        ["Exercice", "Séries", "Reps", "Charge", "Tempo", "Repos", "RIR", "Notes coach"],
+        ["Long run", null, "2h30", null, null, null, null, null],
+      ]),
+      "Trail - Samedi",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ["PROGRAMME HYBRIDE — 22 mars → 5 juillet 2026", null, null, null, null, null, null, null, null, null],
+        [null, null, "SALLE", null, "TRAIL", null, "REPOS", null, "LONG", null],
+        ["SEM.", "DATES", "PHASE", "LUNDI", "MARDI", "MERCREDI", "JEUDI", "VENDREDI", "SAMEDI", "DIMANCHE"],
+        [
+          "S1",
+          "22 Mar → 28 Mar",
+          "Phase 1",
+          "Force — pattern lourd",
+          "Course facile 60min",
+          "Qualité trail",
+          "Hypertrophie haut du corps",
+          "Repos",
+          "Sortie longue trail",
+          "Spécifique robuste",
+        ],
+      ]),
+      "Instructions - Vue densemble",
+    );
+
+    const ab = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
+    const res = importPlanFromExcelArrayBuffer(ab);
+
+    expect(res.sessionTemplates.map((t) => t.name).sort()).toEqual([
+      "Force",
+      "Hypertrophie",
+      "Specifique",
+      "Trail - Mardi",
+      "Trail - Mercredi",
+      "Trail - Samedi",
+    ]);
+    expect(res.plannedSessions.length).toBe(6);
+    expect(res.plannedSessions.find((s) => s.templateName === "Force")?.scheduledFor).toBe("2026-03-23");
+    expect(res.plannedSessions.find((s) => s.templateName === "Trail - Mardi")?.scheduledFor).toBe("2026-03-24");
+    expect(res.plannedSessions.find((s) => s.templateName === "Trail - Mercredi")?.scheduledFor).toBe("2026-03-25");
+    expect(res.plannedSessions.find((s) => s.templateName === "Hypertrophie")?.scheduledFor).toBe("2026-03-26");
+    expect(res.plannedSessions.find((s) => s.templateName === "Trail - Samedi")?.scheduledFor).toBe("2026-03-28");
+    expect(res.plannedSessions.find((s) => s.templateName === "Specifique")?.scheduledFor).toBe("2026-03-22");
   });
 });

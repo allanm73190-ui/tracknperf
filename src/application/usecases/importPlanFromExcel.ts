@@ -20,6 +20,18 @@ type TableRow = {
   values: Row;
 };
 
+type LegacyWeekdayKey = "lundi" | "mardi" | "mercredi" | "jeudi" | "vendredi" | "samedi" | "dimanche";
+
+const LEGACY_WEEKDAYS: Array<{ key: LegacyWeekdayKey; jsDay: number; aliases: string[] }> = [
+  { key: "lundi", jsDay: 1, aliases: ["lundi", "monday"] },
+  { key: "mardi", jsDay: 2, aliases: ["mardi", "tuesday"] },
+  { key: "mercredi", jsDay: 3, aliases: ["mercredi", "wednesday"] },
+  { key: "jeudi", jsDay: 4, aliases: ["jeudi", "thursday"] },
+  { key: "vendredi", jsDay: 5, aliases: ["vendredi", "friday"] },
+  { key: "samedi", jsDay: 6, aliases: ["samedi", "saturday"] },
+  { key: "dimanche", jsDay: 0, aliases: ["dimanche", "sunday"] },
+];
+
 function normalizeHeaderKey(key: string): string {
   return key
     .normalize("NFD")
@@ -193,6 +205,254 @@ function parseJsonObjectCell(value: unknown, context: string, errors: string[]):
   }
 }
 
+function toIsoDateLocal(d: Date): string {
+  const yyyy = String(d.getFullYear()).padStart(4, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function extractYearFromText(value: string): number | null {
+  const matches = Array.from(value.matchAll(/\b(20\d{2})\b/g));
+  if (matches.length === 0) return null;
+  const last = matches[matches.length - 1]?.[1];
+  if (!last) return null;
+  const year = Number(last);
+  return Number.isFinite(year) ? year : null;
+}
+
+function parseLegacyMonthToken(token: string): number | null {
+  const k = normalizeHeaderKey(token).replace(/_/g, "");
+  if (k.startsWith("jan")) return 1;
+  if (k.startsWith("fev") || k.startsWith("feb")) return 2;
+  if (k.startsWith("mar")) return 3;
+  if (k.startsWith("avr") || k.startsWith("apr")) return 4;
+  if (k.startsWith("mai") || k.startsWith("may")) return 5;
+  if (k.startsWith("juin") || k.startsWith("jun")) return 6;
+  if (k.startsWith("juil") || k.startsWith("jul")) return 7;
+  if (k.startsWith("aou") || k.startsWith("aug")) return 8;
+  if (k.startsWith("sep")) return 9;
+  if (k.startsWith("oct")) return 10;
+  if (k.startsWith("nov")) return 11;
+  if (k.startsWith("dec")) return 12;
+  return null;
+}
+
+function parseLegacyDateRange(rangeValue: string, fallbackYear: number | null): { start: Date; end: Date } | null {
+  const tokens = Array.from(
+    rangeValue.matchAll(/(\d{1,2})\s*([A-Za-zÀ-ÿ]{3,})(?:\s*(\d{4}))?/g),
+  );
+  if (tokens.length < 2) return null;
+
+  const first = tokens[0];
+  const second = tokens[1];
+  if (!first || !second) return null;
+
+  const day1 = Number(first[1]);
+  const month1 = parseLegacyMonthToken(first[2] ?? "");
+  const year1 = first[3] ? Number(first[3]) : fallbackYear;
+  const day2 = Number(second[1]);
+  const month2 = parseLegacyMonthToken(second[2] ?? "");
+  let year2 = second[3] ? Number(second[3]) : year1;
+
+  if (!month1 || !month2 || !year1 || !Number.isFinite(day1) || !Number.isFinite(day2)) return null;
+  if (year2 && year2 < year1) year2 = year1;
+  if (!second[3] && year2 === year1 && month2 < month1) {
+    year2 = year1 + 1;
+  }
+  if (!year2) return null;
+
+  const start = new Date(year1, month1 - 1, day1, 12, 0, 0, 0);
+  const end = new Date(year2, month2 - 1, day2, 12, 0, 0, 0);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+  if (end.getTime() < start.getTime()) return null;
+  return { start, end };
+}
+
+function buildLegacyWeekdayDateMap(start: Date, end: Date): Map<LegacyWeekdayKey, string> {
+  const byWeekday = new Map<LegacyWeekdayKey, string>();
+  const maxSpanDays = Math.max(0, Math.min(10, Math.round((end.getTime() - start.getTime()) / 86400000)));
+
+  for (let offset = 0; offset <= maxSpanDays; offset += 1) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + offset);
+    const jsDay = d.getDay();
+    const match = LEGACY_WEEKDAYS.find((w) => w.jsDay === jsDay);
+    if (!match) continue;
+    byWeekday.set(match.key, toIsoDateLocal(d));
+  }
+
+  return byWeekday;
+}
+
+function isLikelyRestCell(value: string): boolean {
+  const k = normalizeHeaderKey(value);
+  const hasTrainingSignal =
+    k.includes("force") ||
+    k.includes("hypertroph") ||
+    k.includes("specifi") ||
+    k.includes("trail") ||
+    k.includes("course");
+  if (hasTrainingSignal) return false;
+  return k.includes("repos") || k.includes("decharge");
+}
+
+function pickLegacyTemplateNameForDay(
+  day: LegacyWeekdayKey,
+  cellValue: string,
+  templateNames: string[],
+): string | null {
+  const templates = templateNames.map((name) => ({ name, key: normalizeHeaderKey(name) }));
+  const cellKey = normalizeHeaderKey(cellValue);
+  const daySpecificTemplate = templates.find((t) => t.key.includes(day))?.name ?? null;
+  const trailDayTemplate = templates.find((t) => t.key.includes("trail") && t.key.includes(day))?.name ?? null;
+
+  if (cellKey.includes("force")) {
+    return templates.find((t) => t.key.includes("force"))?.name ?? null;
+  }
+  if (cellKey.includes("hypertroph")) {
+    return templates.find((t) => t.key.includes("hypertroph"))?.name ?? null;
+  }
+  if (cellKey.includes("specifi")) {
+    return templates.find((t) => t.key.includes("specifi"))?.name ?? null;
+  }
+
+  if (cellKey.includes("trail") || cellKey.includes("course")) {
+    return trailDayTemplate ?? templates.find((t) => t.key.includes("trail"))?.name ?? daySpecificTemplate;
+  }
+
+  if (!isLikelyRestCell(cellValue) && daySpecificTemplate) {
+    return daySpecificTemplate;
+  }
+  return null;
+}
+
+function extractLegacyFallbackYear(workbook: XLSX.WorkBook): number | null {
+  const fromTitle =
+    typeof workbook.Props?.Title === "string" && workbook.Props.Title.trim()
+      ? extractYearFromText(workbook.Props.Title)
+      : null;
+  if (fromTitle) return fromTitle;
+
+  for (const sheetName of workbook.SheetNames) {
+    if (!normalizeHeaderKey(sheetName).includes("instruction")) continue;
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) continue;
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: null, raw: false });
+    for (let i = 0; i < Math.min(rows.length, 12); i += 1) {
+      const row = rows[i];
+      if (!Array.isArray(row)) continue;
+      for (const cell of row) {
+        if (typeof cell !== "string" || !cell.trim()) continue;
+        const year = extractYearFromText(cell);
+        if (year) return year;
+      }
+    }
+  }
+  return null;
+}
+
+function parseLegacyOverviewPlannedSessions(
+  workbook: XLSX.WorkBook,
+  templateNames: string[],
+): PlanImport["plannedSessions"] {
+  const fallbackYear = extractLegacyFallbackYear(workbook);
+  const planned: PlanImport["plannedSessions"] = [];
+  const dedupe = new Set<string>();
+
+  for (const sheetName of workbook.SheetNames) {
+    const key = normalizeHeaderKey(sheetName);
+    if (!key.includes("instruction")) continue;
+    if (!(key.includes("vue") || key.includes("overview") || key.includes("ensemble"))) continue;
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) continue;
+    const rows = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1, defval: null, raw: false });
+    if (!Array.isArray(rows) || rows.length === 0) continue;
+
+    let headerRowIndex = -1;
+    let semIdx = -1;
+    let datesIdx = -1;
+    let phaseIdx = -1;
+    const weekdayIndexByKey = new Map<LegacyWeekdayKey, number>();
+
+    for (let i = 0; i < Math.min(rows.length, 25); i += 1) {
+      const row = rows[i];
+      if (!Array.isArray(row)) continue;
+      const normalized = row.map((cell) => (typeof cell === "string" ? normalizeHeaderKey(cell) : ""));
+
+      const nextSemIdx = normalized.findIndex((h) => h === "sem" || h === "semaine" || h === "week");
+      const nextDatesIdx = normalized.findIndex((h) => h === "dates" || h === "date");
+      if (nextSemIdx < 0 || nextDatesIdx < 0) continue;
+
+      const nextWeekdayIndexByKey = new Map<LegacyWeekdayKey, number>();
+      for (const day of LEGACY_WEEKDAYS) {
+        const idx = normalized.findIndex((h) => day.aliases.includes(h));
+        if (idx >= 0) nextWeekdayIndexByKey.set(day.key, idx);
+      }
+      if (nextWeekdayIndexByKey.size < 3) continue;
+
+      headerRowIndex = i;
+      semIdx = nextSemIdx;
+      datesIdx = nextDatesIdx;
+      phaseIdx = normalized.findIndex((h) => h === "phase");
+      for (const [dayKey, idx] of nextWeekdayIndexByKey.entries()) {
+        weekdayIndexByKey.set(dayKey, idx);
+      }
+      break;
+    }
+
+    if (headerRowIndex < 0) continue;
+
+    for (let i = headerRowIndex + 1; i < rows.length; i += 1) {
+      const row = rows[i];
+      if (!Array.isArray(row)) continue;
+      const weekLabel = normalizeMaybeString(row[semIdx]);
+      if (!weekLabel || !/^s\d+/i.test(weekLabel)) continue;
+
+      const dateRangeRaw = normalizeMaybeString(row[datesIdx]);
+      if (!dateRangeRaw) continue;
+      const dateRange = parseLegacyDateRange(dateRangeRaw, fallbackYear);
+      if (!dateRange) continue;
+
+      const dateMap = buildLegacyWeekdayDateMap(dateRange.start, dateRange.end);
+      if (dateMap.size < 5) continue;
+      const phaseValue = phaseIdx >= 0 ? normalizeMaybeString(row[phaseIdx]) : null;
+
+      for (const day of LEGACY_WEEKDAYS) {
+        const columnIndex = weekdayIndexByKey.get(day.key);
+        if (columnIndex === undefined) continue;
+        const rawCell = normalizeMaybeString(row[columnIndex]);
+        if (!rawCell || isLikelyRestCell(rawCell)) continue;
+
+        const templateName = pickLegacyTemplateNameForDay(day.key, rawCell, templateNames);
+        if (!templateName) continue;
+        const scheduledFor = dateMap.get(day.key);
+        if (!scheduledFor) continue;
+
+        const dedupeKey = `${scheduledFor}::${templateName.toLowerCase()}::${weekLabel.toLowerCase()}`;
+        if (dedupe.has(dedupeKey)) continue;
+        dedupe.add(dedupeKey);
+
+        planned.push({
+          scheduledFor,
+          templateName,
+          payload: {
+            source: "legacy_programme_template_schedule",
+            sheetName,
+            weekLabel,
+            phase: phaseValue,
+            day: day.key,
+            text: rawCell,
+          },
+        });
+      }
+    }
+  }
+
+  planned.sort((a, b) => a.scheduledFor.localeCompare(b.scheduledFor));
+  return planned;
+}
+
 function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | null {
   const templateSheets = workbook.SheetNames.filter((n) => !n.toLowerCase().includes("instruction"));
   const sessionTemplates: PlanImport["sessionTemplates"] = [];
@@ -254,12 +514,22 @@ function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | n
   if (!sessionTemplates.length) return null;
 
   const planName = workbook.Props?.Title?.trim() || "Imported programme";
+  const plannedSessions = parseLegacyOverviewPlannedSessions(
+    workbook,
+    sessionTemplates.map((t) => t.name),
+  );
 
   return planImportSchema.parse({
     plan: { name: planName, description: "Imported from legacy programme_template.xlsx" },
-    planVersion: { version: 1, payload: { source: "legacy_programme_template" } },
+    planVersion: {
+      version: 1,
+      payload: {
+        source: "legacy_programme_template",
+        legacyPlannedSessionsCount: plannedSessions.length,
+      },
+    },
     sessionTemplates,
-    plannedSessions: [],
+    plannedSessions,
   });
 }
 
