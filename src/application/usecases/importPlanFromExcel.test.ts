@@ -134,6 +134,51 @@ describe("importPlanFromExcelArrayBuffer", () => {
     expect(force?.template).toBeTruthy();
   });
 
+  it("parses legacy template sheets with plural headers and reordered columns", () => {
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ["LUNDI — FORCE", null, null, null, null, null, null, null],
+        ["Notes coach", "Charge", "Exercices", "Reps", "Séries", "Repos", "Tempo", "RIR"],
+        ["── ACTIVATION ──", null, null, null, null, null, null, null],
+        ["Monter en charge sans échec", "80 kg", "Back Squat", "5", "4", "120", "2-0-1", "1"],
+      ]),
+      "Force",
+    );
+
+    XLSX.utils.book_append_sheet(
+      wb,
+      XLSX.utils.aoa_to_sheet([
+        ["PROGRAMME TEST — 1 semaine", null, null, null, null, null, null, null, null, null],
+        [null, null, "SALLE", null, "TRAIL", null, "REPOS", null, "LONG", null],
+        ["SEM.", "DATES", "PHASE", "LUNDI", "MARDI", "MERCREDI", "JEUDI", "VENDREDI", "SAMEDI", "DIMANCHE"],
+        ["S1", "22 Mar → 28 Mar", "Phase 1", "Force", "Repos", "Repos", "Repos", "Repos", "Repos", "Repos"],
+      ]),
+      "Instructions - Vue densemble",
+    );
+
+    const ab = XLSX.write(wb, { type: "array", bookType: "xlsx" }) as ArrayBuffer;
+    const res = importPlanFromExcelArrayBuffer(ab);
+
+    expect(res.sessionTemplates).toHaveLength(1);
+    const force = res.sessionTemplates[0];
+    expect(force?.name).toBe("Force");
+    const items = (force?.template.items ?? []) as Array<Record<string, unknown>>;
+    expect(items).toHaveLength(1);
+    expect(items[0]).toMatchObject({
+      exercise: "Back Squat",
+      series: "4",
+      reps: "5",
+      load: "80 kg",
+      rest: "120",
+      tempo: "2-0-1",
+      rir: "1",
+      coachNotes: "Monter en charge sans échec",
+    });
+  });
+
   it("parses planned sessions from legacy 'Instructions - Vue densemble' schedule", () => {
     const wb = XLSX.utils.book_new();
 

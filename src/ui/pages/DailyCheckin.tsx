@@ -160,7 +160,7 @@ export default function DailyCheckinPage() {
 
   return (
     <AppShell
-      title="Daily check-in"
+      title="Check-in quotidien"
       nav={[
         { to: "/today", label: "Aujourd'hui" },
         { to: "/history", label: "Historique" },
@@ -193,7 +193,7 @@ export default function DailyCheckinPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <ScoreSlider label="Douleur (1-10)" value={painScore} onChange={setPainScore} />
               <ScoreSlider label="Fatigue (1-10)" value={fatigueScore} onChange={setFatigueScore} />
-              <ScoreSlider label="Readiness (1-10)" value={readinessScore} onChange={setReadinessScore} />
+              <ScoreSlider label="Disponibilité (1-10)" value={readinessScore} onChange={setReadinessScore} />
               <Field label="Sommeil (h)" value={sleepHours} onChange={setSleepHours} />
               <ScoreSlider label="Qualité sommeil (1-10)" value={sleepQualityScore} onChange={setSleepQualityScore} />
               <ScoreSlider label="Courbatures (1-10)" value={sorenessScore} onChange={setSorenessScore} />

@@ -15,24 +15,25 @@ import {
 import { flushSyncQueue } from "../../application/sync/syncClient";
 import { getQueueStats, listRecentOps, type SyncOp } from "../../infra/offline/db";
 
-function getRecoTitle(reco: PersistedRecommendation): string {
+function getRecoTitle(reco: PersistedRecommendation): string | null {
   const out = reco.output as { recommendedTemplateName?: unknown } | null;
-  if (typeof out?.recommendedTemplateName === "string") return out.recommendedTemplateName;
-  return "Séance recommandée";
+  if (typeof out?.recommendedTemplateName === "string" && out.recommendedTemplateName.trim()) {
+    return out.recommendedTemplateName.trim();
+  }
+  return null;
 }
 
-function getRecoHeadline(reco: PersistedRecommendation): string {
+function getRecoHeadline(reco: PersistedRecommendation): string | null {
   const exp = reco.explanation as { summary?: { headline?: unknown } } | null;
-  if (typeof exp?.summary?.headline === "string") return exp.summary.headline;
-  return "";
+  if (typeof exp?.summary?.headline === "string" && exp.summary.headline.trim()) {
+    return exp.summary.headline.trim();
+  }
+  return null;
 }
 
-function getRecoReasons(reco: PersistedRecommendation): string[] {
-  const exp = reco.explanation as { summary?: { reasonsTop3?: Array<{ text?: unknown }> } } | null;
-  if (!Array.isArray(exp?.summary?.reasonsTop3)) return [];
-  return exp!.summary!.reasonsTop3!
-    .slice(0, 3)
-    .map((r) => (typeof r.text === "string" ? r.text : JSON.stringify(r)));
+function formatIsoDate(isoDate: string): string {
+  const d = new Date(`${isoDate}T00:00:00`);
+  return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
 }
 
 export default function TodayPage() {
@@ -53,6 +54,15 @@ export default function TodayPage() {
   const todayLabel = useMemo(() => {
     return new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }).toUpperCase();
   }, []);
+  const recoTitle = recommendation ? getRecoTitle(recommendation) : null;
+  const recoHeadline = recommendation ? getRecoHeadline(recommendation) : null;
+  const hasRecoAdjustment =
+    !!recommendation &&
+    (!!recoHeadline || (!!recoTitle && (!!plannedCandidate?.templateName ? recoTitle !== plannedCandidate.templateName : true)));
+  const otherPlanned = useMemo(
+    () => overview?.planned.filter((p) => p.id !== plannedCandidate?.id) ?? [],
+    [overview?.planned, plannedCandidate?.id],
+  );
 
   async function refreshData(ignoreSignal?: { ignore: boolean }) {
     try {
@@ -62,15 +72,8 @@ export default function TodayPage() {
       try {
         const reco = await computeAndPersistTodayRecommendation(next);
         if (!ignoreSignal?.ignore) setRecommendation(reco);
-      } catch (err) {
-        if (!ignoreSignal?.ignore) {
-          setRecommendation(null);
-          setMessage(
-            err instanceof Error
-              ? `Recommandation indisponible pour le moment. (${err.message})`
-              : "Recommandation indisponible pour le moment.",
-          );
-        }
+      } catch {
+        if (!ignoreSignal?.ignore) setRecommendation(null);
       }
       const stats = await getQueueStats();
       if (!ignoreSignal?.ignore) setSyncStatus(stats);
@@ -173,31 +176,58 @@ export default function TodayPage() {
         </div>
       ) : overview ? (
         <div className="grid gap-4">
-          {/* Recommendation hero */}
-          {recommendation ? (
-            <SessionStateCard
-              state="recommended"
-              title={getRecoTitle(recommendation)}
-              subtitle={getRecoHeadline(recommendation)}
-              reasons={getRecoReasons(recommendation)}
-              recommendationId={recommendation.recommendationId}
-              onStart={openDetailedLogging}
-            />
-          ) : plannedCandidate ? (
-            <SessionStateCard
-              state="recommended"
-              title={plannedCandidate.templateName ?? "Séance planifiée"}
-              subtitle="Recommandation calculée localement à partir de la séance du jour."
-              reasons={[
-                "Une séance planifiée est disponible aujourd'hui.",
-                "Le moteur de recommandation est momentanément indisponible.",
-                "Vous pouvez démarrer la séance détaillée sans bloquer le suivi.",
-              ]}
-              onStart={openDetailedLogging}
-            />
+          {plannedCandidate ? (
+            <div className="rounded-[1.5rem] bg-surface-container-low p-6 grid gap-4">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Séance du jour</div>
+                  <h2 className="font-headline font-black text-3xl tracking-tighter leading-none mt-2">
+                    {plannedCandidate.templateName ?? "Séance planifiée"}
+                  </h2>
+                  <div className="text-sm text-on-surface-variant mt-2 capitalize">
+                    {formatIsoDate(plannedCandidate.scheduledFor)}
+                  </div>
+                </div>
+                <Link
+                  to={`/planned-session/${plannedCandidate.id}`}
+                  className="text-[10px] font-bold uppercase tracking-widest text-secondary shrink-0 mt-1"
+                >
+                  Détail →
+                </Link>
+              </div>
+
+              {hasRecoAdjustment ? (
+                <div className="rounded-[1rem] bg-surface-container-highest p-3 text-sm text-on-surface-variant">
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-secondary mb-1">Ajustement moteur</div>
+                  {recoTitle ? <div className="font-semibold text-on-surface">{recoTitle}</div> : null}
+                  {recoHeadline ? <div>{recoHeadline}</div> : null}
+                </div>
+              ) : null}
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={openDetailedLogging}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full font-bold text-sm uppercase tracking-widest text-[#3a4a00] active:scale-95 transition-all"
+                  style={{ background: "linear-gradient(45deg, #beee00 0%, #f3ffca 100%)" }}
+                >
+                  Ouvrir la séance détaillée
+                </button>
+                <Link
+                  to="/programme"
+                  className="inline-flex items-center px-4 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest bg-surface-container-highest text-on-surface-variant active:scale-95"
+                >
+                  Programme
+                </Link>
+              </div>
+            </div>
           ) : (
-            <div className="rounded-[1.5rem] bg-surface-container-low p-8">
-              <div className="text-on-surface-variant text-sm">Aucune recommandation pour aujourd'hui.</div>
+            <div className="rounded-[1.5rem] bg-surface-container-low p-8 grid gap-3">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Séance du jour</div>
+              <div className="font-headline font-black text-2xl tracking-tight">Journée libre</div>
+              <div className="text-sm text-on-surface-variant">Aucune séance planifiée aujourd’hui.</div>
+              <Link to="/programme" className="text-[10px] font-bold uppercase tracking-widest text-secondary">
+                Voir le programme →
+              </Link>
             </div>
           )}
 
@@ -206,7 +236,7 @@ export default function TodayPage() {
               <div>
                 <h3 className="font-headline font-bold uppercase tracking-tight text-sm">Daily check-in</h3>
                 <p className="text-xs text-on-surface-variant mt-1">
-                  Mettez à jour douleur, fatigue, sommeil et signaux de sécurité.
+                  Mettez à jour douleur, fatigue, sommeil et disponibilité.
                 </p>
               </div>
               <Link
@@ -218,22 +248,21 @@ export default function TodayPage() {
             </div>
           </div>
 
-          {/* Planned sessions */}
-          {overview.planned.length > 0 && (
+          {otherPlanned.length > 0 && (
             <div className="rounded-[1.5rem] bg-surface-container-low p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-headline font-bold uppercase tracking-tight text-sm">Planifié</h3>
+                <h3 className="font-headline font-bold uppercase tracking-tight text-sm">Autres séances planifiées</h3>
                 <Link to="/programme" className="text-[10px] font-bold text-secondary uppercase tracking-widest">
                   Programme →
                 </Link>
               </div>
               <div className="grid gap-2">
-                {overview.planned.map((p) => (
+                {otherPlanned.map((p) => (
                   <Link key={p.id} to={`/planned-session/${p.id}`}>
                     <SessionStateCard
                       state="planned"
                       title={p.templateName ?? "Séance"}
-                      subtitle={p.scheduledFor}
+                      subtitle={formatIsoDate(p.scheduledFor)}
                     />
                   </Link>
                 ))}
@@ -256,34 +285,13 @@ export default function TodayPage() {
                     <SessionStateCard
                       state="executed"
                       title={`${e.startedAt.slice(11, 16)} → ${e.endedAt ? e.endedAt.slice(11, 16) : "—"}`}
-                      subtitle={e.id.slice(0, 8)}
+                      subtitle={formatIsoDate(e.startedAt.slice(0, 10))}
                     />
                   </Link>
                 ))}
               </div>
             </div>
           )}
-
-          {/* No sessions at all */}
-          {overview.planned.length === 0 && overview.executed.length === 0 && !recommendation && (
-            <div className="rounded-[1.5rem] bg-surface-container-low p-8 text-center">
-              <div className="text-on-surface-variant text-sm mb-4">Journée libre — aucune session planifiée.</div>
-              <Link to="/programme" className="text-[10px] font-bold text-secondary uppercase tracking-widest">
-                Voir le programme →
-              </Link>
-            </div>
-          )}
-
-          {/* Quick log FAB */}
-          <div className="flex justify-end">
-            <button
-              onClick={openDetailedLogging}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-full font-bold text-sm uppercase tracking-widest text-[#3a4a00] active:scale-95 transition-all"
-              style={{ background: "linear-gradient(45deg, #beee00 0%, #f3ffca 100%)" }}
-            >
-              Ouvrir la séance détaillée
-            </button>
-          </div>
         </div>
       ) : null}
 

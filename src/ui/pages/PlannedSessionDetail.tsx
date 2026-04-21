@@ -387,6 +387,11 @@ export default function PlannedSessionDetailPage() {
     () => inferLegacyEnduranceTargets(session, draftExercises),
     [session, draftExercises],
   );
+  const safeSessionPainScore = useMemo(() => {
+    const parsed = toNullableNumber(sessionPainScore);
+    if (parsed === null) return 0;
+    return Math.max(0, Math.min(10, Math.round(parsed)));
+  }, [sessionPainScore]);
 
   const isStrengthLikeMode = sessionMode === "strength" || sessionMode === "mixed";
   const showEndurancePanel = sessionMode === "endurance" || sessionMode === "mixed" || sessionMode === "recovery";
@@ -707,6 +712,118 @@ export default function PlannedSessionDetailPage() {
             )}
           </div>
 
+          {showExercisePanel && (
+            <div className="grid gap-4">
+              <div className="text-[10px] px-3 py-1 rounded-full bg-surface-container-highest text-secondary font-bold tracking-widest uppercase justify-self-start">
+                Exécution détaillée
+              </div>
+              {draftExercises.map((exercise) => (
+                <div key={exercise.localId} className="rounded-[1.5rem] bg-surface-container-low p-5 grid gap-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">
+                        Exercice {exercise.position}
+                      </div>
+                      <label className="grid gap-1 max-w-[520px]">
+                        <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Nom de l'exercice</span>
+                        <input
+                          value={exercise.exerciseName}
+                          onChange={(e) => updateExerciseName(exercise.localId, e.currentTarget.value)}
+                          className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
+                          style={{ border: 0 }}
+                          placeholder={`Exercice ${exercise.position}`}
+                        />
+                      </label>
+                      <div className="text-xs text-on-surface-variant mt-2">
+                        Cible: Séries {exercise.seriesRaw ?? String(exercise.sets.length)} · Reps {exercise.repsRaw ?? "—"} · Charge {exercise.loadRaw ?? "—"}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeExercise(exercise.localId)}
+                      className="text-[10px] uppercase tracking-widest text-on-surface-variant px-2 py-1 rounded-full bg-surface-container-highest active:scale-95"
+                    >
+                      Retirer
+                    </button>
+                  </div>
+
+                  <div className="grid gap-2">
+                    {exercise.sets.map((set) => (
+                      <div key={set.setIndex} className="rounded-[0.9rem] bg-surface-container-highest p-3 grid gap-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
+                            Set {set.setIndex}
+                          </span>
+                          <button
+                            onClick={() => removeSet(exercise.localId, set.setIndex)}
+                            className="text-[10px] uppercase tracking-widest text-on-surface-variant"
+                            type="button"
+                          >
+                            Retirer
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+                          <Field label="Reps" value={set.reps} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "reps", v)} inputMode="numeric" />
+                          <Field label="Charge (kg)" value={set.loadKg} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "loadKg", v)} inputMode="decimal" />
+                          <Field label="RPE" value={set.rpe} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "rpe", v)} inputMode="decimal" />
+                          <Field label="RIR" value={set.rir} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "rir", v)} inputMode="decimal" />
+                          <Field label="Repos (s)" value={set.restSeconds} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "restSeconds", v)} inputMode="numeric" />
+                          <Field label="Douleur (0-10)" value={set.painScore} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "painScore", v)} inputMode="decimal" />
+                        </div>
+                        <label className="flex items-center gap-2 text-xs text-on-surface-variant">
+                          <input
+                            type="checkbox"
+                            checked={set.completed}
+                            onChange={(e) => updateSetField(exercise.localId, set.setIndex, "completed", e.currentTarget.checked)}
+                          />
+                          Set validé
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="grid gap-2 md:grid-cols-[auto_220px_1fr] items-end">
+                    <button
+                      type="button"
+                      onClick={() => addSet(exercise.localId)}
+                      className="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-on-surface-variant active:scale-95"
+                    >
+                      Ajouter un set
+                    </button>
+                    <label className="grid gap-1">
+                      <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Douleur exercice (0-10)</span>
+                      <input
+                        value={exercise.painScore}
+                        onChange={(e) => updateExercisePain(exercise.localId, e.currentTarget.value)}
+                        className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
+                        style={{ border: 0 }}
+                        inputMode="decimal"
+                        placeholder="ex: 3"
+                      />
+                    </label>
+                    <label className="grid gap-1 flex-1">
+                      <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Notes exercice</span>
+                      <input
+                        value={exercise.notes}
+                        onChange={(e) => updateExerciseNotes(exercise.localId, e.currentTarget.value)}
+                        className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
+                        style={{ border: 0 }}
+                        placeholder="Technique, douleur, adaptation..."
+                      />
+                    </label>
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addExercise}
+                className="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-on-surface-variant active:scale-95 justify-self-start"
+              >
+                Ajouter un exercice
+              </button>
+            </div>
+          )}
+
           <div className="rounded-[1.5rem] bg-surface-container-low p-6 grid gap-4">
             <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Métriques en direct</div>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-6">
@@ -767,14 +884,18 @@ export default function PlannedSessionDetailPage() {
             </label>
             <label className="grid gap-2 max-w-[240px]">
               <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Douleur séance (0-10)</span>
-              <input
-                value={sessionPainScore}
-                onChange={(e) => setSessionPainScore(e.currentTarget.value)}
-                className="rounded-[0.875rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
-                style={{ border: 0 }}
-                inputMode="decimal"
-                placeholder="ex: 2"
-              />
+              <div className="rounded-[0.875rem] bg-surface-container-highest px-3 py-2 flex items-center gap-3">
+                <input
+                  type="range"
+                  min={0}
+                  max={10}
+                  step={1}
+                  value={safeSessionPainScore}
+                  onChange={(e) => setSessionPainScore(e.currentTarget.value)}
+                  className="w-full accent-lime-300"
+                />
+                <span className="text-sm font-bold text-on-surface min-w-[2ch]">{safeSessionPainScore}</span>
+              </div>
             </label>
           </div>
 
@@ -798,123 +919,6 @@ export default function PlannedSessionDetailPage() {
                   placeholder="Allure, météo, sensations..."
                 />
               </label>
-            </div>
-          )}
-
-          {showExercisePanel && (
-            <div className="grid gap-4">
-              {draftExercises.map((exercise) => (
-                <div key={exercise.localId} className="rounded-[1.5rem] bg-surface-container-low p-5 grid gap-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1">
-                      <div className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mb-1">
-                        Exercice {exercise.position}
-                      </div>
-                      <label className="grid gap-1 max-w-[520px]">
-                        <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Nom de l'exercice</span>
-                        <input
-                          value={exercise.exerciseName}
-                          onChange={(e) => updateExerciseName(exercise.localId, e.currentTarget.value)}
-                          className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
-                          style={{ border: 0 }}
-                          placeholder={`Exercice ${exercise.position}`}
-                        />
-                      </label>
-                      <div className="text-xs text-on-surface-variant mt-2 grid gap-1">
-                        <div>Séries prévues: {exercise.seriesRaw ?? String(exercise.sets.length)}</div>
-                        <div>Reps cibles: {exercise.repsRaw ?? "—"}</div>
-                        <div>Charge cible: {exercise.loadRaw ?? "—"}</div>
-                        <div>Tempo: {exercise.tempoRaw ?? "—"} · Repos: {exercise.restRaw ?? "—"} · RIR: {exercise.rirRaw ?? "—"}</div>
-                      </div>
-                      {exercise.coachNotes && (
-                        <p className="text-sm text-on-surface-variant mt-3 leading-relaxed">{exercise.coachNotes}</p>
-                      )}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeExercise(exercise.localId)}
-                      className="text-[10px] uppercase tracking-widest text-on-surface-variant px-2 py-1 rounded-full bg-surface-container-highest active:scale-95"
-                    >
-                      Retirer
-                    </button>
-                  </div>
-
-                  <div className="grid gap-2">
-                    {exercise.sets.map((set) => (
-                      <div key={set.setIndex} className="rounded-[0.9rem] bg-surface-container-highest p-3 grid gap-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
-                            Set {set.setIndex}
-                          </span>
-                          <button
-                            onClick={() => removeSet(exercise.localId, set.setIndex)}
-                            className="text-[10px] uppercase tracking-widest text-on-surface-variant"
-                            type="button"
-                          >
-                            Retirer
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-                          <Field label="Reps" value={set.reps} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "reps", v)} inputMode="numeric" />
-                          <Field label="Charge (kg)" value={set.loadKg} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "loadKg", v)} inputMode="decimal" />
-                          <Field label="RPE" value={set.rpe} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "rpe", v)} inputMode="decimal" />
-                          <Field label="RIR" value={set.rir} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "rir", v)} inputMode="decimal" />
-                          <Field label="Repos (s)" value={set.restSeconds} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "restSeconds", v)} inputMode="numeric" />
-                          <Field label="Douleur (0-10)" value={set.painScore} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "painScore", v)} inputMode="decimal" />
-                        </div>
-
-                        <label className="flex items-center gap-2 text-xs text-on-surface-variant">
-                          <input
-                            type="checkbox"
-                            checked={set.completed}
-                            onChange={(e) => updateSetField(exercise.localId, set.setIndex, "completed", e.currentTarget.checked)}
-                          />
-                          Set validé
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid gap-2 md:grid-cols-[auto_220px_1fr] items-end">
-                    <button
-                      type="button"
-                      onClick={() => addSet(exercise.localId)}
-                      className="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-on-surface-variant active:scale-95"
-                    >
-                      Ajouter un set
-                    </button>
-                    <label className="grid gap-1">
-                      <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Douleur exercice (0-10)</span>
-                      <input
-                        value={exercise.painScore}
-                        onChange={(e) => updateExercisePain(exercise.localId, e.currentTarget.value)}
-                        className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
-                        style={{ border: 0 }}
-                        inputMode="decimal"
-                        placeholder="ex: 3"
-                      />
-                    </label>
-                    <label className="grid gap-1 flex-1">
-                      <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Notes exercice</span>
-                      <input
-                        value={exercise.notes}
-                        onChange={(e) => updateExerciseNotes(exercise.localId, e.currentTarget.value)}
-                        className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
-                        style={{ border: 0 }}
-                        placeholder="Technique, douleur, adaptation..."
-                      />
-                    </label>
-                  </div>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addExercise}
-                className="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-on-surface-variant active:scale-95 justify-self-start"
-              >
-                Ajouter un exercice
-              </button>
             </div>
           )}
 

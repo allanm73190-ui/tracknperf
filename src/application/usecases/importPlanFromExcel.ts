@@ -457,6 +457,17 @@ function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | n
   const templateSheets = workbook.SheetNames.filter((n) => !n.toLowerCase().includes("instruction"));
   const sessionTemplates: PlanImport["sessionTemplates"] = [];
 
+  function findHeaderIndex(header: string[], aliases: string[]): number {
+    return header.findIndex((h) => aliases.some((alias) => h === alias || h.startsWith(alias)));
+  }
+
+  function isSectionSeparatorRow(value: string): boolean {
+    const compact = value.trim();
+    if (!compact) return true;
+    if (/^[\-\u2500\u2013\u2014_ ]+$/.test(compact)) return true;
+    return /^[\-\u2500\u2013\u2014_ ]+.+[\-\u2500\u2013\u2014_ ]+$/.test(compact);
+  }
+
   for (const sheetName of templateSheets) {
     const sheet = workbook.Sheets[sheetName];
     if (!sheet) continue;
@@ -468,7 +479,7 @@ function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | n
       const r = rows[i];
       if (!Array.isArray(r)) continue;
       const normalized = r.map((c) => (typeof c === "string" ? normalizeHeaderKey(c) : ""));
-      if (normalized.some((h) => h === "exercice" || h === "exercise")) {
+      if (normalized.some((h) => h === "exercice" || h === "exercise" || h === "exercices" || h === "exercises")) {
         headerRowIndex = i;
         break;
       }
@@ -477,8 +488,15 @@ function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | n
 
     const header =
       (rows[headerRowIndex] ?? []).map((c) => (typeof c === "string" ? normalizeHeaderKey(c) : "")) ?? [];
-    const exIdx = header.findIndex((h) => h === "exercice" || h === "exercise");
+    const exIdx = findHeaderIndex(header, ["exercice", "exercise", "exercices", "exercises", "mouvement"]);
     if (exIdx < 0) continue;
+    const seriesIdx = findHeaderIndex(header, ["series", "serie", "set", "sets"]);
+    const repsIdx = findHeaderIndex(header, ["reps", "rep", "repetition", "repetitions"]);
+    const loadIdx = findHeaderIndex(header, ["charge", "load", "poids"]);
+    const tempoIdx = findHeaderIndex(header, ["tempo", "cadence"]);
+    const restIdx = findHeaderIndex(header, ["repos", "rest", "recuperation"]);
+    const rirIdx = findHeaderIndex(header, ["rir"]);
+    const notesIdx = findHeaderIndex(header, ["notes_coach", "notes", "commentaire", "consigne"]);
 
     const items: ProgrammeRow[] = [];
     for (let i = headerRowIndex + 1; i < rows.length; i++) {
@@ -486,15 +504,16 @@ function parseProgrammeTemplateWorkbook(workbook: XLSX.WorkBook): PlanImport | n
       if (!Array.isArray(r)) continue;
       const exercise = normalizeMaybeString(r[exIdx]);
       if (!exercise) continue;
+      if (isSectionSeparatorRow(exercise)) continue;
       items.push({
         exercise,
-        series: normalizeMaybeString(r[1]),
-        reps: normalizeMaybeString(r[2]),
-        load: normalizeMaybeString(r[3]),
-        tempo: normalizeMaybeString(r[4]),
-        rest: normalizeMaybeString(r[5]),
-        rir: normalizeMaybeString(r[6]),
-        coachNotes: normalizeMaybeString(r[7]),
+        series: seriesIdx >= 0 ? normalizeMaybeString(r[seriesIdx]) : null,
+        reps: repsIdx >= 0 ? normalizeMaybeString(r[repsIdx]) : null,
+        load: loadIdx >= 0 ? normalizeMaybeString(r[loadIdx]) : null,
+        tempo: tempoIdx >= 0 ? normalizeMaybeString(r[tempoIdx]) : null,
+        rest: restIdx >= 0 ? normalizeMaybeString(r[restIdx]) : null,
+        rir: rirIdx >= 0 ? normalizeMaybeString(r[rirIdx]) : null,
+        coachNotes: notesIdx >= 0 ? normalizeMaybeString(r[notesIdx]) : null,
       });
     }
 
