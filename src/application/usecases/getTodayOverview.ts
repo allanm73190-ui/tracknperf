@@ -43,6 +43,7 @@ export async function getTodayOverview(now = new Date()): Promise<TodayOverview>
     .select(
       `
       id,
+      created_at,
       scheduled_for,
       plan_id,
       plan_version_id,
@@ -52,13 +53,13 @@ export async function getTodayOverview(now = new Date()): Promise<TodayOverview>
     `,
     )
     .eq("scheduled_for", todayIso)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
 
   if (plannedErr) {
     throw new Error(`Could not load planned sessions. (${plannedErr.message})`);
   }
 
-  const planned: TodayPlannedSession[] = (plannedRows ?? []).map((r) => {
+  const plannedRaw: TodayPlannedSession[] = (plannedRows ?? []).map((r) => {
     const templateName =
       r &&
       typeof r === "object" &&
@@ -90,6 +91,18 @@ export async function getTodayOverview(now = new Date()): Promise<TodayOverview>
           : {},
     };
   });
+
+  // Keep only the most recently created row for each (template/session slot) to avoid stale duplicates after re-imports.
+  const seen = new Set<string>();
+  const planned: TodayPlannedSession[] = [];
+  for (const row of plannedRaw) {
+    const payloadText =
+      typeof row.payload.text === "string" ? row.payload.text.trim().toLowerCase() : "";
+    const slotKey = `${row.sessionTemplateId ?? "none"}::${(row.templateName ?? "").toLowerCase()}::${payloadText}`;
+    if (seen.has(slotKey)) continue;
+    seen.add(slotKey);
+    planned.push(row);
+  }
 
   // "Today" executed sessions: by started_at date in local time is tricky; keep it simple V1:
   // query last 24h and filter client-side by local date prefix.
@@ -135,4 +148,3 @@ export async function getTodayOverview(now = new Date()): Promise<TodayOverview>
 
   return { todayIso, planned, executed };
 }
-

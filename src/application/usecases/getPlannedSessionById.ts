@@ -175,6 +175,36 @@ function extractTemplateExercisesFromPayload(payloadInput: Record<string, unknow
     if (ordered.length > 0) return ordered.map((row, i) => ({ ...row, position: i + 1 }));
   }
 
+  // Legacy safety net: when only a free-text prescription exists in payload, expose it as pseudo exercises.
+  const freeText =
+    asString(payloadInput.text) ??
+    asString(payloadInput.notes) ??
+    asString(payloadInput.description) ??
+    asString(payloadInput.consigne);
+  if (freeText) {
+    const lines = freeText
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .map((line) => line.replace(/^[•\-\u2022]+\s*/, ""));
+    if (lines.length > 0) {
+      return lines.slice(0, 8).map((line, i) => ({
+        id: `payload-text-${i + 1}`,
+        sessionTemplateExerciseId: null,
+        position: i + 1,
+        exerciseName: line,
+        seriesRaw: null,
+        repsRaw: null,
+        loadRaw: null,
+        tempoRaw: null,
+        restRaw: null,
+        rirRaw: null,
+        coachNotes: null,
+        payload: { source: "payload_text_fallback" },
+      }));
+    }
+  }
+
   return [];
 }
 

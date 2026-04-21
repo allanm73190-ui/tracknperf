@@ -48,6 +48,13 @@ type EnduranceDraft = {
   notes: string;
 };
 
+type PlannedEnduranceTargets = {
+  durationMinutes: string;
+  distanceKm: string;
+  elevationGainM: string;
+  rpe: string;
+};
+
 function formatDate(iso: string): string {
   const d = new Date(iso + "T00:00:00");
   return d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
@@ -124,6 +131,56 @@ function toInputNumber(v: unknown): string {
   if (typeof v === "number" && Number.isFinite(v)) return String(v);
   if (typeof v === "string" && v.trim().length > 0) return v.trim();
   return "";
+}
+
+function pickNumberFromText(text: string, regex: RegExp): string | null {
+  const m = text.match(regex);
+  if (!m?.[1]) return null;
+  const n = Number(String(m[1]).replace(",", "."));
+  if (!Number.isFinite(n)) return null;
+  return String(Math.round(n * 100) / 100);
+}
+
+function inferLegacyEnduranceTargets(
+  session: PlannedSessionDetail | null,
+  exercises: ExerciseDraft[],
+): PlannedEnduranceTargets {
+  const payload = session?.payload ?? {};
+  const fromPayloadDuration = toInputNumber(payload.durationMinutes);
+  const fromPayloadDistance = toInputNumber(payload.distanceKm ?? payload.runDistanceKm);
+  const fromPayloadElevation = toInputNumber(payload.elevationGainM);
+  const fromPayloadRpe = toInputNumber(payload.rpe);
+
+  const textCandidates = [
+    typeof payload.text === "string" ? payload.text : "",
+    ...exercises.map((ex) => ex.coachNotes ?? ""),
+    ...exercises.map((ex) => ex.repsRaw ?? ""),
+    ...exercises.map((ex) => ex.seriesRaw ?? ""),
+  ]
+    .filter((s) => s.trim().length > 0)
+    .join(" \n ");
+
+  const durationFromHours = (() => {
+    const m = textCandidates.match(/(\d{1,2})\s*h(?:\s*(\d{1,2}))?/i);
+    if (!m?.[1]) return null;
+    const h = Number(m[1]);
+    const min = m[2] ? Number(m[2]) : 0;
+    if (!Number.isFinite(h) || !Number.isFinite(min)) return null;
+    return String(h * 60 + min);
+  })();
+  const durationFromMinutes = pickNumberFromText(textCandidates, /(\d{2,3})\s*min/i);
+  const distanceFromText = pickNumberFromText(textCandidates, /(\d+(?:[.,]\d+)?)\s*km/i);
+  const elevationFromText =
+    pickNumberFromText(textCandidates, /d\+\s*(\d+(?:[.,]\d+)?)/i) ??
+    pickNumberFromText(textCandidates, /(\d+(?:[.,]\d+)?)\s*m\s*(?:de\s*)?d\+/i);
+  const rpeFromText = pickNumberFromText(textCandidates, /rpe\s*([0-9]+(?:[.,][0-9]+)?)/i);
+
+  return {
+    durationMinutes: fromPayloadDuration || durationFromHours || durationFromMinutes || "",
+    distanceKm: fromPayloadDistance || distanceFromText || "",
+    elevationGainM: fromPayloadElevation || elevationFromText || "",
+    rpe: fromPayloadRpe || rpeFromText || "",
+  };
 }
 
 function computeDurationMinutesFromTimes(startTime: string, endTime: string): number | null {
@@ -326,6 +383,10 @@ export default function PlannedSessionDetailPage() {
     () => computeLiveMetrics({ exercises: draftExercises, endurance: enduranceDraft, durationFromTimes, sessionPainScore }),
     [draftExercises, enduranceDraft, durationFromTimes, sessionPainScore],
   );
+  const plannedEnduranceTargets = useMemo(
+    () => inferLegacyEnduranceTargets(session, draftExercises),
+    [session, draftExercises],
+  );
 
   const isStrengthLikeMode = sessionMode === "strength" || sessionMode === "mixed";
   const showEndurancePanel = sessionMode === "endurance" || sessionMode === "mixed" || sessionMode === "recovery";
@@ -362,7 +423,16 @@ export default function PlannedSessionDetailPage() {
         setSession(data);
         const shouldSeedManualExercise = importedExercises.length === 0 && (nextMode === "strength" || nextMode === "mixed");
         setDraftExercises(shouldSeedManualExercise ? [makeManualExercise(1)] : importedExercises);
-        setEnduranceDraft(makeInitialEnduranceDraft(data));
+        const inferredEndurance = inferLegacyEnduranceTargets(data, importedExercises);
+        const initialEndurance = makeInitialEnduranceDraft(data);
+        setEnduranceDraft({
+          durationMinutes: initialEndurance.durationMinutes || inferredEndurance.durationMinutes,
+          distanceKm: initialEndurance.distanceKm || inferredEndurance.distanceKm,
+          elevationGainM: initialEndurance.elevationGainM || inferredEndurance.elevationGainM,
+          avgHr: initialEndurance.avgHr,
+          rpe: initialEndurance.rpe || inferredEndurance.rpe,
+          notes: initialEndurance.notes,
+        });
         setSessionPainScore(toInputNumber(data.payload?.sessionPainScore ?? data.payload?.painScore));
       } catch (err) {
         if (!ignore) {
@@ -597,6 +667,44 @@ export default function PlannedSessionDetailPage() {
               {session.templateName ?? "Séance"}
             </h1>
             <div className="text-sm text-on-surface-variant capitalize">{formatDate(session.scheduledFor)}</div>
+          </div>
+
+          <div className="rounded-[1.5rem] bg-surface-container-low p-6 grid gap-3">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+              Plan prescrit
+            </div>
+            {showEndurancePanel && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <MetricCard label="Durée cible" value={plannedEnduranceTargets.durationMinutes || "—"} unit="min" />
+                <MetricCard label="Distance cible" value={plannedEnduranceTargets.distanceKm || "—"} unit="km" />
+                <MetricCard label="D+ cible" value={plannedEnduranceTargets.elevationGainM || "—"} unit="m" />
+                <MetricCard label="RPE cible" value={plannedEnduranceTargets.rpe || "—"} />
+              </div>
+            )}
+            {draftExercises.length === 0 ? (
+              <div className="rounded-[1rem] bg-surface-container-highest p-4 text-sm text-on-surface-variant">
+                Aucun détail d'exercice n'a été retrouvé pour cette séance.
+              </div>
+            ) : (
+              <div className="grid gap-2">
+                {draftExercises.map((exercise) => (
+                  <div key={`planned-${exercise.localId}`} className="rounded-[0.9rem] bg-surface-container-highest p-3 grid gap-1">
+                    <div className="text-sm font-semibold text-on-surface">{exercise.exerciseName || `Exercice ${exercise.position}`}</div>
+                    <div className="text-xs text-on-surface-variant">
+                      Séries: {exercise.seriesRaw ?? String(exercise.sets.length)} · Reps: {exercise.repsRaw ?? "—"} · Charge: {exercise.loadRaw ?? "—"}
+                    </div>
+                    {(exercise.restRaw || exercise.tempoRaw || exercise.rirRaw) && (
+                      <div className="text-xs text-on-surface-variant">
+                        Tempo: {exercise.tempoRaw ?? "—"} · Repos: {exercise.restRaw ?? "—"} · RIR: {exercise.rirRaw ?? "—"}
+                      </div>
+                    )}
+                    {exercise.coachNotes && (
+                      <div className="text-xs text-on-surface-variant leading-relaxed">{exercise.coachNotes}</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="rounded-[1.5rem] bg-surface-container-low p-6 grid gap-4">

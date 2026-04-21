@@ -52,16 +52,33 @@ async function loadWeek(monday: Date): Promise<ProgrammeSession[]> {
     .from("planned_sessions")
     .select(`
       id,
+      created_at,
       scheduled_for,
       session_templates:session_template_id ( name )
     `)
     .gte("scheduled_for", start)
     .lte("scheduled_for", end)
-    .order("scheduled_for", { ascending: true });
+    .order("scheduled_for", { ascending: true })
+    .order("created_at", { ascending: false });
 
   if (pErr) throw new Error(pErr.message);
 
-  const plannedIds = (plannedRows ?? []).map((r) => String((r as { id: unknown }).id));
+  const dedupedRows = (() => {
+    const out: Array<Record<string, unknown>> = [];
+    const seen = new Set<string>();
+    for (const r of (plannedRows ?? []) as Array<Record<string, unknown>>) {
+      const iso = String(r.scheduled_for ?? "");
+      const tplObj = r.session_templates as { name?: unknown } | null | undefined;
+      const tpl = typeof tplObj?.name === "string" ? tplObj.name.trim().toLowerCase() : "";
+      const key = `${iso}::${tpl}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(r);
+    }
+    return out;
+  })();
+
+  const plannedIds = dedupedRows.map((r) => String((r as { id: unknown }).id));
 
   let executedPlannedIds = new Set<string>();
   if (plannedIds.length > 0) {
@@ -76,7 +93,7 @@ async function loadWeek(monday: Date): Promise<ProgrammeSession[]> {
     );
   }
 
-  return (plannedRows ?? []).map((r) => {
+  return dedupedRows.map((r) => {
     const id = String((r as { id: unknown }).id);
     const tpl = (r as { session_templates?: { name?: unknown } | null }).session_templates;
     return {

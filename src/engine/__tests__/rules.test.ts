@@ -154,7 +154,11 @@ describe("computePainRisk", () => {
   });
   it("higher risk with recent pain report", () => {
     const base = computePainRisk(makeFatigue({ articular: 0.4 }), []);
-    const withPain = computePainRisk(makeFatigue({ articular: 0.4 }), [{ reportedAt:"2026-04-14T00:00:00Z", bodyZone:"knee", severity:3 }]);
+    const recentPainDate = new Date(Date.now() - 2 * 86_400_000).toISOString();
+    const withPain = computePainRisk(
+      makeFatigue({ articular: 0.4 }),
+      [{ reportedAt: recentPainDate, bodyZone: "knee", severity: 3 }],
+    );
     expect(withPain).toBeGreaterThan(base);
   });
   it("in [0,1]", () => {

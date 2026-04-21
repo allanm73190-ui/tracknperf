@@ -1,41 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getExecutedSessionById, type ExecutedSessionDetail } from "../../application/usecases/getExecutedSessionById";
-import { supabase } from "../../infra/supabase/client";
-import type { ExplanationV1_1 } from "../../domain/engine/v1_1/types";
 import { inferSessionMode, sessionModeLabel } from "../../domain/session/sessionMode";
 import { AppShell } from "../kit/AppShell";
 import { Pill } from "../kit/Pill";
-import { RecommendationExplanationCard } from "../components/RecommendationExplanationCard";
-
-async function loadExplanationForSession(session: ExecutedSessionDetail): Promise<ExplanationV1_1 | null> {
-  if (!supabase) return null;
-  let recoId: string | null = session.recommendationId;
-
-  // Fallback for historical rows where recommendation_id was not yet written on executed_sessions.
-  if (!recoId && session.plannedSessionId && session.planId) {
-    const { data, error } = await supabase
-      .from("recommendations")
-      .select("id")
-      .eq("plan_id", session.planId)
-      .contains("input", { planned_session_id: session.plannedSessionId })
-      .order("created_at", { ascending: false })
-      .limit(1);
-    if (error || !data || data.length === 0 || !data[0]) return null;
-    recoId = String(data[0].id);
-  }
-  if (!recoId) return null;
-
-  const { data: expRows, error: expErr } = await supabase
-    .from("recommendation_explanations")
-    .select("content")
-    .eq("recommendation_id", recoId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (expErr || !expRows) return null;
-  return expRows.content as ExplanationV1_1;
-}
 
 function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString("fr-FR", {
@@ -66,7 +34,6 @@ export default function SessionDetailPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
   const [row, setRow] = useState<ExecutedSessionDetail | null>(null);
-  const [explanation, setExplanation] = useState<ExplanationV1_1 | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -87,8 +54,6 @@ export default function SessionDetailPage() {
           return;
         }
         setRow(data);
-        const exp = await loadExplanationForSession(data);
-        if (!ignore) setExplanation(exp);
       } catch (err) {
         if (!ignore) setMessage(err instanceof Error ? err.message : "Impossible de charger la séance.");
       } finally {
@@ -408,16 +373,6 @@ export default function SessionDetailPage() {
               {row.payload.notes}
             </div>
           )}
-
-          <div className="grid gap-2">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                Recommandation moteur
-              </span>
-              <Pill tone="secondary">IA</Pill>
-            </div>
-            <RecommendationExplanationCard explanation={explanation} />
-          </div>
 
           <div className="flex gap-3">
             <Link to="/history">
