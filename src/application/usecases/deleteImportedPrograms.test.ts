@@ -11,42 +11,109 @@ vi.mock("../../infra/supabase/client", () => ({ supabase: mockSupabase }));
 
 import { deleteAllImportedPrograms } from "./deleteImportedPrograms";
 
-function makeCountChain(result: { count: number | null; error: unknown }) {
-  const chain: Record<string, ReturnType<typeof vi.fn>> = {};
-  chain.select = vi.fn().mockReturnValue(chain);
-  chain.eq = vi.fn().mockResolvedValue(result);
-  return chain;
-}
-
-function makeDeleteChain(result: { error: unknown }) {
-  const chain: Record<string, ReturnType<typeof vi.fn>> = {};
-  chain.delete = vi.fn().mockReturnValue(chain);
-  chain.eq = vi.fn().mockResolvedValue(result);
-  return chain;
-}
-
 describe("deleteAllImportedPrograms", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("deletes all plans for the authenticated user and returns deleted count", async () => {
+  it("purges mutable imported program data and deactivates plans", async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: { id: "user-1" } },
       error: null,
     });
 
-    let call = 0;
+    let plansCall = 0;
+    let plannedSessionsCall = 0;
+    let templatesCall = 0;
+
     mockSupabase.from.mockImplementation((table: string) => {
-      expect(table).toBe("plans");
-      call += 1;
-      if (call === 1) return makeCountChain({ count: 3, error: null });
-      return makeDeleteChain({ error: null });
+      if (table === "plans") {
+        plansCall += 1;
+        if (plansCall === 1) {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({
+                data: [
+                  { id: "plan-1", active: true },
+                  { id: "plan-2", active: false },
+                ],
+                error: null,
+              }),
+            }),
+          };
+        }
+        return {
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              in: vi.fn().mockResolvedValue({ error: null }),
+            }),
+          }),
+        };
+      }
+
+      if (table === "plan_versions") {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              in: vi.fn().mockResolvedValue({
+                data: [{ id: "pv-1", plan_id: "plan-1" }],
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
+
+      if (table === "planned_sessions") {
+        plannedSessionsCall += 1;
+        if (plannedSessionsCall === 1) {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockResolvedValue({ count: 4, error: null }),
+              }),
+            }),
+          };
+        }
+        return {
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              in: vi.fn().mockResolvedValue({ error: null }),
+            }),
+          }),
+        };
+      }
+
+      if (table === "session_templates") {
+        templatesCall += 1;
+        if (templatesCall === 1) {
+          return {
+            select: vi.fn().mockReturnValue({
+              eq: vi.fn().mockReturnValue({
+                in: vi.fn().mockResolvedValue({ count: 3, error: null }),
+              }),
+            }),
+          };
+        }
+        return {
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              in: vi.fn().mockResolvedValue({ error: null }),
+            }),
+          }),
+        };
+      }
+
+      throw new Error(`Unexpected table ${table}`);
     });
 
     const result = await deleteAllImportedPrograms();
-    expect(result.deletedPlans).toBe(3);
-    expect(mockSupabase.from).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({
+      deletedPlannedSessions: 4,
+      deletedTemplates: 3,
+      deactivatedPlans: 1,
+      deletedPlans: 1,
+    });
   });
 
   it("throws when no authenticated user is available", async () => {

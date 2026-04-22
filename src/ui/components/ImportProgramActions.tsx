@@ -24,14 +24,16 @@ export function ImportProgramActions(props: ImportProgramActionsProps) {
     setInfo(null);
     setError(null);
     const confirmed = window.confirm(
-      "Confirmez-vous la suppression totale du programme importé (plans, templates, séances planifiées) ? Cette action est irréversible.",
+      "Confirmez-vous la purge du programme importé (désactivation des plans, suppression des templates et des séances planifiées) ? Cette action est irréversible.",
     );
     if (!confirmed) return;
 
     setBusy(true);
     try {
       const result = await deleteAllImportedPrograms();
-      setInfo(`${result.deletedPlans} plan(s) supprimé(s).`);
+      setInfo(
+        `${result.deactivatedPlans} plan(s) désactivé(s), ${result.deletedPlannedSessions} séance(s) planifiée(s) supprimée(s), ${result.deletedTemplates} template(s) supprimé(s).`,
+      );
       props.onProgramsPurged?.(result.deletedPlans);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Suppression impossible.");
@@ -111,4 +113,3 @@ export function ImportProgramActions(props: ImportProgramActionsProps) {
     </div>
   );
 }
-
