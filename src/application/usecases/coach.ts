@@ -133,9 +133,11 @@ export async function getAthletePlannedSessions(args: {
       id,
       user_id,
       scheduled_for,
-      session_templates:session_template_id ( name )
+      session_templates:session_template_id ( name ),
+      plans!inner ( active )
     `)
     .eq("user_id", args.athleteId)
+    .eq("plans.active", true)
     .order("scheduled_for", { ascending: true });
 
   if (args.from) query = query.gte("scheduled_for", args.from);

@@ -286,7 +286,7 @@ export default function AdminPage() {
               onProgramsPurged={(deletedPlans) => {
                 setParsed(null);
                 setFile(null);
-                setMessage(`${deletedPlans} plan(s) désactivé(s) et programme purgé.`);
+                setMessage(`${deletedPlans} plan(s) désactivé(s), programme purgé et séances planifiées masquées.`);
                 setMessageType("success");
               }}
             />

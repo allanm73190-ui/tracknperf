@@ -54,10 +54,12 @@ async function loadWeek(monday: Date): Promise<ProgrammeSession[]> {
       id,
       created_at,
       scheduled_for,
-      session_templates:session_template_id ( name )
+      session_templates:session_template_id ( name ),
+      plans!inner ( active )
     `)
     .gte("scheduled_for", start)
     .lte("scheduled_for", end)
+    .eq("plans.active", true)
     .order("scheduled_for", { ascending: true })
     .order("created_at", { ascending: false });
 

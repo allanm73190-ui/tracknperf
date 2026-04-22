@@ -75,20 +75,6 @@ export async function deleteAllImportedPrograms(): Promise<DeleteImportedProgram
     );
   }
 
-  const { error: plannedSessionsDeleteError } = await supabase
-    .from("planned_sessions")
-    .delete()
-    .eq("user_id", userId)
-    .in("plan_id", planIds);
-  if (plannedSessionsDeleteError) {
-    const details = isPostgrestErrorMessage(plannedSessionsDeleteError);
-    throw new Error(
-      details
-        ? `Suppression impossible des séances planifiées. (${details})`
-        : "Suppression impossible des séances planifiées.",
-    );
-  }
-
   let deletedTemplates = 0;
   if (planVersionIds.length > 0) {
     const { count: templatesCount, error: templatesCountError } = await supabase
@@ -128,6 +114,8 @@ export async function deleteAllImportedPrograms(): Promise<DeleteImportedProgram
   // Alias de compatibilité utilisé côté UI.
   const deactivatedPlans = activePlanIds.length;
   return {
+    // Compat: ce compteur représente les séances planifiées impactées
+    // (masquées via plans désactivés), pas supprimées physiquement.
     deletedPlannedSessions: plannedSessionsCount ?? 0,
     deletedTemplates,
     deactivatedPlans,

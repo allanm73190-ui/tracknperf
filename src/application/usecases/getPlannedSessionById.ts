@@ -230,9 +230,11 @@ export async function getPlannedSessionById(id: string): Promise<PlannedSessionD
       plan_version_id,
       session_template_id,
       payload,
-      session_templates:session_template_id ( name, template )
+      session_templates:session_template_id ( name, template ),
+      plans!inner ( active )
     `)
     .eq("id", id)
+    .eq("plans.active", true)
     .maybeSingle();
 
   if (error) throw new Error(error.message);

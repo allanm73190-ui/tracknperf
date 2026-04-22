@@ -16,14 +16,13 @@ describe("deleteAllImportedPrograms", () => {
     vi.clearAllMocks();
   });
 
-  it("purges mutable imported program data and deactivates plans", async () => {
+  it("purges mutable templates, keeps immutable session chains, and deactivates plans", async () => {
     mockSupabase.auth.getUser.mockResolvedValue({
       data: { user: { id: "user-1" } },
       error: null,
     });
 
     let plansCall = 0;
-    let plannedSessionsCall = 0;
     let templatesCall = 0;
 
     mockSupabase.from.mockImplementation((table: string) => {
@@ -65,20 +64,10 @@ describe("deleteAllImportedPrograms", () => {
       }
 
       if (table === "planned_sessions") {
-        plannedSessionsCall += 1;
-        if (plannedSessionsCall === 1) {
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                in: vi.fn().mockResolvedValue({ count: 4, error: null }),
-              }),
-            }),
-          };
-        }
         return {
-          delete: vi.fn().mockReturnValue({
+          select: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              in: vi.fn().mockResolvedValue({ error: null }),
+              in: vi.fn().mockResolvedValue({ count: 4, error: null }),
             }),
           }),
         };
@@ -126,4 +115,3 @@ describe("deleteAllImportedPrograms", () => {
     expect(mockSupabase.from).not.toHaveBeenCalled();
   });
 });
-

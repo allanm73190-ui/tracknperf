@@ -49,10 +49,12 @@ export async function getTodayOverview(now = new Date()): Promise<TodayOverview>
       plan_version_id,
       session_template_id,
       payload,
-      session_templates:session_template_id ( name )
+      session_templates:session_template_id ( name ),
+      plans!inner ( active )
     `,
     )
     .eq("scheduled_for", todayIso)
+    .eq("plans.active", true)
     .order("created_at", { ascending: false });
 
   if (plannedErr) {
