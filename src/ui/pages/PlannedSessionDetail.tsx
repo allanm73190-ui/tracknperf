@@ -11,19 +11,9 @@ import { computeAndPersistTodayRecommendation } from "../../application/usecases
 import { AppShell } from "../kit/AppShell";
 import { inferSessionMode, sessionModeLabel, type SessionMode } from "../../domain/session/sessionMode";
 
-type SetDraft = {
-  setIndex: number;
-  reps: string;
-  loadKg: string;
-  rpe: string;
-  rir: string;
-  restSeconds: string;
-  painScore: string;
-  completed: boolean;
-};
-
 type ExerciseDraft = {
   localId: string;
+  plannedSessionItemLiveId: string | null;
   sessionTemplateExerciseId: string | null;
   position: number;
   exerciseName: string;
@@ -34,9 +24,10 @@ type ExerciseDraft = {
   restRaw: string | null;
   rirRaw: string | null;
   coachNotes: string | null;
+  completedSeries: string;
+  completedReps: string;
+  completedRpe: string;
   painScore: string;
-  notes: string;
-  sets: SetDraft[];
 };
 
 type EnduranceDraft = {
@@ -90,20 +81,6 @@ function estimateSetCount(exercise: PlannedSessionTemplateExercise): number {
     return Math.max(1, Math.min(8, plusNumbers[0] ?? 3));
   }
   return 3;
-}
-
-function makeInitialSets(count: number): SetDraft[] {
-  const safeCount = Math.max(1, Math.min(8, count));
-  return Array.from({ length: safeCount }, (_, idx) => ({
-    setIndex: idx + 1,
-    reps: "",
-    loadKg: "",
-    rpe: "",
-    rir: "",
-    restSeconds: "",
-    painScore: "",
-    completed: true,
-  }));
 }
 
 function toNullableNumber(input: string): number | null {
@@ -227,26 +204,18 @@ function computeLiveMetrics(args: {
     if (exercisePain !== null && exercisePain >= 0 && exercisePain <= 10) {
       painValues.push(exercisePain);
     }
-    for (const set of ex.sets) {
-      if (!set.completed) continue;
-      totalSets += 1;
-      const reps = toNullableInteger(set.reps);
-      const loadKg = toNullableNumber(set.loadKg);
-      const rpe = toNullableNumber(set.rpe);
-      if (reps !== null && reps > 0) {
-        totalReps += reps;
-        if (loadKg !== null && loadKg > 0) {
-          tonnageKg += reps * loadKg;
-        }
-      }
-      if (rpe !== null) {
-        rpeSum += rpe;
-        rpeCount += 1;
-      }
-      const setPain = toNullableNumber(set.painScore);
-      if (setPain !== null && setPain >= 0 && setPain <= 10) {
-        painValues.push(setPain);
-      }
+    const completedSeries = toNullableInteger(ex.completedSeries);
+    const safeSeriesCount = completedSeries !== null && completedSeries > 0 ? Math.min(30, completedSeries) : 0;
+    const reps = toNullableInteger(ex.completedReps);
+    const rpe = toNullableNumber(ex.completedRpe);
+
+    totalSets += safeSeriesCount;
+    if (safeSeriesCount > 0 && reps !== null && reps > 0) {
+      totalReps += reps * safeSeriesCount;
+    }
+    if (safeSeriesCount > 0 && rpe !== null) {
+      rpeSum += rpe * safeSeriesCount;
+      rpeCount += safeSeriesCount;
     }
   }
 
@@ -285,6 +254,7 @@ function fromTemplateExercises(templateExercises: PlannedSessionTemplateExercise
     .sort((a, b) => a.position - b.position);
   return sorted.map((exercise) => ({
     localId: crypto.randomUUID(),
+    plannedSessionItemLiveId: exercise.plannedSessionItemLiveId,
     sessionTemplateExerciseId: exercise.sessionTemplateExerciseId,
     position: exercise.position,
     exerciseName: exercise.exerciseName,
@@ -295,15 +265,17 @@ function fromTemplateExercises(templateExercises: PlannedSessionTemplateExercise
     restRaw: exercise.restRaw,
     rirRaw: exercise.rirRaw,
     coachNotes: exercise.coachNotes,
+    completedSeries: String(estimateSetCount(exercise)),
+    completedReps: "",
+    completedRpe: "",
     painScore: "",
-    notes: "",
-    sets: makeInitialSets(estimateSetCount(exercise)),
   }));
 }
 
 function makeManualExercise(position: number): ExerciseDraft {
   return {
     localId: crypto.randomUUID(),
+    plannedSessionItemLiveId: null,
     sessionTemplateExerciseId: null,
     position,
     exerciseName: "",
@@ -314,9 +286,10 @@ function makeManualExercise(position: number): ExerciseDraft {
     restRaw: null,
     rirRaw: null,
     coachNotes: null,
+    completedSeries: "3",
+    completedReps: "",
+    completedRpe: "",
     painScore: "",
-    notes: "",
-    sets: makeInitialSets(3),
   };
 }
 
@@ -373,7 +346,6 @@ export default function PlannedSessionDetailPage() {
   const [sessionPainScore, setSessionPainScore] = useState("");
   const [globalNotes, setGlobalNotes] = useState("");
   const [draftExercises, setDraftExercises] = useState<ExerciseDraft[]>([]);
-  const [expandedExerciseIds, setExpandedExerciseIds] = useState<string[]>([]);
   const [enduranceDraft, setEnduranceDraft] = useState<EnduranceDraft>(makeInitialEnduranceDraft(null));
   const [loggedId, setLoggedId] = useState<string | null>(null);
 
@@ -398,16 +370,6 @@ export default function PlannedSessionDetailPage() {
   const showEndurancePanel = sessionMode === "endurance" || sessionMode === "mixed" || sessionMode === "recovery";
   const showExercisePanel = isStrengthLikeMode || draftExercises.length > 0;
   const requiresStrengthDetails = isStrengthLikeMode;
-
-  useEffect(() => {
-    setExpandedExerciseIds((prev) => {
-      const valid = prev.filter((id) => draftExercises.some((ex) => ex.localId === id));
-      if (draftExercises.length === 0) return valid.length === 0 ? prev : [];
-      if (valid.length === 0) return [draftExercises[0]!.localId];
-      if (valid.length === prev.length && valid.every((id, idx) => id === prev[idx])) return prev;
-      return valid;
-    });
-  }, [draftExercises]);
 
   useEffect(() => {
     let ignore = false;
@@ -440,7 +402,6 @@ export default function PlannedSessionDetailPage() {
         const shouldSeedManualExercise = importedExercises.length === 0 && (nextMode === "strength" || nextMode === "mixed");
         const nextExercises = shouldSeedManualExercise ? [makeManualExercise(1)] : importedExercises;
         setDraftExercises(nextExercises);
-        setExpandedExerciseIds(nextExercises.length > 0 ? [nextExercises[0]!.localId] : []);
         const inferredEndurance = inferLegacyEnduranceTargets(data, importedExercises);
         const initialEndurance = makeInitialEnduranceDraft(data);
         setEnduranceDraft({
@@ -470,84 +431,33 @@ export default function PlannedSessionDetailPage() {
     };
   }, [sessionId]);
 
-  function updateExerciseNotes(localId: string, notes: string) {
-    setDraftExercises((prev) => prev.map((ex) => (ex.localId === localId ? { ...ex, notes } : ex)));
-  }
-
   function updateExerciseName(localId: string, exerciseName: string) {
     setDraftExercises((prev) => prev.map((ex) => (ex.localId === localId ? { ...ex, exerciseName } : ex)));
+  }
+
+  function updateExerciseCompletedSeries(localId: string, completedSeries: string) {
+    setDraftExercises((prev) => prev.map((ex) => (ex.localId === localId ? { ...ex, completedSeries } : ex)));
+  }
+
+  function updateExerciseCompletedReps(localId: string, completedReps: string) {
+    setDraftExercises((prev) => prev.map((ex) => (ex.localId === localId ? { ...ex, completedReps } : ex)));
+  }
+
+  function updateExerciseCompletedRpe(localId: string, completedRpe: string) {
+    setDraftExercises((prev) => prev.map((ex) => (ex.localId === localId ? { ...ex, completedRpe } : ex)));
   }
 
   function updateExercisePain(localId: string, painScore: string) {
     setDraftExercises((prev) => prev.map((ex) => (ex.localId === localId ? { ...ex, painScore } : ex)));
   }
 
-  function updateSetField(localId: string, setIndex: number, field: keyof SetDraft, value: string | boolean) {
-    setDraftExercises((prev) =>
-      prev.map((ex) => {
-        if (ex.localId !== localId) return ex;
-        return {
-          ...ex,
-          sets: ex.sets.map((set) => {
-            if (set.setIndex !== setIndex) return set;
-            return {
-              ...set,
-              [field]: value,
-            } as SetDraft;
-          }),
-        };
-      }),
-    );
-  }
-
   function updateEnduranceField(field: keyof EnduranceDraft, value: string) {
     setEnduranceDraft((prev) => ({ ...prev, [field]: value }));
   }
 
-  function addSet(localId: string) {
-    setDraftExercises((prev) =>
-      prev.map((ex) => {
-        if (ex.localId !== localId) return ex;
-        const nextIndex = ex.sets.length > 0 ? ex.sets[ex.sets.length - 1]!.setIndex + 1 : 1;
-        return {
-          ...ex,
-          sets: [
-            ...ex.sets,
-            {
-              setIndex: nextIndex,
-              reps: "",
-              loadKg: "",
-              rpe: "",
-              rir: "",
-              restSeconds: "",
-              painScore: "",
-              completed: true,
-            },
-          ],
-        };
-      }),
-    );
-  }
-
-  function removeSet(localId: string, setIndex: number) {
-    setDraftExercises((prev) =>
-      prev.map((ex) => {
-        if (ex.localId !== localId) return ex;
-        const filtered = ex.sets.filter((set) => set.setIndex !== setIndex);
-        const reIndexed = filtered.map((set, idx) => ({ ...set, setIndex: idx + 1 }));
-        return {
-          ...ex,
-          sets: reIndexed.length > 0 ? reIndexed : makeInitialSets(1),
-        };
-      }),
-    );
-  }
-
   function addExercise() {
     setDraftExercises((prev) => {
-      const created = makeManualExercise(prev.length + 1);
-      setExpandedExerciseIds((old) => (old.includes(created.localId) ? old : [...old, created.localId]));
-      const next = [...prev, created];
+      const next = [...prev, makeManualExercise(prev.length + 1)];
       return next.map((ex, idx) => ({ ...ex, position: idx + 1 }));
     });
   }
@@ -556,15 +466,8 @@ export default function PlannedSessionDetailPage() {
     setDraftExercises((prev) => {
       const filtered = prev.filter((ex) => ex.localId !== localId);
       const next = filtered.length > 0 ? filtered : [makeManualExercise(1)];
-      setExpandedExerciseIds((old) => old.filter((id) => id !== localId));
       return next.map((ex, idx) => ({ ...ex, position: idx + 1 }));
     });
-  }
-
-  function toggleExercise(localId: string) {
-    setExpandedExerciseIds((prev) =>
-      prev.includes(localId) ? prev.filter((id) => id !== localId) : [...prev, localId],
-    );
   }
 
   async function onSubmit() {
@@ -582,27 +485,41 @@ export default function PlannedSessionDetailPage() {
         throw new Error("Une séance force requiert au moins un exercice détaillé.");
       }
 
-      const payloadExercises = draftExercises.map((ex, idx) => ({
-        sessionTemplateExerciseId: ex.sessionTemplateExerciseId,
-        position: idx + 1,
-        exerciseName: ex.exerciseName.trim() || `Exercice ${idx + 1}`,
-        notes: ex.notes.trim() || null,
-        payload: {
-          painScore: toNullablePainScore(ex.painScore),
-        },
-        sets: ex.sets.map((set) => ({
-          setIndex: set.setIndex,
-          reps: toNullableInteger(set.reps),
-          loadKg: toNullableNumber(set.loadKg),
-          rpe: toNullableNumber(set.rpe),
-          rir: toNullableNumber(set.rir),
-          restSeconds: toNullableInteger(set.restSeconds),
-          completed: set.completed,
+      if (requiresStrengthDetails) {
+        for (const ex of draftExercises) {
+          const series = toNullableInteger(ex.completedSeries);
+          if (series === null || series < 1) {
+            throw new Error(`Exercice "${ex.exerciseName || `#${ex.position}`}": renseignez au moins 1 série.`);
+          }
+        }
+      }
+
+      const payloadExercises = draftExercises.map((ex, idx) => {
+        const seriesCountRaw = toNullableInteger(ex.completedSeries);
+        const seriesCount = seriesCountRaw !== null && seriesCountRaw > 0 ? Math.min(30, seriesCountRaw) : 0;
+        const reps = toNullableInteger(ex.completedReps);
+        const rpe = toNullableNumber(ex.completedRpe);
+        return {
+          plannedSessionItemLiveId: ex.plannedSessionItemLiveId,
+          sessionTemplateExerciseId: ex.sessionTemplateExerciseId,
+          position: idx + 1,
+          exerciseName: ex.exerciseName.trim() || `Exercice ${idx + 1}`,
+          notes: null,
           payload: {
-            painScore: toNullablePainScore(set.painScore),
+            painScore: toNullablePainScore(ex.painScore),
           },
-        })),
-      }));
+          sets: Array.from({ length: seriesCount }, (_, setIdx) => ({
+            setIndex: setIdx + 1,
+            reps,
+            loadKg: null,
+            rpe,
+            rir: null,
+            restSeconds: null,
+            completed: true,
+            payload: {},
+          })),
+        };
+      });
 
       const res = await logExecutedSessionDetailed({
         plannedSessionId: session.id,
@@ -737,25 +654,19 @@ export default function PlannedSessionDetailPage() {
                 Exécution détaillée
               </div>
               {draftExercises.map((exercise) => (
-                <div key={exercise.localId} className="rounded-[1.2rem] bg-surface-container-low overflow-hidden">
-                  <div className="p-4 flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleExercise(exercise.localId)}
-                      className="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant text-sm font-black shrink-0 active:scale-95"
-                    >
-                      {expandedExerciseIds.includes(exercise.localId) ? "−" : "+"}
-                    </button>
+                <div key={exercise.localId} className="rounded-[1.2rem] bg-surface-container-low p-4 grid gap-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
                         Exercice {exercise.position}
                       </div>
-                      <div className="text-sm font-semibold text-on-surface truncate">
-                        {exercise.exerciseName || `Exercice ${exercise.position}`}
-                      </div>
-                      <div className="text-xs text-on-surface-variant mt-1">
-                        Cible: {exercise.seriesRaw ?? String(exercise.sets.length)} séries · {exercise.repsRaw ?? "—"} reps
-                      </div>
+                      <input
+                        value={exercise.exerciseName}
+                        onChange={(e) => updateExerciseName(exercise.localId, e.currentTarget.value)}
+                        className="mt-1 rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm w-full"
+                        style={{ border: 0 }}
+                        placeholder={`Exercice ${exercise.position}`}
+                      />
                     </div>
                     <button
                       type="button"
@@ -766,89 +677,36 @@ export default function PlannedSessionDetailPage() {
                     </button>
                   </div>
 
-                  {expandedExerciseIds.includes(exercise.localId) && (
-                    <div
-                      className="px-4 pb-4 grid gap-4"
-                      style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-                    >
-                      <label className="grid gap-1 max-w-[520px] mt-3">
-                        <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Nom de l'exercice</span>
-                        <input
-                          value={exercise.exerciseName}
-                          onChange={(e) => updateExerciseName(exercise.localId, e.currentTarget.value)}
-                          className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
-                          style={{ border: 0 }}
-                          placeholder={`Exercice ${exercise.position}`}
-                        />
-                      </label>
+                  <div className="text-xs text-on-surface-variant">
+                    Programme: {exercise.seriesRaw ?? "—"} séries · {exercise.repsRaw ?? "—"} reps
+                  </div>
 
-                      <div className="grid gap-2">
-                        {exercise.sets.map((set) => (
-                          <div key={set.setIndex} className="rounded-[0.9rem] bg-surface-container-highest p-3 grid gap-3">
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">
-                                Set {set.setIndex}
-                              </span>
-                              <button
-                                onClick={() => removeSet(exercise.localId, set.setIndex)}
-                                className="text-[10px] uppercase tracking-widest text-on-surface-variant"
-                                type="button"
-                              >
-                                Retirer
-                              </button>
-                            </div>
-                            <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
-                              <Field label="Reps" value={set.reps} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "reps", v)} inputMode="numeric" />
-                              <Field label="Charge (kg)" value={set.loadKg} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "loadKg", v)} inputMode="decimal" />
-                              <Field label="RPE" value={set.rpe} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "rpe", v)} inputMode="decimal" />
-                              <Field label="RIR" value={set.rir} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "rir", v)} inputMode="decimal" />
-                              <Field label="Repos (s)" value={set.restSeconds} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "restSeconds", v)} inputMode="numeric" />
-                              <Field label="Douleur (0-10)" value={set.painScore} onChange={(v) => updateSetField(exercise.localId, set.setIndex, "painScore", v)} inputMode="decimal" />
-                            </div>
-                            <label className="flex items-center gap-2 text-xs text-on-surface-variant">
-                              <input
-                                type="checkbox"
-                                checked={set.completed}
-                                onChange={(e) => updateSetField(exercise.localId, set.setIndex, "completed", e.currentTarget.checked)}
-                              />
-                              Set validé
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="grid gap-2 md:grid-cols-[auto_220px_1fr] items-end">
-                        <button
-                          type="button"
-                          onClick={() => addSet(exercise.localId)}
-                          className="px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-surface-container-highest text-on-surface-variant active:scale-95"
-                        >
-                          Ajouter un set
-                        </button>
-                        <label className="grid gap-1">
-                          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Douleur exercice (0-10)</span>
-                          <input
-                            value={exercise.painScore}
-                            onChange={(e) => updateExercisePain(exercise.localId, e.currentTarget.value)}
-                            className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
-                            style={{ border: 0 }}
-                            inputMode="decimal"
-                            placeholder="ex: 3"
-                          />
-                        </label>
-                        <label className="grid gap-1 flex-1">
-                          <span className="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Notes exercice</span>
-                          <input
-                            value={exercise.notes}
-                            onChange={(e) => updateExerciseNotes(exercise.localId, e.currentTarget.value)}
-                            className="rounded-[0.75rem] bg-surface-container-highest text-on-surface px-3 py-2 text-sm"
-                            style={{ border: 0 }}
-                            placeholder="Technique, douleur, adaptation..."
-                          />
-                        </label>
-                      </div>
-                    </div>
-                  )}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <Field
+                      label="Séries faites"
+                      value={exercise.completedSeries}
+                      onChange={(v) => updateExerciseCompletedSeries(exercise.localId, v)}
+                      inputMode="numeric"
+                    />
+                    <Field
+                      label="Reps / série"
+                      value={exercise.completedReps}
+                      onChange={(v) => updateExerciseCompletedReps(exercise.localId, v)}
+                      inputMode="numeric"
+                    />
+                    <Field
+                      label="RPE"
+                      value={exercise.completedRpe}
+                      onChange={(v) => updateExerciseCompletedRpe(exercise.localId, v)}
+                      inputMode="decimal"
+                    />
+                    <Field
+                      label="Douleur (0-10)"
+                      value={exercise.painScore}
+                      onChange={(v) => updateExercisePain(exercise.localId, v)}
+                      inputMode="decimal"
+                    />
+                  </div>
                 </div>
               ))}
               <button
