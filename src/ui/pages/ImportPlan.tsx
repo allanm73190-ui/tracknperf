@@ -4,7 +4,9 @@ import * as XLSX from "xlsx";
 import { importPlanFromCsvText } from "../../application/usecases/importPlanFromCsv";
 import { importPlanFromExcelArrayBuffer } from "../../application/usecases/importPlanFromExcel";
 import { importPlanFromJsonText } from "../../application/usecases/importPlanFromJson";
+import { buildPerfectImportTemplateWorkbook } from "../../application/usecases/importPlanTemplate";
 import { persistImportedPlan } from "../../application/usecases/persistImportedPlan";
+import { deleteAllImportedPrograms } from "../../application/usecases/deleteImportedPrograms";
 import type { PlanImport } from "../../domain/plan/planImport";
 
 type ParsedSession = {
@@ -26,53 +28,34 @@ export default function ImportPlanPage() {
   const [sessions, setSessions] = useState<ParsedSession[]>([]);
   const [busy, setBusy] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   function downloadTemplate() {
-    const wb = XLSX.utils.book_new();
-    wb.Props = { Title: "Template Import V2" };
+    const wb = buildPerfectImportTemplateWorkbook();
+    XLSX.writeFile(wb, "template-import-plan-v2-parfait.xlsx");
+  }
 
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet([
-        {
-          plan_name: "Bloc Hybride S1",
-          plan_description: "Exemple V2 importable",
-          version: 1,
-          payload_json: "{\"athlete_level\":\"intermediate\"}",
-        },
-      ]),
-      "plan",
+  async function onDeleteAllImportedPrograms() {
+    setActionMessage(null);
+    setActionError(null);
+    const confirmed = window.confirm(
+      "Confirmez-vous la suppression totale du programme importé (plans, templates, séances planifiées) ? Cette action est irréversible.",
     );
+    if (!confirmed) return;
 
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet([
-        { template_name: "Force A", session_type: "strength", priority: "high", lock_status: "adaptable" },
-        { template_name: "Trail Z2", session_type: "endurance", priority: "normal", lock_status: "adaptable" },
-      ]),
-      "templates",
-    );
-
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet([
-        { template_name: "Force A", position: 1, exercise_name: "Back Squat", series: "4", reps: "6", load: "75%" },
-        { template_name: "Force A", position: 2, exercise_name: "Bench Press", series: "4", reps: "6", load: "70%" },
-        { template_name: "Trail Z2", position: 1, exercise_name: "Zone 2 Run", reps: "45min", notes: "RPE 4-5" },
-      ]),
-      "items",
-    );
-
-    XLSX.utils.book_append_sheet(
-      wb,
-      XLSX.utils.json_to_sheet([
-        { scheduled_for: "2026-05-12", template_name: "Force A", block_primary_goal: "strength", payload_json: "{\"day\":\"lundi\"}" },
-        { scheduled_for: "2026-05-13", template_name: "Trail Z2", block_primary_goal: "endurance", payload_json: "{\"day\":\"mardi\"}" },
-      ]),
-      "planned_sessions",
-    );
-
-    XLSX.writeFile(wb, "template-import-plan-v2.xlsx");
+    setBusy(true);
+    try {
+      const result = await deleteAllImportedPrograms();
+      setPlanImport(null);
+      setSessions([]);
+      setStep("upload");
+      setActionMessage(`${result.deletedPlans} plan(s) supprimé(s).`);
+    } catch (error) {
+      setActionError(error instanceof Error ? error.message : "Suppression impossible.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function handleFile(file: File) {
@@ -232,7 +215,24 @@ export default function ImportPlanPage() {
                   padding: 8,
                 }}
               >
-                Télécharger le modèle (.xlsx)
+                Télécharger le template parfait (.xlsx)
+              </button>
+              <button
+                onClick={() => void onDeleteAllImportedPrograms()}
+                disabled={busy}
+                style={{
+                  background: "transparent",
+                  color: "#ff7351",
+                  fontSize: 13,
+                  textDecoration: "underline",
+                  border: "none",
+                  cursor: busy ? "not-allowed" : "pointer",
+                  marginTop: 6,
+                  padding: 8,
+                  opacity: busy ? 0.6 : 1,
+                }}
+              >
+                Supprimer tout le programme importé
               </button>
             </div>
             <input
@@ -242,6 +242,24 @@ export default function ImportPlanPage() {
               style={{ display: "none" }}
               onChange={onFileChange}
             />
+            {actionMessage && (
+              <div style={{
+                marginTop: 16, padding: "12px 16px", borderRadius: 10,
+                background: "rgba(202,253,0,0.12)", color: "#cafd00",
+                fontSize: 13,
+              }}>
+                {actionMessage}
+              </div>
+            )}
+            {actionError && (
+              <div style={{
+                marginTop: 16, padding: "12px 16px", borderRadius: 10,
+                background: "rgba(255,115,81,0.12)", color: "#ff7351",
+                fontSize: 13,
+              }}>
+                {actionError}
+              </div>
+            )}
             {parseError && (
               <div style={{
                 marginTop: 16, padding: "12px 16px", borderRadius: 10,
