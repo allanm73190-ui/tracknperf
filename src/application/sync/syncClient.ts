@@ -1,5 +1,6 @@
 import { supabase } from "../../infra/supabase/client";
 import { listPendingOps, markOpApplied, markOpFailed, type SyncOp } from "../../infra/offline/db";
+import { createSyncNotification } from "../usecases/notifications";
 
 function computeBackoffMs(attempts: number): number {
   const base = 1000; // 1s
@@ -76,6 +77,27 @@ export async function flushSyncQueue(): Promise<SyncResult> {
   }
 
   const pendingAfter = (await listPendingOps(9999)).length;
+
+  // Best-effort in-app notifications for sync lifecycle.
+  try {
+    if (failed > 0) {
+      await createSyncNotification({
+        title: "Incident de synchronisation",
+        message: `${failed} opération(s) en échec. Réessayez lorsque la connexion est stable.`,
+        dedupeKey: `sync-error:${new Date().toISOString().slice(0, 16)}`,
+        payload: { failed, applied, pendingAfter },
+      });
+    } else if (applied > 0) {
+      await createSyncNotification({
+        title: "Synchronisation terminée",
+        message: `${applied} opération(s) appliquée(s) avec succès.`,
+        dedupeKey: `sync-ok:${new Date().toISOString().slice(0, 16)}`,
+        payload: { failed, applied, pendingAfter },
+      });
+    }
+  } catch {
+    // Non-blocking notification path.
+  }
+
   return { applied, failed, pendingAfter };
 }
-

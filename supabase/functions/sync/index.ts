@@ -1432,6 +1432,7 @@ Deno.serve(async (req) => {
             id,
             executed_session_id: executedSessionId,
             session_template_exercise_id: asString(op.payload.session_template_exercise_id),
+            planned_session_item_live_id: asString(op.payload.planned_session_item_live_id),
             position,
             exercise_name_snapshot: exerciseName,
             notes: asString(op.payload.notes),
@@ -1548,18 +1549,30 @@ Deno.serve(async (req) => {
           results.push({ opId: op.opId, status: "rejected", error: "Missing executed_session_id." });
           continue;
         }
-        const { error } = await authClient.from("session_feedback").insert({
-          executed_session_id: executedSessionId,
-          rating: typeof op.payload.rating === "number" ? op.payload.rating : null,
-          soreness: typeof op.payload.soreness === "number" ? op.payload.soreness : null,
-          notes: typeof op.payload.notes === "string" ? op.payload.notes : null,
-          payload: typeof op.payload.payload === "object" && op.payload.payload ? op.payload.payload : {},
-        });
-        if (error) {
-          results.push({ opId: op.opId, status: "error", error: error.message });
+        const feedbackId = asString(op.payload.id) ?? crypto.randomUUID();
+        const { data, error } = await authClient
+          .from("session_feedback")
+          .upsert(
+            {
+              id: feedbackId,
+              executed_session_id: executedSessionId,
+              rating: typeof op.payload.rating === "number" ? op.payload.rating : null,
+              soreness: typeof op.payload.soreness === "number" ? op.payload.soreness : null,
+              notes: typeof op.payload.notes === "string" ? op.payload.notes : null,
+              payload: typeof op.payload.payload === "object" && op.payload.payload ? op.payload.payload : {},
+            },
+            { onConflict: "user_id,executed_session_id" },
+          )
+          .select("id")
+          .single();
+        if (error || !data?.id) {
+          results.push({ opId: op.opId, status: "error", error: error?.message ?? "Upsert failed." });
           continue;
         }
-        await markApplied(authClient, op.idempotencyKey);
+        await markAppliedWithResult(authClient, op.idempotencyKey, {
+          session_feedback_id: String(data.id),
+          executed_session_id: executedSessionId,
+        });
         results.push({ opId: op.opId, status: "applied" });
         continue;
       }
@@ -1614,20 +1627,34 @@ Deno.serve(async (req) => {
       }
 
       if (op.entity === "context_snapshots") {
-        const { error } = await authClient.from("context_snapshots").insert({
-          plan_id: op.payload.plan_id ?? null,
-          plan_version_id: op.payload.plan_version_id ?? null,
-          executed_session_id: op.payload.executed_session_id ?? null,
-          recommendation_id: op.payload.recommendation_id ?? null,
-          captured_at: op.payload.captured_at ?? null,
-          input_quality: typeof op.payload.input_quality === "object" && op.payload.input_quality ? op.payload.input_quality : {},
-          payload: typeof op.payload.payload === "object" && op.payload.payload ? op.payload.payload : {},
-        });
-        if (error) {
-          results.push({ opId: op.opId, status: "error", error: error.message });
+        const contextId = asString(op.payload.id) ?? crypto.randomUUID();
+        const contextIdempotencyKey = asString(op.payload.idempotency_key) ?? op.idempotencyKey;
+        const { data, error } = await authClient
+          .from("context_snapshots")
+          .upsert(
+            {
+              id: contextId,
+              idempotency_key: contextIdempotencyKey,
+              plan_id: op.payload.plan_id ?? null,
+              plan_version_id: op.payload.plan_version_id ?? null,
+              executed_session_id: op.payload.executed_session_id ?? null,
+              recommendation_id: op.payload.recommendation_id ?? null,
+              captured_at: op.payload.captured_at ?? null,
+              input_quality: typeof op.payload.input_quality === "object" && op.payload.input_quality ? op.payload.input_quality : {},
+              payload: typeof op.payload.payload === "object" && op.payload.payload ? op.payload.payload : {},
+            },
+            { onConflict: "user_id,idempotency_key" },
+          )
+          .select("id")
+          .single();
+        if (error || !data?.id) {
+          results.push({ opId: op.opId, status: "error", error: error?.message ?? "Upsert failed." });
           continue;
         }
-        await markApplied(authClient, op.idempotencyKey);
+        await markAppliedWithResult(authClient, op.idempotencyKey, {
+          context_snapshot_id: String(data.id),
+          idempotency_key: contextIdempotencyKey,
+        });
         results.push({ opId: op.opId, status: "applied" });
         continue;
       }

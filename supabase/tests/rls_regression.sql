@@ -82,6 +82,34 @@ declare
   u2m uuid := gen_random_uuid();
   dev_m uuid;
 
+  -- planned_session_items_live + planned_session_item_changes
+  u1o uuid := gen_random_uuid();
+  u2o uuid := gen_random_uuid();
+  plan_o uuid;
+  pv_o uuid;
+  tpl_o uuid;
+  tplex_o uuid;
+  ps_o uuid;
+  live_o uuid;
+  change_o uuid;
+
+  -- coach scope
+  coach_p uuid := gen_random_uuid();
+  athlete_p_assigned uuid := gen_random_uuid();
+  athlete_p_unassigned uuid := gen_random_uuid();
+  plan_p1 uuid;
+  plan_p2 uuid;
+  pv_p1 uuid;
+  pv_p2 uuid;
+  tpl_p1 uuid;
+  tpl_p2 uuid;
+  tplex_p1 uuid;
+  tplex_p2 uuid;
+  ps_p1 uuid;
+  ps_p2 uuid;
+  live_p1 uuid;
+  live_p2 uuid;
+
   -- admin probing
   u1n uuid := gen_random_uuid();
   u2n uuid := gen_random_uuid();
@@ -96,7 +124,11 @@ begin
     (u1a),(u2a),(u1b),(u2b),(u1c),(u2c),(u1d),(u2d),
     (u1e),(u2e),(u1f),(u2f),(u1g),(u2g),(u1h),(u2h),
     (u1i),(u2i),(u1j),(u2j),(u1k),(u2k),(u1l),(u2l),
-    (u1m),(u2m),(u1n),(u2n);
+    (u1m),(u2m),(u1n),(u2n),(u1o),(u2o),(coach_p),(athlete_p_assigned),(athlete_p_unassigned);
+
+  -- Bootstrap coach assignment as superuser (admin-only mutation under RLS).
+  insert into public.coach_athlete_assignments (coach_user_id, athlete_user_id, active)
+    values (coach_p, athlete_p_assigned, true);
 
   -- -----------------------------------------------------------------------
   -- Switch to authenticated role so RLS is enforced for all subsequent ops.
@@ -322,7 +354,170 @@ begin
   end;
 
   -- =======================================================================
-  -- TEST 14 — admin probing protection
+  -- TEST 14 — planned_session_items_live + planned_session_item_changes isolation
+  -- =======================================================================
+  perform set_config('request.jwt.claim.sub', u1o::text, true);
+
+  insert into public.plans (user_id, name) values (u1o, 'Plan O') returning id into plan_o;
+  insert into public.plan_versions (user_id, plan_id, version)
+    values (u1o, plan_o, 1) returning id into pv_o;
+  insert into public.session_templates (user_id, plan_version_id, name)
+    values (u1o, pv_o, 'Template O') returning id into tpl_o;
+  insert into public.session_template_exercises (
+    user_id, session_template_id, position, exercise_name, series_raw, reps_raw
+  ) values (
+    u1o, tpl_o, 1, 'Back Squat', '3', '5'
+  ) returning id into tplex_o;
+  insert into public.planned_sessions (
+    user_id, plan_id, plan_version_id, session_template_id, scheduled_for
+  ) values (
+    u1o, plan_o, pv_o, tpl_o, current_date
+  ) returning id into ps_o;
+  insert into public.planned_session_items_snapshot (
+    user_id, planned_session_id, session_template_exercise_id, position, exercise_name, series_raw, reps_raw, payload
+  ) values (
+    u1o, ps_o, tplex_o, 1, 'Back Squat', '3', '5', '{}'::jsonb
+  );
+
+  select l.id
+    into live_o
+    from public.planned_session_items_live l
+    where l.user_id = u1o
+      and l.planned_session_id = ps_o
+      and l.position = 1
+    limit 1;
+
+  if live_o is null then
+    raise exception 'RLS/INIT FAIL: live item was not initialized from snapshot';
+  end if;
+
+  update public.planned_session_items_live
+    set reps_raw = '6'
+    where id = live_o;
+
+  select c.id
+    into change_o
+    from public.planned_session_item_changes c
+    where c.user_id = u1o
+      and c.planned_session_item_live_id = live_o
+      and c.change_type = 'update'
+    order by c.changed_at desc
+    limit 1;
+
+  if change_o is null then
+    raise exception 'AUDIT FAIL: update on live item did not create planned_session_item_changes row';
+  end if;
+
+  perform set_config('request.jwt.claim.sub', u2o::text, true);
+
+  if exists (select 1 from public.planned_session_items_live where id = live_o) then
+    raise exception 'RLS FAIL: user2 can read user1 planned_session_items_live';
+  end if;
+
+  if exists (select 1 from public.planned_session_item_changes where id = change_o) then
+    raise exception 'RLS FAIL: user2 can read user1 planned_session_item_changes';
+  end if;
+
+  begin
+    update public.planned_session_items_live
+      set reps_raw = '8'
+      where id = live_o;
+    if found then
+      raise exception 'RLS FAIL: user2 updated user1 planned_session_items_live';
+    end if;
+  end;
+
+  -- =======================================================================
+  -- TEST 15 — coach scope ACL + mutation scope
+  -- =======================================================================
+  perform set_config('request.jwt.claim.sub', athlete_p_assigned::text, true);
+
+  insert into public.plans (user_id, name) values (athlete_p_assigned, 'Plan Athlete Assigné') returning id into plan_p1;
+  insert into public.plan_versions (user_id, plan_id, version)
+    values (athlete_p_assigned, plan_p1, 1) returning id into pv_p1;
+  insert into public.session_templates (user_id, plan_version_id, name)
+    values (athlete_p_assigned, pv_p1, 'Template Assigné') returning id into tpl_p1;
+  insert into public.session_template_exercises (
+    user_id, session_template_id, position, exercise_name, series_raw, reps_raw
+  ) values (
+    athlete_p_assigned, tpl_p1, 1, 'Bench Press', '4', '6'
+  ) returning id into tplex_p1;
+  insert into public.planned_sessions (
+    user_id, plan_id, plan_version_id, session_template_id, scheduled_for
+  ) values (
+    athlete_p_assigned, plan_p1, pv_p1, tpl_p1, current_date
+  ) returning id into ps_p1;
+  insert into public.planned_session_items_snapshot (
+    user_id, planned_session_id, session_template_exercise_id, position, exercise_name, series_raw, reps_raw, payload
+  ) values (
+    athlete_p_assigned, ps_p1, tplex_p1, 1, 'Bench Press', '4', '6', '{}'::jsonb
+  );
+
+  select l.id into live_p1
+  from public.planned_session_items_live l
+  where l.user_id = athlete_p_assigned
+    and l.planned_session_id = ps_p1
+    and l.position = 1
+  limit 1;
+
+  perform set_config('request.jwt.claim.sub', athlete_p_unassigned::text, true);
+
+  insert into public.plans (user_id, name) values (athlete_p_unassigned, 'Plan Athlete Hors Scope') returning id into plan_p2;
+  insert into public.plan_versions (user_id, plan_id, version)
+    values (athlete_p_unassigned, plan_p2, 1) returning id into pv_p2;
+  insert into public.session_templates (user_id, plan_version_id, name)
+    values (athlete_p_unassigned, pv_p2, 'Template Hors Scope') returning id into tpl_p2;
+  insert into public.session_template_exercises (
+    user_id, session_template_id, position, exercise_name, series_raw, reps_raw
+  ) values (
+    athlete_p_unassigned, tpl_p2, 1, 'Deadlift', '3', '5'
+  ) returning id into tplex_p2;
+  insert into public.planned_sessions (
+    user_id, plan_id, plan_version_id, session_template_id, scheduled_for
+  ) values (
+    athlete_p_unassigned, plan_p2, pv_p2, tpl_p2, current_date
+  ) returning id into ps_p2;
+  insert into public.planned_session_items_snapshot (
+    user_id, planned_session_id, session_template_exercise_id, position, exercise_name, series_raw, reps_raw, payload
+  ) values (
+    athlete_p_unassigned, ps_p2, tplex_p2, 1, 'Deadlift', '3', '5', '{}'::jsonb
+  );
+
+  select l.id into live_p2
+  from public.planned_session_items_live l
+  where l.user_id = athlete_p_unassigned
+    and l.planned_session_id = ps_p2
+    and l.position = 1
+  limit 1;
+
+  perform set_config('request.jwt.claim.sub', coach_p::text, true);
+
+  if not exists (select 1 from public.planned_sessions where user_id = athlete_p_assigned and id = ps_p1) then
+    raise exception 'RLS FAIL: assigned coach cannot read assigned athlete sessions';
+  end if;
+
+  if exists (select 1 from public.planned_sessions where user_id = athlete_p_unassigned and id = ps_p2) then
+    raise exception 'RLS FAIL: coach can read unassigned athlete sessions';
+  end if;
+
+  update public.planned_session_items_live
+    set coach_notes = 'Coach update OK'
+    where id = live_p1;
+  if not found then
+    raise exception 'RLS FAIL: assigned coach cannot update in-scope live item';
+  end if;
+
+  begin
+    update public.planned_session_items_live
+      set coach_notes = 'Should fail'
+      where id = live_p2;
+    if found then
+      raise exception 'RLS FAIL: coach updated out-of-scope live item';
+    end if;
+  end;
+
+  -- =======================================================================
+  -- TEST 16 — admin probing protection
   -- =======================================================================
   perform set_config('request.jwt.claim.sub', u1n::text, true);
 

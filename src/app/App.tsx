@@ -1,6 +1,7 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthProvider";
 import { useIsAdmin } from "../auth/useIsAdmin";
+import { useUserRole } from "../auth/useUserRole";
 import { useHasProfile } from "../auth/useHasProfile";
 import AdminPage from "../ui/pages/Admin";
 import AuthPage from "../ui/pages/Auth";
@@ -12,11 +13,14 @@ import PlannedSessionDetailPage from "../ui/pages/PlannedSessionDetail";
 import ProgrammePage from "../ui/pages/Programme";
 import StatsPage from "../ui/pages/Stats";
 import ImportPlanPage from "../ui/pages/ImportPlan";
+import CoachHubPage from "../ui/pages/CoachHub";
+import CoachSessionEditPage from "../ui/pages/CoachSessionEdit";
 import DailyCheckinPage from "../ui/pages/DailyCheckin";
 import ProfileEditPage from "../ui/pages/ProfileEdit";
 import SettingsUnitsPage from "../ui/pages/SettingsUnits";
 import SettingsPage from "../ui/pages/Settings";
 import TodayPage from "../ui/pages/Today";
+import FreeJournalPage from "../ui/pages/FreeJournal";
 
 function AppLoading(props: { title?: string }) {
   return (
@@ -80,6 +84,29 @@ function RequireAdmin() {
   return <Outlet />;
 }
 
+function RequireCoach() {
+  const { user } = useAuth();
+  const { loading, role, error } = useUserRole(user?.id ?? null);
+  const { isAdmin } = useIsAdmin(user?.id ?? null);
+
+  if (!user) return <Navigate to="/auth" replace />;
+  if (loading) return <AppLoading />;
+  const isCoach = role === "coach" || isAdmin;
+  if (!isCoach) {
+    return (
+      <main className="container">
+        <h1>TrackNPerf</h1>
+        <h2>Coach</h2>
+        <p role="alert" style={{ maxWidth: 720 }}>
+          Vous n’avez pas accès au hub coach.
+        </p>
+        {error ? <pre style={{ whiteSpace: "pre-wrap", opacity: 0.8 }}>{error}</pre> : null}
+      </main>
+    );
+  }
+  return <Outlet />;
+}
+
 function IndexRedirect() {
   // We want `/` to go to the primary screen, but only after auth/profile is resolved.
   return <Navigate to="/today" replace />;
@@ -107,6 +134,11 @@ export default function App() {
         <Route element={<RequireProfile />}>
           <Route path="/" element={<IndexRedirect />} />
           <Route path="/today" element={<TodayPage />} />
+          <Route path="/journal-libre" element={<FreeJournalPage />} />
+          <Route element={<RequireCoach />}>
+            <Route path="/coach" element={<CoachHubPage />} />
+            <Route path="/coach/session/:sessionId" element={<CoachSessionEditPage />} />
+          </Route>
           <Route element={<RequireAdmin />}>
             <Route path="/admin" element={<AdminPage />} />
           </Route>

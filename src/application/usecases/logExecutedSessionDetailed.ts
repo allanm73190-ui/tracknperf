@@ -15,6 +15,7 @@ type ExecutedSetInput = {
 
 type ExecutedExerciseInput = {
   sessionTemplateExerciseId: string | null;
+  plannedSessionItemLiveId: string | null;
   position: number;
   exerciseName: string;
   notes: string | null;
@@ -305,6 +306,7 @@ export async function logExecutedSessionDetailed(
       id: executedExerciseId,
       executed_session_id: executedSessionId,
       session_template_exercise_id: exercise.sessionTemplateExerciseId,
+      planned_session_item_live_id: exercise.plannedSessionItemLiveId,
       position: exercise.position,
       exercise_name_snapshot: exercise.exerciseName,
       notes: exercise.notes,
@@ -354,6 +356,7 @@ export async function logExecutedSessionDetailed(
 
   const feedbackRating = metrics.avgRpe !== null ? Math.round(metrics.avgRpe) : null;
   await enqueue("session_feedback", {
+    id: crypto.randomUUID(),
     executed_session_id: executedSessionId,
     rating: feedbackRating,
     soreness: metrics.avgPainScore !== null ? Math.round(metrics.avgPainScore) : null,

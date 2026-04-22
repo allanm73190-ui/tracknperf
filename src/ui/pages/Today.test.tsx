@@ -6,6 +6,9 @@ import TodayPage from "./Today";
 vi.mock("../../auth/AuthProvider", () => ({
   useAuth: () => ({ user: { id: "u1", email: "test@test.com" }, signOut: vi.fn(), isConfigured: true }),
 }));
+vi.mock("../../auth/useUserRole", () => ({
+  useUserRole: () => ({ loading: false, role: "athlete", error: null }),
+}));
 vi.mock("../../application/usecases/getTodayOverview", () => ({
   getTodayOverview: vi.fn().mockResolvedValue({ planned: [], executed: [] }),
 }));
@@ -21,6 +24,10 @@ vi.mock("../../infra/offline/db", () => ({
     { opId: "op1", entity: "session", opType: "upsert", status: "pending", attempts: 0, nextAttemptAt: null, lastError: null },
     { opId: "op2", entity: "profile", opType: "upsert", status: "applied", attempts: 1, nextAttemptAt: null, lastError: null },
   ]),
+}));
+vi.mock("../../application/usecases/notifications", () => ({
+  listInAppNotifications: vi.fn().mockResolvedValue([]),
+  markNotificationAsRead: vi.fn().mockResolvedValue(undefined),
 }));
 
 async function openSyncDrawer() {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../auth/AuthProvider";
 import { useIsAdmin } from "../../auth/useIsAdmin";
+import { useUserRole } from "../../auth/useUserRole";
 import { Link, useNavigate } from "react-router-dom";
 import { AppShell } from "../kit/AppShell";
 import { Button } from "../kit/Button";
@@ -14,6 +15,7 @@ import {
 } from "../../application/usecases/computeAndPersistTodayRecommendation";
 import { flushSyncQueue } from "../../application/sync/syncClient";
 import { getQueueStats, listRecentOps, type SyncOp } from "../../infra/offline/db";
+import { listInAppNotifications, markNotificationAsRead, type InAppNotification } from "../../application/usecases/notifications";
 
 function getRecoTitle(reco: PersistedRecommendation): string | null {
   const out = reco.output as { recommendedTemplateName?: unknown } | null;
@@ -40,6 +42,7 @@ export default function TodayPage() {
   const navigate = useNavigate();
   const { user, signOut, isConfigured } = useAuth();
   const { isAdmin } = useIsAdmin(user?.id ?? null);
+  const { role } = useUserRole(user?.id ?? null);
   const [overview, setOverview] = useState<TodayOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
@@ -48,6 +51,7 @@ export default function TodayPage() {
   const [syncBusy, setSyncBusy] = useState(false);
   const [syncDrawerOpen, setSyncDrawerOpen] = useState(false);
   const [recentOps, setRecentOps] = useState<SyncOp[]>([]);
+  const [notifications, setNotifications] = useState<InAppNotification[]>([]);
 
   const plannedCandidate = useMemo(() => overview?.planned?.[0] ?? null, [overview?.planned]);
 
@@ -79,6 +83,8 @@ export default function TodayPage() {
       if (!ignoreSignal?.ignore) setSyncStatus(stats);
       const recent = await listRecentOps(50);
       if (!ignoreSignal?.ignore) setRecentOps(recent);
+      const notificationRows = await listInAppNotifications(12);
+      if (!ignoreSignal?.ignore) setNotifications(notificationRows);
     } catch (err) {
       if (!ignoreSignal?.ignore) {
         setMessage(err instanceof Error ? err.message : "Erreur de chargement.");
@@ -122,11 +128,21 @@ export default function TodayPage() {
     void navigate(`/planned-session/${plannedCandidate.id}`);
   }
 
+  async function onReadNotification(id: string) {
+    try {
+      await markNotificationAsRead(id);
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, readAt: new Date().toISOString() } : n)));
+    } catch {
+      // no-op
+    }
+  }
+
   return (
     <AppShell
       title="Aujourd'hui"
       nav={[
         { to: "/today", label: "Aujourd'hui" },
+        ...(role === "coach" || isAdmin ? [{ to: "/coach", label: "Coach" }] : []),
         { to: "/history", label: "Historique" },
         { to: "/stats", label: "Stats" },
         ...(isAdmin ? [{ to: "/admin", label: "Admin" }] : []),
@@ -176,6 +192,24 @@ export default function TodayPage() {
         </div>
       ) : overview ? (
         <div className="grid gap-4">
+          {notifications.length > 0 && (
+            <div className="rounded-[1.5rem] bg-surface-container-low p-4 grid gap-2">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-primary">Notifications</div>
+              {notifications.slice(0, 4).map((n) => (
+                <button
+                  key={n.id}
+                  type="button"
+                  onClick={() => void onReadNotification(n.id)}
+                  className={`text-left rounded-[0.9rem] p-3 ${n.readAt ? "bg-surface-container-lowest" : "bg-surface-container-highest"}`}
+                >
+                  <div className="text-[10px] uppercase tracking-widest text-secondary font-bold">{n.category}</div>
+                  <div className="text-sm font-semibold text-on-surface">{n.title}</div>
+                  <div className="text-xs text-on-surface-variant">{n.message}</div>
+                </button>
+              ))}
+            </div>
+          )}
+
           {plannedCandidate ? (
             <div className="rounded-[1.5rem] bg-surface-container-low p-6 grid gap-4">
               <div className="flex items-start justify-between gap-4">
@@ -210,8 +244,14 @@ export default function TodayPage() {
                   className="inline-flex items-center gap-2 px-5 py-3 rounded-full font-bold text-sm uppercase tracking-widest text-[#3a4a00] active:scale-95 transition-all"
                   style={{ background: "linear-gradient(45deg, #beee00 0%, #f3ffca 100%)" }}
                 >
-                  Ouvrir la séance détaillée
+                  Séance planifiée
                 </button>
+                <Link
+                  to="/journal-libre"
+                  className="inline-flex items-center px-5 py-3 rounded-full font-bold text-sm uppercase tracking-widest bg-surface-container-highest text-on-surface active:scale-95"
+                >
+                  Journal libre
+                </Link>
                 <Link
                   to="/programme"
                   className="inline-flex items-center px-4 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest bg-surface-container-highest text-on-surface-variant active:scale-95"
@@ -225,9 +265,17 @@ export default function TodayPage() {
               <div className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Séance du jour</div>
               <div className="font-headline font-black text-2xl tracking-tight">Journée libre</div>
               <div className="text-sm text-on-surface-variant">Aucune séance planifiée aujourd’hui.</div>
-              <Link to="/programme" className="text-[10px] font-bold uppercase tracking-widest text-secondary">
-                Voir le programme →
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  to="/journal-libre"
+                  className="inline-flex items-center px-5 py-3 rounded-full font-bold text-sm uppercase tracking-widest bg-surface-container-highest text-on-surface active:scale-95"
+                >
+                  Journal libre
+                </Link>
+                <Link to="/programme" className="inline-flex items-center px-4 py-3 rounded-full text-[11px] font-bold uppercase tracking-widest bg-surface-container-highest text-secondary active:scale-95">
+                  Programme
+                </Link>
+              </div>
             </div>
           )}
 
