@@ -461,7 +461,7 @@ export default function TodayPage() {
                         fontSize: 18,
                         color: statusColor,
                       }}>
-                        {isApplied ? "✓" : isError ? "✕" : "↻"}
+                        {isApplied ? "OK" : isError ? "ER" : "Q"}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 2 }}>
@@ -518,7 +518,7 @@ export default function TodayPage() {
                 gap: 8,
               }}
             >
-              ↻ FORCER LA SYNCHRO
+              FORCER LA SYNCHRO
             </button>
             <p style={{ textAlign: "center", fontSize: 10, color: "#adaaaa", marginTop: 12, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 500 }}>
               {syncStatus ? `${syncStatus.applied} ops appliquées · ${syncStatus.pending} en attente` : "Chargement…"}

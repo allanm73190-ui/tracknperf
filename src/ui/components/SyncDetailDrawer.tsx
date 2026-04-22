@@ -61,13 +61,13 @@ export function SyncDetailDrawer({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "SYNCED":
-        return "✓";
+        return "OK";
       case "QUEUED":
-        return "⏳";
+        return "Q";
       case "WAITING":
-        return "⟳";
+        return "W";
       default:
-        return "•";
+        return ".";
     }
   };
 
@@ -98,7 +98,7 @@ export function SyncDetailDrawer({
             onClick={onClose}
             aria-label="Close"
           >
-            ✕
+            X
           </button>
         </div>
 
@@ -106,7 +106,7 @@ export function SyncDetailDrawer({
         {isOffline && (
           <div className={styles.offlineAlert}>
             <div className={styles.alertContent}>
-              <span className={styles.alertIcon}>⚠</span>
+              <span className={styles.alertIcon}>!</span>
               <span className={styles.alertText}>Hors ligne. Synchronisation en attente.</span>
             </div>
             <button
@@ -176,7 +176,7 @@ export function SyncDetailDrawer({
             onClick={onForceSync}
             disabled={!isOffline && syncStatus?.pending === 0}
           >
-            <span className={styles.syncIcon}>⚡</span>
+            <span className={styles.syncIcon}>SYNC</span>
             Forcer la synchronisation
           </button>
           {lastSyncTime && (

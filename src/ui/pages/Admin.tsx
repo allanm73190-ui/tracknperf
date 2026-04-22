@@ -13,6 +13,7 @@ import { importPlanFromCsvText } from "../../application/usecases/importPlanFrom
 import { importPlanFromExcelArrayBuffer } from "../../application/usecases/importPlanFromExcel";
 import { persistImportedPlanWithEngineContext } from "../../application/usecases/persistImportedPlan";
 import { AppShell } from "../kit/AppShell";
+import { ImportProgramActions } from "../components/ImportProgramActions";
 
 type Format = "excel" | "json" | "csv";
 type Tab = "engine" | "import";
@@ -118,7 +119,7 @@ export default function AdminPage() {
         algorithmVersionId: selectedAlgorithmVersionId || null,
       });
       const names = parsed.sessionTemplates.map((t) => t.name).join(", ");
-      setMessage(`✓ ${parsed.sessionTemplates.length} séance(s)-type importée(s) : ${names}`);
+      setMessage(`${parsed.sessionTemplates.length} séance(s)-type importée(s) : ${names}`);
       setMessageType("success");
       setParsed(null);
     } catch (err) {
@@ -168,8 +169,8 @@ export default function AdminPage() {
     <AppShell
       title="Admin"
       nav={[
-        { to: "/today", label: "Today" },
-        { to: "/history", label: "History" },
+        { to: "/today", label: "Aujourd'hui" },
+        { to: "/history", label: "Historique" },
         { to: "/stats", label: "Stats" },
         { to: "/admin", label: "Admin" },
       ]}
@@ -253,7 +254,11 @@ export default function AdminPage() {
               alignItems: "center", gap: 14,
             }}>
               <div style={{ width: 56, height: 56, background: "#1a1a1a", borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 24, color: "#c57eff" }}>⬆</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#c57eff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  <path d="M12 11v6" />
+                  <path d="m9 14 3-3 3 3" />
+                </svg>
               </div>
               <div>
                 <p style={{ fontFamily: "var(--font-headline)", fontSize: 16, fontWeight: 700, margin: "0 0 4px" }}>
@@ -275,6 +280,16 @@ export default function AdminPage() {
                 style={{ color: "#adaaaa", fontSize: 12 }}
               />
             </div>
+
+            <ImportProgramActions
+              disabled={busy}
+              onProgramsPurged={(deletedPlans) => {
+                setParsed(null);
+                setFile(null);
+                setMessage(`${deletedPlans} plan(s) supprimé(s).`);
+                setMessageType("success");
+              }}
+            />
 
             {/* Format selector */}
             <label style={{ display: "grid", gap: 6 }}>

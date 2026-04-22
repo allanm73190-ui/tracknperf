@@ -33,7 +33,21 @@ export default function AccessDeniedPage() {
             position: "relative", background: "#262626", padding: 40, borderRadius: 40,
             border: "1px solid rgba(72,72,71,0.15)", boxShadow: "0 0 60px rgba(197,126,255,0.08)",
           }}>
-            <span style={{ fontSize: 96, lineHeight: 1, display: "block" }}>🔒</span>
+            <svg
+              width="96"
+              height="96"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#c57eff"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ display: "block" }}
+              aria-hidden
+            >
+              <rect x="3" y="11" width="18" height="10" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
           </div>
         </div>
 
@@ -72,7 +86,7 @@ export default function AccessDeniedPage() {
           background: "#131313", padding: "10px 24px", borderRadius: 999,
           border: "1px solid rgba(72,72,71,0.15)",
         }}>
-          <span style={{ color: "#c57eff", fontSize: 16 }}>✓</span>
+          <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#c57eff", display: "inline-block" }} />
           <span style={{ fontFamily: "var(--font-headline)", fontSize: 10, letterSpacing: "0.15em", textTransform: "uppercase", color: "#adaaaa" }}>
             Protocole de Sécurité Actif
           </span>

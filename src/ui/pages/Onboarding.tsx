@@ -65,7 +65,7 @@ export default function OnboardingPage() {
             margin: "0 auto 32px",
             boxShadow: "0 0 50px rgba(202,253,0,0.4)",
           }}>
-            <span style={{ fontSize: 40 }}>✓</span>
+            <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#0e0e0e", display: "inline-block" }} />
           </div>
           <h2 style={{
             fontFamily: "var(--font-headline)",

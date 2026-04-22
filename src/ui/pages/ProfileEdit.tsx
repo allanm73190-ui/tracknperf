@@ -186,7 +186,7 @@ export default function ProfileEditPage() {
 
           {success && (
             <div style={{ padding: "14px 16px", borderRadius: 12, background: "rgba(202,253,0,0.08)", color: "#cafd00", fontSize: 13, marginBottom: 16, fontWeight: 600 }}>
-              Profil sauvegardé ✓
+              Profil sauvegardé
             </div>
           )}
 

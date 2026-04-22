@@ -7,11 +7,11 @@ import { Button } from "../kit/Button";
 
 type Mood = "great" | "good" | "neutral" | "bad";
 
-const MOODS: { value: Mood; label: string; emoji: string }[] = [
-  { value: "great", label: "Super", emoji: "🔥" },
-  { value: "good", label: "Bien", emoji: "💪" },
-  { value: "neutral", label: "Moyen", emoji: "😐" },
-  { value: "bad", label: "Dur", emoji: "😩" },
+const MOODS: { value: Mood; label: string; code: string }[] = [
+  { value: "great", label: "Super", code: "S+" },
+  { value: "good", label: "Bien", code: "B+" },
+  { value: "neutral", label: "Moyen", code: "M" },
+  { value: "bad", label: "Dur", code: "D" },
 ];
 
 type Props = {
@@ -118,7 +118,7 @@ export function FeedbackForm({ plannedSessionId, planId, onSuccess, onCancel }: 
                     : "bg-surface-container-highest text-on-surface-variant hover:bg-surface-container",
                 ].join(" ")}
               >
-                <span className="text-xl leading-none">{m.emoji}</span>
+                <span className="font-headline font-black text-sm leading-none">{m.code}</span>
                 <span className="text-[10px] font-bold uppercase tracking-widest">{m.label}</span>
               </button>
             );

@@ -10,7 +10,7 @@ type Props = {
 };
 
 export function SessionStateCard({ state, title, subtitle, meta, actionLabel, onAction }: Props) {
-  const icon = state === "executed" ? "✓" : "○";
+  const icon = state === "executed" ? "OK" : "PL";
   const toneClass =
     state === "executed"
       ? "bg-primary-container/15 text-primary"

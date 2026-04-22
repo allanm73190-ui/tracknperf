@@ -11,7 +11,8 @@
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps",
     "lint": "eslint src",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "check:ui": "node scripts/ui-guardrails.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.56.0",

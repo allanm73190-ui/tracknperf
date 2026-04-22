@@ -1,12 +1,10 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import * as XLSX from "xlsx";
 import { importPlanFromCsvText } from "../../application/usecases/importPlanFromCsv";
 import { importPlanFromExcelArrayBuffer } from "../../application/usecases/importPlanFromExcel";
 import { importPlanFromJsonText } from "../../application/usecases/importPlanFromJson";
-import { buildPerfectImportTemplateWorkbook } from "../../application/usecases/importPlanTemplate";
 import { persistImportedPlan } from "../../application/usecases/persistImportedPlan";
-import { deleteAllImportedPrograms } from "../../application/usecases/deleteImportedPrograms";
+import { ImportProgramActions } from "../components/ImportProgramActions";
 import type { PlanImport } from "../../domain/plan/planImport";
 
 type ParsedSession = {
@@ -28,35 +26,6 @@ export default function ImportPlanPage() {
   const [sessions, setSessions] = useState<ParsedSession[]>([]);
   const [busy, setBusy] = useState(false);
   const [importError, setImportError] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
-
-  function downloadTemplate() {
-    const wb = buildPerfectImportTemplateWorkbook();
-    XLSX.writeFile(wb, "template-import-plan-v2-parfait.xlsx");
-  }
-
-  async function onDeleteAllImportedPrograms() {
-    setActionMessage(null);
-    setActionError(null);
-    const confirmed = window.confirm(
-      "Confirmez-vous la suppression totale du programme importé (plans, templates, séances planifiées) ? Cette action est irréversible.",
-    );
-    if (!confirmed) return;
-
-    setBusy(true);
-    try {
-      const result = await deleteAllImportedPrograms();
-      setPlanImport(null);
-      setSessions([]);
-      setStep("upload");
-      setActionMessage(`${result.deletedPlans} plan(s) supprimé(s).`);
-    } catch (error) {
-      setActionError(error instanceof Error ? error.message : "Suppression impossible.");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   async function handleFile(file: File) {
     setParseError(null);
@@ -193,7 +162,24 @@ export default function ImportPlanPage() {
                 transition: "border-color 0.15s, background 0.15s",
               }}
             >
-              <div style={{ fontSize: 36, marginBottom: 12 }}>📂</div>
+              <div style={{ marginBottom: 12 }}>
+                <svg
+                  width="36"
+                  height="36"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={dragging ? "#cafd00" : "#adaaaa"}
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ display: "block", margin: "0 auto" }}
+                  aria-hidden
+                >
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  <path d="M12 11v6" />
+                  <path d="m9 14 3-3 3 3" />
+                </svg>
+              </div>
               <p style={{ fontWeight: 600, fontSize: 15, margin: "0 0 6px" }}>
                 Glissez un fichier ici
               </p>
@@ -201,39 +187,15 @@ export default function ImportPlanPage() {
                 ou cliquez pour sélectionner — CSV, Excel (.xlsx), JSON
               </p>
             </div>
-            <div style={{ textAlign: "center" }}>
-              <button
-                onClick={downloadTemplate}
-                style={{
-                  background: "transparent",
-                  color: "#888",
-                  fontSize: 13,
-                  textDecoration: "underline",
-                  border: "none",
-                  cursor: "pointer",
-                  marginTop: 12,
-                  padding: 8,
-                }}
-              >
-                Télécharger le template parfait (.xlsx)
-              </button>
-              <button
-                onClick={() => void onDeleteAllImportedPrograms()}
+            <div style={{ marginTop: 8 }}>
+              <ImportProgramActions
                 disabled={busy}
-                style={{
-                  background: "transparent",
-                  color: "#ff7351",
-                  fontSize: 13,
-                  textDecoration: "underline",
-                  border: "none",
-                  cursor: busy ? "not-allowed" : "pointer",
-                  marginTop: 6,
-                  padding: 8,
-                  opacity: busy ? 0.6 : 1,
+                onProgramsPurged={() => {
+                  setPlanImport(null);
+                  setSessions([]);
+                  setStep("upload");
                 }}
-              >
-                Supprimer tout le programme importé
-              </button>
+              />
             </div>
             <input
               ref={fileRef}
@@ -242,24 +204,6 @@ export default function ImportPlanPage() {
               style={{ display: "none" }}
               onChange={onFileChange}
             />
-            {actionMessage && (
-              <div style={{
-                marginTop: 16, padding: "12px 16px", borderRadius: 10,
-                background: "rgba(202,253,0,0.12)", color: "#cafd00",
-                fontSize: 13,
-              }}>
-                {actionMessage}
-              </div>
-            )}
-            {actionError && (
-              <div style={{
-                marginTop: 16, padding: "12px 16px", borderRadius: 10,
-                background: "rgba(255,115,81,0.12)", color: "#ff7351",
-                fontSize: 13,
-              }}>
-                {actionError}
-              </div>
-            )}
             {parseError && (
               <div style={{
                 marginTop: 16, padding: "12px 16px", borderRadius: 10,

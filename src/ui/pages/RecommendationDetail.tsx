@@ -26,8 +26,8 @@ export default function RecommendationDetailPage() {
     <AppShell
       title="Analyse IA"
       nav={[
-        { to: "/today", label: "Today" },
-        { to: "/history", label: "History" },
+        { to: "/today", label: "Aujourd'hui" },
+        { to: "/history", label: "Historique" },
         { to: "/stats", label: "Stats" },
       ]}
     >
@@ -36,7 +36,7 @@ export default function RecommendationDetailPage() {
         {/* Hero */}
         <section>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <span style={{ color: "#cafd00", fontSize: 14 }}>⚡</span>
+            <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#cafd00", display: "inline-block" }} />
             <span style={{ fontFamily: "var(--font-headline)", fontWeight: 700, fontSize: 11, letterSpacing: "0.15em", textTransform: "uppercase", color: "#cafd00" }}>
               Session Recommandée
             </span>
@@ -92,7 +92,7 @@ export default function RecommendationDetailPage() {
             {/* VRC full-width */}
             <div style={{ gridColumn: "1 / -1", background: "#131313", borderRadius: 16, padding: 24, borderLeft: "4px solid #cafd00" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                <span style={{ fontSize: 20, color: "#cafd00" }}>📈</span>
+                <span style={{ fontFamily: "var(--font-headline)", fontWeight: 900, color: "#cafd00", fontSize: 14, letterSpacing: "0.08em" }}>VRC</span>
                 <span style={{ fontFamily: "var(--font-headline)", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#adaaaa" }}>Variabilité (VRC)</span>
               </div>
               <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
@@ -106,7 +106,7 @@ export default function RecommendationDetailPage() {
 
             {/* Fatigue */}
             <div style={{ background: "#1a1a1a", borderRadius: 16, padding: 20 }}>
-              <span style={{ fontSize: 22, color: "#c57eff", display: "block", marginBottom: 12 }}>🔋</span>
+              <span style={{ display: "inline-block", marginBottom: 12, fontFamily: "var(--font-headline)", color: "#c57eff", fontWeight: 900, letterSpacing: "0.1em" }}>FAT</span>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 26, fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 4px" }}>BASSE</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#adaaaa", margin: 0 }}>Niveau de Fatigue</p>
               <div style={{ width: "100%", height: 4, background: "rgba(255,255,255,0.06)", borderRadius: 999, marginTop: 14, overflow: "hidden" }}>
@@ -116,7 +116,7 @@ export default function RecommendationDetailPage() {
 
             {/* Sleep */}
             <div style={{ background: "#1a1a1a", borderRadius: 16, padding: 20 }}>
-              <span style={{ fontSize: 22, color: "#fce047", display: "block", marginBottom: 12 }}>🌙</span>
+              <span style={{ display: "inline-block", marginBottom: 12, fontFamily: "var(--font-headline)", color: "#fce047", fontWeight: 900, letterSpacing: "0.1em" }}>SLP</span>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 26, fontWeight: 900, letterSpacing: "-0.03em", margin: "0 0 4px" }}>8h12</p>
               <p style={{ fontFamily: "var(--font-headline)", fontSize: 10, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#adaaaa", margin: 0 }}>Sommeil Profond</p>
               <p style={{ color: "#adaaaa", fontSize: 11, marginTop: 10, lineHeight: 1.5 }}>Qualité réparatrice validée par 3 cycles REM complets.</p>
@@ -134,7 +134,7 @@ export default function RecommendationDetailPage() {
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
           }}
         >
-          LANCER LA SESSION ▶
+          LANCER LA SESSION
         </button>
       </div>
     </AppShell>
