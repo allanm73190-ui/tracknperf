@@ -254,7 +254,7 @@ function fromTemplateExercises(templateExercises: PlannedSessionTemplateExercise
     .sort((a, b) => a.position - b.position);
   return sorted.map((exercise) => ({
     localId: crypto.randomUUID(),
-    plannedSessionItemLiveId: exercise.plannedSessionItemLiveId,
+    plannedSessionItemLiveId: exercise.id,
     sessionTemplateExerciseId: exercise.sessionTemplateExerciseId,
     position: exercise.position,
     exerciseName: exercise.exerciseName,
